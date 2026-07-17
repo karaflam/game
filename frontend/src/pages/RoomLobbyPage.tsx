@@ -7,11 +7,21 @@ import { useSocket } from '../hooks/useSocket';
 import { ClientEvents, ServerEvents } from '../lib/socketEvents';
 import { useGameStore } from '../store/useGameStore';
 
+const PSEUDO_STORAGE_KEY = 'game:pseudo';
+const PSEUDO_MAX_LENGTH = 20;
+
 export function RoomLobbyPage() {
   const { gameId } = useParams();
   const navigate = useNavigate();
   const { socket } = useSocket();
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
+  const [pseudo, setPseudo] = useState(() => {
+    try {
+      return localStorage.getItem(PSEUDO_STORAGE_KEY) ?? '';
+    } catch {
+      return '';
+    }
+  });
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const setGameId = useGameStore(state => state.setGameId);
@@ -28,17 +38,33 @@ export function RoomLobbyPage() {
     );
   }
 
+  const handlePseudoChange = (value: string) => {
+    setPseudo(value);
+    try {
+      localStorage.setItem(PSEUDO_STORAGE_KEY, value);
+    } catch {
+      // ignore
+    }
+  };
+
+  const trimmedPseudo = pseudo.trim();
+
   const handleCreateRoom = () => {
+    if (!trimmedPseudo) {
+      setError('Veuillez saisir un pseudo.');
+      return;
+    }
+
     if (!socket) {
       setError('Connexion serveur non disponible.');
       return;
     }
 
-    socket.emit(ClientEvents.CreateRoom);
+    socket.emit(ClientEvents.CreateRoom, { name: trimmedPseudo });
     socket.once(ServerEvents.RoomCreated, ({ roomId, players }) => {
       setGameId(gameId);
       setRoomCode(roomId);
-      setPlayers(players ?? [socket.id ?? '']);
+      setPlayers(players);
       setStatus('waiting');
       navigate(`/jeu/${gameId}/salon/${roomId}`);
     });
@@ -48,6 +74,11 @@ export function RoomLobbyPage() {
   };
 
   const handleJoinRoom = () => {
+    if (!trimmedPseudo) {
+      setError('Veuillez saisir un pseudo.');
+      return;
+    }
+
     const code = joinCode.trim().toUpperCase();
     if (!code) {
       setError('Veuillez saisir un code de salon.');
@@ -59,7 +90,7 @@ export function RoomLobbyPage() {
       return;
     }
 
-    socket.emit(ClientEvents.JoinRoom, { roomId: code });
+    socket.emit(ClientEvents.JoinRoom, { roomId: code, name: trimmedPseudo });
     socket.once(ServerEvents.RoomUpdate, ({ players }) => {
       setGameId(gameId);
       setRoomCode(code);
@@ -82,6 +113,21 @@ export function RoomLobbyPage() {
           </div>
         </div>
 
+        <div className="mt-6 rounded-3xl border border-border bg-background p-6">
+          <label className="block text-sm font-semibold text-foreground" htmlFor="pseudo">
+            Votre pseudo
+          </label>
+          <p className="mt-1 text-sm text-muted-foreground">C’est ce nom qui sera affiché aux autres joueurs pendant la partie.</p>
+          <input
+            id="pseudo"
+            value={pseudo}
+            onChange={event => handlePseudoChange(event.target.value)}
+            maxLength={PSEUDO_MAX_LENGTH}
+            placeholder="Ex : Alex"
+            className="mt-3 w-full max-w-sm rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
         {error ? (
           <div className="mt-6 rounded-3xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
             {error}
@@ -92,7 +138,7 @@ export function RoomLobbyPage() {
           <div className="rounded-3xl border border-border bg-background p-6">
             <h2 className="text-xl font-semibold text-foreground">Créer un salon</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">Générez un code unique et invitez vos amis pour rejoindre votre partie.</p>
-            <Button className="mt-4" onClick={handleCreateRoom}>
+            <Button className="mt-4" onClick={handleCreateRoom} disabled={!trimmedPseudo}>
               Créer un salon
             </Button>
           </div>
@@ -106,7 +152,7 @@ export function RoomLobbyPage() {
                 placeholder="Code du salon"
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
-              <Button variant="secondary" onClick={handleJoinRoom}>
+              <Button variant="secondary" onClick={handleJoinRoom} disabled={!trimmedPseudo}>
                 Rejoindre
               </Button>
             </div>

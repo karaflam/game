@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { getSocket, disconnectSocket } from '../lib/socketClient';
 import { ServerEvents } from '../lib/socketEvents';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore, type Player } from '../store/useGameStore';
 
 export function useSocket() {
   const [connected, setConnected] = useState(false);
@@ -35,7 +35,7 @@ export function useSocket() {
       setMessage(data.payload);
     };
 
-    const handleRoomUpdate = ({ players }: { roomId: string; players: string[] }) => {
+    const handleRoomUpdate = ({ players }: { roomId: string; players: Player[] }) => {
       setPlayers(players);
       setStatus('waiting');
     };

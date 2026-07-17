@@ -1,16 +1,18 @@
 import { create } from 'zustand';
 
+export type Player = { id: string; name: string };
+
 type GameStatus = 'idle' | 'waiting' | 'in-game' | 'finished';
 
 type GameState = {
   gameId: string | null;
   roomCode: string | null;
-  players: string[];
+  players: Player[];
   status: GameStatus;
   error: string | null;
   setGameId: (gameId: string | null) => void;
   setRoomCode: (roomCode: string | null) => void;
-  setPlayers: (players: string[]) => void;
+  setPlayers: (players: Player[]) => void;
   setStatus: (status: GameStatus) => void;
   setError: (error: string | null) => void;
   reset: () => void;

@@ -44,9 +44,9 @@ export function RoomWaitingPage() {
     );
   }
 
-  const isHost = socketId !== null && socketId === players[0];
+  const isHost = socketId !== null && socketId === players[0]?.id;
   const canStart = players.length > 1 && isHost;
-  const host = players[0] ?? 'Hôte';
+  const host = players[0]?.name ?? 'Hôte';
 
   const handleStartClick = () => {
     if (!socket || !roomCode) {
@@ -76,8 +76,8 @@ export function RoomWaitingPage() {
             <div className="mt-4 space-y-3 rounded-3xl border border-border bg-surface p-4">
               {players.length > 0 ? (
                 players.map(player => (
-                  <div key={player} className="rounded-2xl bg-card p-3 text-sm text-foreground shadow-sm">
-                    {player === host ? `${player} (hôte)` : player}
+                  <div key={player.id} className="rounded-2xl bg-card p-3 text-sm text-foreground shadow-sm">
+                    {player.name === host ? `${player.name} (hôte)` : player.name}
                   </div>
                 ))
               ) : (
