@@ -36,9 +36,9 @@ io.on(ClientEvents.Connect, socket => {
     });
   });
 
-  socket.on(ClientEvents.CreateRoom, () => {
+  socket.on(ClientEvents.CreateRoom, ({ name }: { name: string }) => {
     try {
-      const { roomId, players } = roomManager.createRoom(socket.id);
+      const { roomId, players } = roomManager.createRoom(socket.id, name);
       socket.join(roomId);
       socket.emit(ServerEvents.RoomCreated, { roomId, players });
     } catch (error) {
@@ -46,9 +46,9 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
-  socket.on(ClientEvents.JoinRoom, ({ roomId }) => {
+  socket.on(ClientEvents.JoinRoom, ({ roomId, name }: { roomId: string; name: string }) => {
     try {
-      const players = roomManager.joinRoom(roomId, socket.id);
+      const players = roomManager.joinRoom(roomId, socket.id, name);
       socket.join(roomId);
       io.to(roomId).emit(ServerEvents.RoomUpdate, { roomId, players });
     } catch (error) {
@@ -114,7 +114,7 @@ io.on(ClientEvents.Connect, socket => {
 
       io.to(roomId).emit(ServerEvents.TruthOrDareUpdate, {
         prompt,
-        activePlayer: `Joueur ${activeIndex + 1}`
+        activePlayer: players[activeIndex].name
       });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
@@ -137,9 +137,9 @@ io.on(ClientEvents.Connect, socket => {
       const message = type === 'action' ? `Action : ${roomData.prompt.dare}` : `Vérité : ${roomData.prompt.truth}`;
       const players = roomManager.getPlayers(roomId);
 
-      for (const playerSocketId of players) {
-        const score = playerSocketId === socket.id ? 1 : 0;
-        io.to(playerSocketId).emit(ServerEvents.TruthOrDareResult, {
+      for (const player of players) {
+        const score = player.id === socket.id ? 1 : 0;
+        io.to(player.id).emit(ServerEvents.TruthOrDareResult, {
           socketId: socket.id,
           message,
           score
@@ -181,9 +181,9 @@ io.on(ClientEvents.Connect, socket => {
       const message = `Le joueur a choisi : ${promptData.prompt[selected]}.`;
       const players = roomManager.getPlayers(roomId);
 
-      for (const playerSocketId of players) {
-        const score = playerSocketId === socket.id ? 1 : 0;
-        io.to(playerSocketId).emit(ServerEvents.WouldYouRatherResult, {
+      for (const player of players) {
+        const score = player.id === socket.id ? 1 : 0;
+        io.to(player.id).emit(ServerEvents.WouldYouRatherResult, {
           socketId: socket.id,
           message,
           score
@@ -236,9 +236,9 @@ io.on(ClientEvents.Connect, socket => {
 
       if (guess.toLowerCase().trim() === answer) {
         roomManager.clearGameData(socket.id, 'twentyQuestions');
-        for (const playerSocketId of players) {
-          const score = playerSocketId === socket.id ? 1 : 0;
-          io.to(playerSocketId).emit(ServerEvents.TwentyQuestionsResult, {
+        for (const player of players) {
+          const score = player.id === socket.id ? 1 : 0;
+          io.to(player.id).emit(ServerEvents.TwentyQuestionsResult, {
             socketId: socket.id,
             message: `Bravo ! Le mot était ${answer}.`,
             score
@@ -249,9 +249,9 @@ io.on(ClientEvents.Connect, socket => {
 
       if (gameData.attempts >= 20) {
         roomManager.clearGameData(socket.id, 'twentyQuestions');
-        for (const playerSocketId of players) {
-          const score = playerSocketId === socket.id ? 0 : 1;
-          io.to(playerSocketId).emit(ServerEvents.TwentyQuestionsResult, {
+        for (const player of players) {
+          const score = player.id === socket.id ? 0 : 1;
+          io.to(player.id).emit(ServerEvents.TwentyQuestionsResult, {
             socketId: socket.id,
             message: `Temps écoulé. Le mot était ${answer}.`,
             score
@@ -307,9 +307,9 @@ io.on(ClientEvents.Connect, socket => {
       const players = roomManager.getPlayers(roomId);
       const message = correct ? 'Vote correct !' : 'Vote incorrect...';
 
-      for (const playerSocketId of players) {
-        const score = playerSocketId === socket.id ? (correct ? 1 : 0) : playerSocketId === submitter ? (correct ? 0 : 1) : 0;
-        io.to(playerSocketId).emit(ServerEvents.TwoTruthsOneLieResult, {
+      for (const player of players) {
+        const score = player.id === socket.id ? (correct ? 1 : 0) : player.id === submitter ? (correct ? 0 : 1) : 0;
+        io.to(player.id).emit(ServerEvents.TwoTruthsOneLieResult, {
           socketId: socket.id,
           message: `${message} La phrase ${gameData.lieIndex + 1} était le mensonge.`,
           score

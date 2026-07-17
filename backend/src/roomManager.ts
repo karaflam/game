@@ -1,5 +1,7 @@
+export type Player = { id: string; name: string };
+
 type RoomState = {
-  players: string[];
+  players: Player[];
   choices: Map<string, string>;
   gameData: Record<string, any>;
 };
@@ -12,11 +14,12 @@ export class RoomManager {
   private rooms = new Map<string, RoomState>();
   private socketRoom = new Map<string, string>();
 
-  createRoom(socketId: string) {
+  createRoom(socketId: string, name: string) {
     const roomId = generateRoomId();
-    this.rooms.set(roomId, { players: [socketId], choices: new Map(), gameData: {} });
+    const player: Player = { id: socketId, name };
+    this.rooms.set(roomId, { players: [player], choices: new Map(), gameData: {} });
     this.socketRoom.set(socketId, roomId);
-    return { roomId, players: [socketId] };
+    return { roomId, players: [player] };
   }
 
   getRoomId(socketId: string) {
@@ -27,17 +30,17 @@ export class RoomManager {
     return this.rooms.get(roomId)?.players ?? [];
   }
 
-  joinRoom(roomId: string, socketId: string) {
+  joinRoom(roomId: string, socketId: string, name: string) {
     if (!this.rooms.has(roomId)) {
       throw new Error('Salle introuvable.');
     }
 
     const room = this.rooms.get(roomId)!;
-    if (room.players.includes(socketId)) {
+    if (room.players.some(player => player.id === socketId)) {
       return room.players;
     }
 
-    room.players.push(socketId);
+    room.players.push({ id: socketId, name });
     this.socketRoom.set(socketId, roomId);
     return room.players;
   }
@@ -54,7 +57,7 @@ export class RoomManager {
       return null;
     }
 
-    room.players = room.players.filter(id => id !== socketId);
+    room.players = room.players.filter(player => player.id !== socketId);
     room.choices.delete(socketId);
     delete room.gameData[socketId];
     this.socketRoom.delete(socketId);
@@ -78,7 +81,7 @@ export class RoomManager {
       throw new Error('Salle introuvable.');
     }
 
-    if (!room.players.includes(socketId)) {
+    if (!room.players.some(player => player.id === socketId)) {
       throw new Error('Vous n’êtes pas membre de la salle.');
     }
 
@@ -160,7 +163,7 @@ export class RoomManager {
       throw new Error('Salle introuvable.');
     }
 
-    if (!room.players.includes(socketId)) {
+    if (!room.players.some(player => player.id === socketId)) {
       throw new Error('Vous n’êtes pas membre de la salle.');
     }
 
