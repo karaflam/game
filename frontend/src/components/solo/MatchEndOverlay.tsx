@@ -1,5 +1,4 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Frown, PartyPopper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Winner } from '@/lib/soloScore';
 
@@ -25,17 +24,23 @@ export function MatchEndOverlay({ winner, onReplay }: MatchEndOverlayProps) {
             className="flex flex-col items-center gap-4 px-6 text-center"
           >
             {winner === 'player' ? (
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-                className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"
+              <motion.span
+                initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
+                animate={{ scale: [0.3, 1.3, 1], rotate: [-20, 10, 0], opacity: 1, y: [0, -12, 0] }}
+                transition={{ duration: 0.9, times: [0, 0.6, 1], repeat: Infinity, repeatDelay: 0.6, repeatType: 'loop' }}
+                className="text-8xl"
               >
-                <PartyPopper className="h-8 w-8" />
-              </motion.div>
+                🎉
+              </motion.span>
             ) : (
-              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <Frown className="h-8 w-8" />
-              </div>
+              <motion.span
+                initial={{ scale: 0.3, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1, y: [0, 4, 0] }}
+                transition={{ duration: 1.4, ease: 'easeInOut', repeat: Infinity, repeatType: 'loop' }}
+                className="text-8xl"
+              >
+                😢
+              </motion.span>
             )}
             <h3 className="text-2xl font-bold text-foreground">
               {winner === 'player' ? 'Vous avez gagné la partie !' : 'L’IA a gagné cette fois...'}

@@ -8,19 +8,47 @@ type ScorePillProps = {
   onReset: () => void;
 };
 
+type RaceBarProps = {
+  label: string;
+  value: number;
+  targetScore: number;
+  colorClassName: string;
+};
+
+function RaceBar({ label, value, targetScore, colorClassName }: RaceBarProps) {
+  const percent = Math.min(100, (value / targetScore) * 100);
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-xs font-semibold text-foreground">
+        <span>{label}</span>
+        <span>
+          {value} / {targetScore}
+        </span>
+      </div>
+      <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ease-out ${colorClassName}`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ScorePill({ player, machine, targetScore, onReset }: ScorePillProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3 text-sm text-secondary-foreground">
-      <div className="flex items-center gap-2 font-semibold">
-        <span>Vous {player}</span>
-        <span className="text-muted-foreground">—</span>
-        <span>IA {machine}</span>
-        <span className="text-xs font-normal text-muted-foreground">(premier à {targetScore})</span>
+    <div className="rounded-2xl bg-secondary px-4 py-3 text-secondary-foreground">
+      <div className="mb-3 flex items-center justify-end">
+        <Button type="button" variant="ghost" size="sm" onClick={onReset} className="gap-1.5">
+          <RotateCcw className="h-4 w-4" />
+          Réinitialiser
+        </Button>
       </div>
-      <Button type="button" variant="ghost" size="sm" onClick={onReset} className="gap-1.5">
-        <RotateCcw className="h-4 w-4" />
-        Réinitialiser
-      </Button>
+      <div className="space-y-3">
+        <RaceBar label="Vous" value={player} targetScore={targetScore} colorClassName="bg-primary" />
+        <RaceBar label="IA" value={machine} targetScore={targetScore} colorClassName="bg-muted-foreground" />
+      </div>
     </div>
   );
 }
