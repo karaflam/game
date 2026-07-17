@@ -27,7 +27,7 @@ export function MatchEndOverlay({ winner, onReplay }: MatchEndOverlayProps) {
               <motion.span
                 initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
                 animate={{ scale: [0.3, 1.3, 1], rotate: [-20, 10, 0], opacity: 1, y: [0, -12, 0] }}
-                transition={{ duration: 0.9, times: [0, 0.6, 1], repeat: Infinity, repeatDelay: 0.6, repeatType: 'loop' }}
+                transition={{ duration: 0.9, times: [0, 0.6, 1] }}
                 className="text-8xl"
               >
                 🎉
@@ -36,7 +36,7 @@ export function MatchEndOverlay({ winner, onReplay }: MatchEndOverlayProps) {
               <motion.span
                 initial={{ scale: 0.3, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1, y: [0, 4, 0] }}
-                transition={{ duration: 1.4, ease: 'easeInOut', repeat: Infinity, repeatType: 'loop' }}
+                transition={{ duration: 0.7, ease: 'easeInOut' }}
                 className="text-8xl"
               >
                 😢

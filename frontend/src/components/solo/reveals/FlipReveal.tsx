@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 
@@ -11,23 +10,26 @@ type FlipRevealProps = {
   onComplete: () => void;
 };
 
-const DURATION_MS = 2000;
-
 const SIZE_CLASSES: Record<'sm' | 'lg', { wrapper: string; text: string }> = {
   sm: { wrapper: 'h-28 w-20', text: 'text-3xl font-bold' },
   lg: { wrapper: 'min-h-32 w-64 px-4 py-3', text: 'text-sm font-medium leading-6' }
 };
 
 export function FlipReveal({ cards, outcomeLabel, cardSize = 'sm', onComplete }: FlipRevealProps) {
-  useEffect(() => {
-    const timer = setTimeout(onComplete, DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-
   const sizeClasses = SIZE_CLASSES[cardSize];
 
   return (
-    <div className="flex min-h-56 flex-col items-center justify-center gap-6 rounded-2xl bg-muted p-6">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onComplete}
+      onKeyDown={event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          onComplete();
+        }
+      }}
+      className="flex min-h-56 cursor-pointer flex-col items-center justify-center gap-6 rounded-2xl bg-muted p-6"
+    >
       <div className="flex flex-wrap items-center justify-center gap-6">
         {cards.map((card, index) => (
           <div key={card.id} className={`relative ${sizeClasses.wrapper}`} style={{ perspective: 800 }}>
@@ -67,6 +69,15 @@ export function FlipReveal({ cards, outcomeLabel, cardSize = 'sm', onComplete }:
           {outcomeLabel}
         </motion.p>
       ) : null}
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 + cards.length * 0.15 + 0.9, duration: 0.4 }}
+        className="text-xs text-muted-foreground"
+      >
+        Cliquez pour continuer
+      </motion.p>
     </div>
   );
 }

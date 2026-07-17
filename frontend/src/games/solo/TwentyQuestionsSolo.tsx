@@ -88,16 +88,21 @@ export function TwentyQuestionsSolo() {
             <strong>Indice :</strong> {hint}
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
             <input
               type="text"
               value={guess}
               onChange={event => setGuess(event.target.value)}
+              onKeyDown={event => {
+                if (event.key === 'Enter') {
+                  submitGuess();
+                }
+              }}
               disabled={isMatchOver || roundOver}
               placeholder="Votre proposition"
               className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
-            <Button type="button" onClick={submitGuess} disabled={isMatchOver || roundOver}>
+            <Button type="button" onClick={submitGuess} disabled={isMatchOver || roundOver} className="h-auto px-6 py-3">
               Valider
             </Button>
           </div>

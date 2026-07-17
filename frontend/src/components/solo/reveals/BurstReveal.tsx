@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Minus, XCircle } from 'lucide-react';
 
@@ -10,8 +9,6 @@ type BurstRevealProps = {
   detail?: string;
   onComplete: () => void;
 };
-
-const DURATION_MS = 1800;
 
 const ICONS: Record<BurstRevealVariant, typeof CheckCircle2> = {
   success: CheckCircle2,
@@ -31,15 +28,20 @@ const PARTICLE_OFFSETS = [
 ];
 
 export function BurstReveal({ icon, headline, detail, onComplete }: BurstRevealProps) {
-  useEffect(() => {
-    const timer = setTimeout(onComplete, DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-
   const Icon = ICONS[icon];
 
   return (
-    <div className="relative flex min-h-56 flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl bg-muted p-6 text-center">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onComplete}
+      onKeyDown={event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          onComplete();
+        }
+      }}
+      className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+    >
       {PARTICLE_OFFSETS.map((offset, index) => (
         <motion.span
           key={index}
@@ -78,6 +80,15 @@ export function BurstReveal({ icon, headline, detail, onComplete }: BurstRevealP
           {detail}
         </motion.p>
       ) : null}
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.9, duration: 0.4 }}
+        className="text-xs text-muted-foreground"
+      >
+        Cliquez pour continuer
+      </motion.p>
     </div>
   );
 }
