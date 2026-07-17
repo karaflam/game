@@ -6,6 +6,7 @@ import { gameThemes } from '../data/gameThemes';
 import { useSocket } from '../hooks/useSocket';
 import { useGameStore } from '../store/useGameStore';
 import { ClientEvents, ServerEvents } from '../lib/socketEvents';
+import { RpsMultiplayer } from '../games/multiplayer/RpsMultiplayer';
 
 export function GamePlayPage() {
   const { gameId, roomCode } = useParams();
@@ -22,10 +23,6 @@ export function GamePlayPage() {
 
   useEffect(() => {
     if (!socket) return;
-
-    const handleRpsResult = (data: { socketId: string; message: string; score: number }) => {
-      setStatusMessage(data.message);
-    };
 
     const handleOddOrEvenResult = (data: { socketId: string; message: string; score: number }) => {
       setStatusMessage(data.message);
@@ -72,7 +69,6 @@ export function GamePlayPage() {
       setPrompt(null);
     };
 
-    socket.on(ServerEvents.RpsResult, handleRpsResult);
     socket.on(ServerEvents.OddOrEvenResult, handleOddOrEvenResult);
     socket.on(ServerEvents.TruthOrDareUpdate, handleTruthOrDareUpdate);
     socket.on(ServerEvents.TruthOrDareResult, handleTruthOrDareResult);
@@ -84,7 +80,6 @@ export function GamePlayPage() {
     socket.on(ServerEvents.TwoTruthsOneLieResult, handleTwoTruthsOneLieResult);
 
     return () => {
-      socket.off(ServerEvents.RpsResult, handleRpsResult);
       socket.off(ServerEvents.OddOrEvenResult, handleOddOrEvenResult);
       socket.off(ServerEvents.TruthOrDareUpdate, handleTruthOrDareUpdate);
       socket.off(ServerEvents.TruthOrDareResult, handleTruthOrDareResult);
@@ -96,15 +91,6 @@ export function GamePlayPage() {
       socket.off(ServerEvents.TwoTruthsOneLieResult, handleTwoTruthsOneLieResult);
     };
   }, [socket]);
-
-  const handleRpsPlay = (choice: string) => {
-    if (!socket) {
-      setStatusMessage('Connexion serveur non disponible.');
-      return;
-    }
-    socket.emit(ClientEvents.RpsPlay, { choice });
-    setStatusMessage(`Vous avez choisi ${choice}. En attente du résultat...`);
-  };
 
   const handleOddOrEvenPlay = (value: number, prediction: 'pair' | 'impair') => {
     if (!socket) {
@@ -217,96 +203,94 @@ export function GamePlayPage() {
           </div>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-border bg-background p-8 space-y-6">
-          <div className="rounded-3xl border border-border bg-surface p-4">
-            <p className="text-sm text-muted-foreground">{statusMessage}</p>
-          </div>
-
+        <div className="mt-8">
           {gameId === 'rps' ? (
-            <div className="grid gap-3 sm:grid-cols-3">
-              {['pierre', 'feuille', 'ciseau'].map(choice => (
-                <Button key={choice} onClick={() => handleRpsPlay(choice)}>
-                  {choice}
-                </Button>
-              ))}
-            </div>
-          ) : gameId === 'odd-or-even' ? (
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[2, 3, 4].map(value => (
-                <Button key={value} onClick={() => handleOddOrEvenPlay(value, 'pair')}>
-                  {value} + pair
-                </Button>
-              ))}
-              {[1, 5, 7].map(value => (
-                <Button key={value} onClick={() => handleOddOrEvenPlay(value, 'impair')}>
-                  {value} + impair
-                </Button>
-              ))}
-            </div>
-          ) : gameId === 'truth-or-dare' ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Button onClick={handleTruthOrDareStart}>Lancer Action ou Vérité</Button>
-              <Button variant="secondary" onClick={() => handleTruthOrDareChoice('truth')}>
-                Vérité
-              </Button>
-              <Button variant="secondary" onClick={() => handleTruthOrDareChoice('action')}>
-                Action
-              </Button>
-              {prompt ? <pre className="whitespace-pre-wrap rounded-3xl border border-border bg-surface p-4 text-sm">{prompt}</pre> : null}
-            </div>
-          ) : gameId === 'would-you-rather' ? (
-            <div className="space-y-4">
-              <Button onClick={handleWouldYouRatherStart}>Lancer Tu Préfères ?</Button>
-              {optionA && optionB ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Button onClick={() => handleWouldYouRatherChoice('option1')}>{optionA}</Button>
-                  <Button onClick={() => handleWouldYouRatherChoice('option2')}>{optionB}</Button>
+            <RpsMultiplayer />
+          ) : (
+            <div className="rounded-3xl border border-border bg-background p-8 space-y-6">
+              <div className="rounded-3xl border border-border bg-surface p-4">
+                <p className="text-sm text-muted-foreground">{statusMessage}</p>
+              </div>
+
+              {gameId === 'odd-or-even' ? (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[2, 3, 4].map(value => (
+                    <Button key={value} onClick={() => handleOddOrEvenPlay(value, 'pair')}>
+                      {value} + pair
+                    </Button>
+                  ))}
+                  {[1, 5, 7].map(value => (
+                    <Button key={value} onClick={() => handleOddOrEvenPlay(value, 'impair')}>
+                      {value} + impair
+                    </Button>
+                  ))}
                 </div>
-              ) : null}
-            </div>
-          ) : gameId === '20-questions' ? (
-            <div className="space-y-4">
-              <Button onClick={handleTwentyQuestionsStart}>Lancer 20 Questions</Button>
-              <div className="flex gap-3">
-                <input
-                  value={guess}
-                  onChange={event => setGuess(event.target.value)}
-                  placeholder="Entrez votre supposition"
-                  className="flex-1 rounded-2xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-                <Button onClick={handleTwentyQuestionsGuess}>Valider</Button>
-              </div>
-            </div>
-          ) : gameId === 'two-truths-one-lie' ? (
-            <div className="space-y-4">
-              <div className="grid gap-3">
-                {statements.map((text, index) => (
-                  <input
-                    key={index}
-                    value={text}
-                    onChange={event => setStatements(prev => prev.map((item, idx) => (idx === index ? event.target.value : item)))}
-                    placeholder={`Phrase ${index + 1}`}
-                    className="rounded-2xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                ))}
-              </div>
-              <Button onClick={handleTwoTruthsOneLieSubmit}>Soumettre 2 vérités, 1 mensonge</Button>
-              {prompt ? (
-                <div className="space-y-3">
-                  <pre className="whitespace-pre-wrap rounded-3xl border border-border bg-surface p-4 text-sm">{prompt}</pre>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {[0, 1, 2].map(index => (
-                      <Button key={index} onClick={() => handleTwoTruthsOneLieVote(index)}>
-                        Vote {index + 1}
-                      </Button>
-                    ))}
+              ) : gameId === 'truth-or-dare' ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Button onClick={handleTruthOrDareStart}>Lancer Action ou Vérité</Button>
+                  <Button variant="secondary" onClick={() => handleTruthOrDareChoice('truth')}>
+                    Vérité
+                  </Button>
+                  <Button variant="secondary" onClick={() => handleTruthOrDareChoice('action')}>
+                    Action
+                  </Button>
+                  {prompt ? <pre className="whitespace-pre-wrap rounded-3xl border border-border bg-surface p-4 text-sm">{prompt}</pre> : null}
+                </div>
+              ) : gameId === 'would-you-rather' ? (
+                <div className="space-y-4">
+                  <Button onClick={handleWouldYouRatherStart}>Lancer Tu Préfères ?</Button>
+                  {optionA && optionB ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Button onClick={() => handleWouldYouRatherChoice('option1')}>{optionA}</Button>
+                      <Button onClick={() => handleWouldYouRatherChoice('option2')}>{optionB}</Button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : gameId === '20-questions' ? (
+                <div className="space-y-4">
+                  <Button onClick={handleTwentyQuestionsStart}>Lancer 20 Questions</Button>
+                  <div className="flex gap-3">
+                    <input
+                      value={guess}
+                      onChange={event => setGuess(event.target.value)}
+                      placeholder="Entrez votre supposition"
+                      className="flex-1 rounded-2xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                    <Button onClick={handleTwentyQuestionsGuess}>Valider</Button>
                   </div>
                 </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="rounded-3xl border border-border bg-surface p-6 text-sm text-muted-foreground">
-              Ce jeu est en cours de développement. Revenez bientôt pour plus d’options.
+              ) : gameId === 'two-truths-one-lie' ? (
+                <div className="space-y-4">
+                  <div className="grid gap-3">
+                    {statements.map((text, index) => (
+                      <input
+                        key={index}
+                        value={text}
+                        onChange={event => setStatements(prev => prev.map((item, idx) => (idx === index ? event.target.value : item)))}
+                        placeholder={`Phrase ${index + 1}`}
+                        className="rounded-2xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      />
+                    ))}
+                  </div>
+                  <Button onClick={handleTwoTruthsOneLieSubmit}>Soumettre 2 vérités, 1 mensonge</Button>
+                  {prompt ? (
+                    <div className="space-y-3">
+                      <pre className="whitespace-pre-wrap rounded-3xl border border-border bg-surface p-4 text-sm">{prompt}</pre>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        {[0, 1, 2].map(index => (
+                          <Button key={index} onClick={() => handleTwoTruthsOneLieVote(index)}>
+                            Vote {index + 1}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-border bg-surface p-6 text-sm text-muted-foreground">
+                  Ce jeu est en cours de développement. Revenez bientôt pour plus d’options.
+                </div>
+              )}
             </div>
           )}
         </div>

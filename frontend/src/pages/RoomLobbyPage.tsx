@@ -60,7 +60,7 @@ export function RoomLobbyPage() {
       return;
     }
 
-    socket.emit(ClientEvents.CreateRoom, { name: trimmedPseudo });
+    socket.emit(ClientEvents.CreateRoom, { name: trimmedPseudo, gameId });
     socket.once(ServerEvents.RoomCreated, ({ roomId, players }) => {
       setGameId(gameId);
       setRoomCode(roomId);
@@ -90,7 +90,7 @@ export function RoomLobbyPage() {
       return;
     }
 
-    socket.emit(ClientEvents.JoinRoom, { roomId: code, name: trimmedPseudo });
+    socket.emit(ClientEvents.JoinRoom, { roomId: code, name: trimmedPseudo, gameId });
     socket.once(ServerEvents.RoomUpdate, ({ players }) => {
       setGameId(gameId);
       setRoomCode(code);
