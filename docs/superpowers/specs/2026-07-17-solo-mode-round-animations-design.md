@@ -111,9 +111,16 @@ Le flux Action ou Vérité change : bouton "Tourner la roue" → animation du ca
 - **TwoTruthsOneLieSolo** : après la sélection d'une affirmation, `BurstReveal` remplace la grille de 3 boutons, révèle laquelle était le mensonge, puis "Série suivante" apparaît.
 - **RpsSolo, OddOrEvenSolo, TwentyQuestionsSolo, TwoTruthsOneLieSolo** : `ScorePill` (déjà branché) affiche désormais les barres de progression via la refonte interne du composant.
 
+## MatchEndOverlay — refonte de l'icône
+
+`frontend/src/components/solo/MatchEndOverlay.tsx` (fin de partie complète, pas de manche) est mis à jour : l'icône `lucide-react` actuelle (`PartyPopper`/`Frown`, petite, dans un cercle) est remplacée par un **emoji géant animé** :
+- Victoire (`winner === 'player'`) : emoji 🎉 ou 😄 en très grand (~80-96px), animation de rebond/agrandissement ressort à l'apparition, puis léger balancement continu (repris du rebond vertical déjà présent).
+- Défaite (`winner === 'machine'`) : emoji 😢 ou 😞 en grand, animation plus sobre (fade + léger tremblement/affaissement), pas de rebond joyeux.
+
+Le reste de l'overlay (titre, texte, bouton "Nouvelle partie") ne change pas.
+
 ## Hors scope
 
 - Pas de sons/audio.
 - Pas de personnalisation de la durée des animations par l'utilisateur.
-- `MatchEndOverlay` (victoire/défaite de la partie complète) n'est pas modifié — seules les révélations de **manche** sont concernées par cette spec.
 - Le carrousel `PlayerWheel` ne gère qu'un seul participant pour l'instant (mode solo) ; sa prop `players` accepte une liste pour rester réutilisable plus tard en multijoueur, mais aucune intégration multijoueur n'est faite ici.
