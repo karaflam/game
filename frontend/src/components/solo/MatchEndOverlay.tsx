@@ -32,6 +32,15 @@ export function MatchEndOverlay({ winner, onReplay }: MatchEndOverlayProps) {
               >
                 🎉
               </motion.span>
+            ) : winner === 'draw' ? (
+              <motion.span
+                initial={{ scale: 0.3, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1, y: [0, -6, 0] }}
+                transition={{ duration: 0.8, ease: 'easeInOut' }}
+                className="text-8xl"
+              >
+                🤝
+              </motion.span>
             ) : (
               <motion.span
                 initial={{ scale: 0.3, opacity: 0 }}
@@ -43,12 +52,14 @@ export function MatchEndOverlay({ winner, onReplay }: MatchEndOverlayProps) {
               </motion.span>
             )}
             <h3 className="text-2xl font-bold text-foreground">
-              {winner === 'player' ? 'Vous avez gagné la partie !' : 'L’IA a gagné cette fois...'}
+              {winner === 'player' ? 'Vous avez gagné la partie !' : winner === 'draw' ? 'Égalité !' : 'L’IA a gagné cette fois...'}
             </h3>
             <p className="text-sm text-muted-foreground">
               {winner === 'player'
                 ? 'Belle performance face à la machine.'
-                : 'Retentez votre chance pour prendre votre revanche.'}
+                : winner === 'draw'
+                  ? 'Personne ne prend l’avantage, belle partie serrée.'
+                  : 'Retentez votre chance pour prendre votre revanche.'}
             </p>
             <Button type="button" onClick={onReplay}>
               Nouvelle partie

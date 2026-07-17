@@ -1,6 +1,6 @@
 export type ScoreState = { player: number; machine: number };
 export type RoundOutcome = 'player' | 'machine' | 'draw';
-export type Winner = 'player' | 'machine' | null;
+export type Winner = 'player' | 'machine' | 'draw' | null;
 
 export function createInitialScore(): ScoreState {
   return { player: 0, machine: 0 };

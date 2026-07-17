@@ -77,9 +77,10 @@ export function RpsMultiplayer() {
     };
   }, [socket, socketId]);
 
-  const opponentId = players.find(player => player.id !== socketId)?.id ?? null;
+  const me = players.find(player => player.id === socketId) ?? null;
+  const opponent = players.find(player => player.id !== socketId) ?? null;
   const myScore = socketId ? scores[socketId] ?? 0 : 0;
-  const opponentScore = opponentId ? scores[opponentId] ?? 0 : 0;
+  const opponentScore = opponent ? scores[opponent.id] ?? 0 : 0;
 
   const playRound = (move: RpsMove) => {
     if (!socket || waiting || round || matchOver) {
@@ -102,7 +103,14 @@ export function RpsMultiplayer() {
 
   return (
     <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
-      <ScorePill player={myScore} machine={opponentScore} targetScore={RPS_TARGET_SCORE} onReset={handleReplay} />
+      <ScorePill
+        player={myScore}
+        machine={opponentScore}
+        targetScore={RPS_TARGET_SCORE}
+        onReset={handleReplay}
+        playerLabel={`${me?.name ?? 'Vous'} (vous)`}
+        machineLabel={opponent?.name ?? 'Adversaire'}
+      />
 
       {round ? (
         <DuelReveal

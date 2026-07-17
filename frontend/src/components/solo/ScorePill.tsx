@@ -6,6 +6,8 @@ type ScorePillProps = {
   machine: number;
   targetScore: number;
   onReset: () => void;
+  playerLabel?: string;
+  machineLabel?: string;
 };
 
 type RaceBarProps = {
@@ -36,7 +38,7 @@ function RaceBar({ label, value, targetScore, colorClassName }: RaceBarProps) {
   );
 }
 
-export function ScorePill({ player, machine, targetScore, onReset }: ScorePillProps) {
+export function ScorePill({ player, machine, targetScore, onReset, playerLabel = 'Vous', machineLabel = 'IA' }: ScorePillProps) {
   return (
     <div className="rounded-2xl bg-secondary px-4 py-3 text-secondary-foreground">
       <div className="mb-3 flex items-center justify-end">
@@ -46,8 +48,8 @@ export function ScorePill({ player, machine, targetScore, onReset }: ScorePillPr
         </Button>
       </div>
       <div className="space-y-3">
-        <RaceBar label="Vous" value={player} targetScore={targetScore} colorClassName="bg-primary" />
-        <RaceBar label="IA" value={machine} targetScore={targetScore} colorClassName="bg-muted-foreground" />
+        <RaceBar label={playerLabel} value={player} targetScore={targetScore} colorClassName="bg-primary" />
+        <RaceBar label={machineLabel} value={machine} targetScore={targetScore} colorClassName="bg-muted-foreground" />
       </div>
     </div>
   );
