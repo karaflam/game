@@ -17,6 +17,12 @@ export function useSocket() {
     const nextSocket = getSocket();
     setSocket(nextSocket);
 
+    if (nextSocket.connected) {
+      setConnected(true);
+      setSocketId(nextSocket.id ?? null);
+      setMessage('Connecté au serveur.');
+    }
+
     const handleConnect = () => {
       setConnected(true);
       setSocketId(nextSocket.id ?? null);
