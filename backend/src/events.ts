@@ -25,7 +25,8 @@ export enum ServerEvents {
   GameStarted = 'game:started',
   RoomCreated = 'room:created',
   RoomUpdate = 'room:update',
-  RoomError = 'room:error'
+  RoomError = 'room:error',
+  ScoreReset = 'score:reset'
 }
 
 export enum ClientEvents {
@@ -33,5 +34,6 @@ export enum ClientEvents {
   Disconnect = 'disconnect',
   CreateRoom = 'create-room',
   JoinRoom = 'join-room',
-  LeaveRoom = 'leave-room'
+  LeaveRoom = 'leave-room',
+  ResetMatchScore = 'reset-match-score'
 }

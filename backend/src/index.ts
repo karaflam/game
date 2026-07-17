@@ -36,9 +36,9 @@ io.on(ClientEvents.Connect, socket => {
     });
   });
 
-  socket.on(ClientEvents.CreateRoom, ({ name }: { name: string }) => {
+  socket.on(ClientEvents.CreateRoom, ({ name, gameId }: { name: string; gameId: string }) => {
     try {
-      const { roomId, players } = roomManager.createRoom(socket.id, name);
+      const { roomId, players } = roomManager.createRoom(socket.id, name, gameId);
       socket.join(roomId);
       socket.emit(ServerEvents.RoomCreated, { roomId, players });
     } catch (error) {
@@ -46,9 +46,9 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
-  socket.on(ClientEvents.JoinRoom, ({ roomId, name }: { roomId: string; name: string }) => {
+  socket.on(ClientEvents.JoinRoom, ({ roomId, name, gameId }: { roomId: string; name: string; gameId: string }) => {
     try {
-      const players = roomManager.joinRoom(roomId, socket.id, name);
+      const players = roomManager.joinRoom(roomId, socket.id, name, gameId);
       socket.join(roomId);
       io.to(roomId).emit(ServerEvents.RoomUpdate, { roomId, players });
     } catch (error) {
@@ -66,15 +66,31 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.RpsPlay, ({ choice }) => {
     try {
-      const result = roomManager.setChoice(socket.id, choice);
+      const result = roomManager.setRpsChoice(socket.id, choice);
       if (!result) {
         socket.emit(ServerEvents.Greeting, { type: ServerEvents.Greeting, payload: 'Choix reçu, en attente du second joueur.' });
         return;
       }
 
-      for (const entry of result.result) {
-        io.to(entry.socketId).emit(ServerEvents.RpsResult, entry);
+      for (const entry of result.entries) {
+        io.to(entry.socketId).emit(ServerEvents.RpsResult, {
+          yourMove: entry.yourMove,
+          opponentMove: entry.opponentMove,
+          outcome: entry.outcome,
+          scores: result.scores,
+          matchOver: result.matchOver,
+          winnerId: result.winnerId
+        });
       }
+    } catch (error) {
+      socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
+
+  socket.on(ClientEvents.ResetMatchScore, () => {
+    try {
+      const { roomId, scores } = roomManager.resetScores(socket.id);
+      io.to(roomId).emit(ServerEvents.ScoreReset, { scores });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }
