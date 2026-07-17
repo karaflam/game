@@ -31,9 +31,9 @@ export function GamePlayPage() {
       setStatusMessage(data.message);
     };
 
-    const handleTruthOrDareUpdate = (data: { prompt: string; activePlayer: string }) => {
-      setPrompt(`${data.activePlayer} : ${data.prompt}`);
-      setStatusMessage('Choisissez action ou vérité.');
+    const handleTruthOrDareUpdate = (data: { prompt: { truth: string; dare: string }; activePlayer: string }) => {
+      setPrompt(null);
+      setStatusMessage(`${data.activePlayer} doit choisir Action ou Vérité.`);
     };
 
     const handleTruthOrDareResult = (data: { socketId: string; message: string; score: number }) => {
