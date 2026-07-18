@@ -24,8 +24,9 @@ export function TwoTruthsOneLieMultiplayer() {
   const players = useGameStore(state => state.players);
   const setStoreScores = useGameStore(state => state.setScores);
   const [statements, setStatements] = useState(['', '', '']);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [lieChoice, setLieChoice] = useState<number | null>(null);
   const [votingStatements, setVotingStatements] = useState<string[] | null>(null);
+  const [submitterId, setSubmitterId] = useState<string | null>(null);
   const [result, setResult] = useState<ResultPayload | null>(null);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [matchOver, setMatchOver] = useState(false);
@@ -36,8 +37,9 @@ export function TwoTruthsOneLieMultiplayer() {
       return;
     }
 
-    const handlePrompt = (data: { statements: string[] }) => {
+    const handlePrompt = (data: { statements: string[]; submitterId: string }) => {
       setVotingStatements(data.statements);
+      setSubmitterId(data.submitterId);
     };
 
     const handleResult = (data: ResultPayload) => {
@@ -55,8 +57,9 @@ export function TwoTruthsOneLieMultiplayer() {
       setWinner(null);
       setResult(null);
       setVotingStatements(null);
-      setHasSubmitted(false);
+      setSubmitterId(null);
       setStatements(['', '', '']);
+      setLieChoice(null);
     };
 
     socket.on(ServerEvents.TwoTruthsOneLiePrompt, handlePrompt);
@@ -74,17 +77,17 @@ export function TwoTruthsOneLieMultiplayer() {
   const opponent = players.find(player => player.id !== socketId) ?? null;
   const myScore = socketId ? scores[socketId] ?? 0 : 0;
   const opponentScore = opponent ? scores[opponent.id] ?? 0 : 0;
+  const iAmSubmitter = submitterId !== null && submitterId === socketId;
 
   const submitStatements = () => {
-    if (!socket || matchOver) {
+    if (!socket || matchOver || lieChoice === null) {
       return;
     }
     const cleaned = statements.map(statement => statement.trim());
     if (cleaned.some(text => !text)) {
       return;
     }
-    socket.emit(ClientEvents.TwoTruthsOneLieSubmit, { statements: cleaned });
-    setHasSubmitted(true);
+    socket.emit(ClientEvents.TwoTruthsOneLieSubmit, { statements: cleaned, lieIndex: lieChoice });
   };
 
   const vote = (voteIndex: number) => {
@@ -97,8 +100,9 @@ export function TwoTruthsOneLieMultiplayer() {
   const handleRevealComplete = () => {
     setResult(null);
     setVotingStatements(null);
-    setHasSubmitted(false);
+    setSubmitterId(null);
     setStatements(['', '', '']);
+    setLieChoice(null);
   };
 
   const handleReplay = () => {
@@ -144,7 +148,7 @@ export function TwoTruthsOneLieMultiplayer() {
           detail={`La phrase ${result.lieIndex + 1} était le mensonge.`}
           onComplete={handleRevealComplete}
         />
-      ) : votingStatements && !hasSubmitted ? (
+      ) : votingStatements && !iAmSubmitter ? (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">Un joueur a soumis 3 affirmations. Votez pour le mensonge.</p>
           <div className="grid gap-3">
@@ -162,24 +166,34 @@ export function TwoTruthsOneLieMultiplayer() {
             ))}
           </div>
         </div>
-      ) : hasSubmitted ? (
+      ) : iAmSubmitter ? (
         <p className="text-sm text-muted-foreground">Affirmations envoyées. En attente du vote de l’adversaire...</p>
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Écrivez 2 vérités et 1 mensonge sur vous.</p>
+          <p className="text-sm text-muted-foreground">Écrivez 2 vérités et 1 mensonge sur vous, puis indiquez laquelle est fausse.</p>
           <div className="grid gap-3">
             {statements.map((text, index) => (
-              <input
-                key={index}
-                value={text}
-                onChange={event => setStatements(prev => prev.map((item, idx) => (idx === index ? event.target.value : item)))}
-                placeholder={`Affirmation ${index + 1}`}
-                disabled={matchOver}
-                className="rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
+              <div key={index} className="flex items-center gap-3">
+                <input
+                  value={text}
+                  onChange={event => setStatements(prev => prev.map((item, idx) => (idx === index ? event.target.value : item)))}
+                  placeholder={`Affirmation ${index + 1}`}
+                  disabled={matchOver}
+                  className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+                <Button
+                  type="button"
+                  variant={lieChoice === index ? 'default' : 'outline'}
+                  onClick={() => setLieChoice(index)}
+                  disabled={matchOver}
+                  className="whitespace-nowrap"
+                >
+                  {lieChoice === index ? 'Mensonge ✓' : 'C’est le mensonge'}
+                </Button>
+              </div>
             ))}
           </div>
-          <Button type="button" onClick={submitStatements} disabled={matchOver}>
+          <Button type="button" onClick={submitStatements} disabled={matchOver || lieChoice === null}>
             Soumettre
           </Button>
         </div>
