@@ -192,7 +192,7 @@ io.on(ClientEvents.Connect, socket => {
           sameChoice: result.sameChoice,
           scores: result.scores,
           matchOver: result.matchOver,
-          winnerId: result.winnerId
+          teamResult: result.teamResult
         });
       }
     } catch (error) {

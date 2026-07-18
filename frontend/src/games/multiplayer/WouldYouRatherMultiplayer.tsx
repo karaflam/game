@@ -16,7 +16,7 @@ type RoundResult = { yourChoice: Side; opponentChoice: Side; sameChoice: boolean
 type WouldYouRatherResultPayload = RoundResult & {
   scores: Record<string, number>;
   matchOver: boolean;
-  winnerId: string | null;
+  teamResult: 'win' | 'lose' | null;
 };
 
 export function WouldYouRatherMultiplayer() {
@@ -49,7 +49,7 @@ export function WouldYouRatherMultiplayer() {
       setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(data.matchOver);
-      setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
+      setWinner(data.teamResult === 'win' ? 'player' : data.teamResult === 'lose' ? 'machine' : null);
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
@@ -156,7 +156,18 @@ export function WouldYouRatherMultiplayer() {
         <p className="text-sm text-muted-foreground">Chargement du dilemme...</p>
       )}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
+      <MatchEndOverlay
+        winner={winner}
+        onReplay={handleReplay}
+        headlineOverride={winner === 'player' ? 'Vous avez gagné ensemble !' : winner === 'machine' ? 'Vous avez perdu ensemble...' : undefined}
+        detailOverride={
+          winner === 'player'
+            ? `${opponent?.name ?? 'Vous'} et vous avez trouvé 5 choix identiques !`
+            : winner === 'machine'
+              ? `${opponent?.name ?? 'Vous'} et vous avez fait 5 choix différents avant de vous accorder. Retentez votre chance !`
+              : undefined
+        }
+      />
     </div>
   );
 }

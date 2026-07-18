@@ -46,6 +46,7 @@ type RoomState = {
   scores: Record<string, number>;
   usedTruthOrDare: Set<number>;
   usedWouldYouRather: Set<number>;
+  wouldYouRatherMismatches: number;
 };
 
 function generateRoomId() {
@@ -66,7 +67,8 @@ export class RoomManager {
       gameData: {},
       scores: { [socketId]: 0 },
       usedTruthOrDare: new Set(),
-      usedWouldYouRather: new Set()
+      usedWouldYouRather: new Set(),
+      wouldYouRatherMismatches: 0
     });
     this.socketRoom.set(socketId, roomId);
     return { roomId, players: [player] };
@@ -343,6 +345,7 @@ export class RoomManager {
     for (const player of room.players) {
       room.scores[player.id] = 0;
     }
+    room.wouldYouRatherMismatches = 0;
 
     return { roomId, scores: { ...room.scores } };
   }
@@ -405,10 +408,17 @@ export class RoomManager {
     if (sameChoice) {
       room.scores[firstSocket] = (room.scores[firstSocket] ?? 0) + 1;
       room.scores[secondSocket] = (room.scores[secondSocket] ?? 0) + 1;
+    } else {
+      room.wouldYouRatherMismatches += 1;
     }
 
+    // Cooperative game: both players always share the same match score (they gain a point
+    // together, or a shared mismatch together), so the team wins or loses together — there is
+    // no individual "winner" to single out here.
     const targetScore = TARGET_SCORES[room.gameId] ?? Infinity;
-    const winnerId = room.players.find(player => (room.scores[player.id] ?? 0) >= targetScore)?.id ?? null;
+    const teamWon = (room.scores[firstSocket] ?? 0) >= targetScore;
+    const teamLost = room.wouldYouRatherMismatches >= targetScore;
+    const teamResult: 'win' | 'lose' | null = teamWon ? 'win' : teamLost ? 'lose' : null;
 
     return {
       roomId,
@@ -418,8 +428,8 @@ export class RoomManager {
       ],
       sameChoice,
       scores: { ...room.scores },
-      matchOver: winnerId !== null,
-      winnerId
+      matchOver: teamResult !== null,
+      teamResult
     };
   }
 

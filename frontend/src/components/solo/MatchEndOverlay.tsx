@@ -6,9 +6,11 @@ type MatchEndOverlayProps = {
   winner: Winner;
   onReplay: () => void;
   opponentLabel?: string;
+  headlineOverride?: string;
+  detailOverride?: string;
 };
 
-export function MatchEndOverlay({ winner, onReplay, opponentLabel }: MatchEndOverlayProps) {
+export function MatchEndOverlay({ winner, onReplay, opponentLabel, headlineOverride, detailOverride }: MatchEndOverlayProps) {
   return (
     <AnimatePresence>
       {winner ? (
@@ -53,18 +55,20 @@ export function MatchEndOverlay({ winner, onReplay, opponentLabel }: MatchEndOve
               </motion.span>
             )}
             <h3 className="text-2xl font-bold text-foreground">
-              {winner === 'player'
-                ? 'Vous avez gagné la partie !'
-                : winner === 'draw'
-                  ? 'Égalité !'
-                  : `${opponentLabel ?? 'L’IA'} a gagné cette fois...`}
+              {headlineOverride ??
+                (winner === 'player'
+                  ? 'Vous avez gagné la partie !'
+                  : winner === 'draw'
+                    ? 'Égalité !'
+                    : `${opponentLabel ?? 'L’IA'} a gagné cette fois...`)}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {winner === 'player'
-                ? `Belle performance face à ${opponentLabel ?? 'la machine'}.`
-                : winner === 'draw'
-                  ? 'Personne ne prend l’avantage, belle partie serrée.'
-                  : 'Retentez votre chance pour prendre votre revanche.'}
+              {detailOverride ??
+                (winner === 'player'
+                  ? `Belle performance face à ${opponentLabel ?? 'la machine'}.`
+                  : winner === 'draw'
+                    ? 'Personne ne prend l’avantage, belle partie serrée.'
+                    : 'Retentez votre chance pour prendre votre revanche.')}
             </p>
             <Button type="button" onClick={onReplay}>
               Nouvelle partie
