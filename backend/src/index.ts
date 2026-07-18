@@ -112,6 +112,7 @@ io.on(ClientEvents.Connect, socket => {
           sum: entry.sum,
           parity: entry.parity,
           outcome: entry.outcome,
+          bothCorrect: entry.bothCorrect,
           scores: result.scores,
           matchOver: result.matchOver,
           winnerId: result.winnerId
@@ -219,6 +220,13 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
+  socket.on(ClientEvents.TwentyQuestionsRequestState, () => {
+    const state = roomManager.getTwentyQuestionsState(socket.id);
+    if (state) {
+      socket.emit(ServerEvents.TwentyQuestionsRoundReady, state);
+    }
+  });
+
   socket.on(ServerEvents.TwentyQuestionsJudge, ({ correct, hint }) => {
     try {
       const result = roomManager.judgeTwentyQuestionsGuess(socket.id, correct, hint);
@@ -240,17 +248,25 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
-  socket.on(ServerEvents.TwoTruthsOneLieSubmit, ({ statements }) => {
+  socket.on(ServerEvents.TwoTruthsOneLieSubmit, ({ statements, lieIndex }) => {
     try {
       const roomId = roomManager.getRoomId(socket.id);
       if (!roomId) {
         throw new Error('Vous n’êtes pas dans une salle.');
       }
 
-      const lieIndex = Math.floor(Math.random() * statements.length);
+      if (roomManager.getGameData(socket.id, 'twoTruthsOneLie')) {
+        throw new Error('Une manche est déjà en cours. Attendez le vote avant de soumettre à nouveau.');
+      }
+
+      if (!Array.isArray(statements) || statements.length !== 3 || !Number.isInteger(lieIndex) || lieIndex < 0 || lieIndex > 2) {
+        throw new Error('Il faut exactement 3 affirmations et indiquer laquelle est le mensonge.');
+      }
+
       roomManager.setGameData(socket.id, 'twoTruthsOneLie', { statements, lieIndex, submitter: socket.id });
       io.to(roomId).emit(ServerEvents.TwoTruthsOneLiePrompt, {
         statements,
+        submitterId: socket.id,
         message: 'Un joueur a soumis 2 vérités et 1 mensonge. Votez pour la phrase mensonge.'
       });
     } catch (error) {

@@ -21,6 +21,7 @@ type RoundResult = {
   sum: number;
   parity: Parity;
   outcome: 'player' | 'machine' | 'draw';
+  bothCorrect: boolean;
 };
 
 type OddOrEvenResultPayload = RoundResult & {
@@ -55,7 +56,8 @@ export function OddOrEvenMultiplayer() {
         opponentPrediction: data.opponentPrediction,
         sum: data.sum,
         parity: data.parity,
-        outcome: data.outcome
+        outcome: data.outcome,
+        bothCorrect: data.bothCorrect
       });
       setScores(data.scores);
       setStoreScores(data.scores);
@@ -120,9 +122,13 @@ export function OddOrEvenMultiplayer() {
         <FlipReveal
           cards={[
             { id: 'player', content: round.yourValue, highlight: round.outcome === 'player' },
-            { id: 'opponent', content: round.opponentValue, highlight: round.outcome === 'machine' }
+            { id: 'opponent', content: round.opponentValue, highlight: round.outcome === 'machine' || round.bothCorrect }
           ]}
-          outcomeLabel={`Somme ${round.sum} (${round.parity})`}
+          outcomeLabel={
+            round.bothCorrect
+              ? `Somme ${round.sum} (${round.parity}) — vous avez tous les deux raison, +1 chacun !`
+              : `Somme ${round.sum} (${round.parity})`
+          }
           onComplete={handleRevealComplete}
         />
       ) : (

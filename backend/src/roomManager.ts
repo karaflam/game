@@ -210,9 +210,13 @@ export class RoomManager {
     const parity = sum % 2 === 0 ? 'pair' : 'impair';
     const firstCorrect = firstChoice.prediction === parity;
     const secondCorrect = secondChoice.prediction === parity;
-    const isDraw = firstCorrect === secondCorrect;
+    const bothCorrect = firstCorrect && secondCorrect;
+    const bothWrong = !firstCorrect && !secondCorrect;
 
-    if (!isDraw) {
+    if (bothCorrect) {
+      room.scores[firstSocket] = (room.scores[firstSocket] ?? 0) + 1;
+      room.scores[secondSocket] = (room.scores[secondSocket] ?? 0) + 1;
+    } else if (!bothWrong) {
       if (firstCorrect) {
         room.scores[firstSocket] = (room.scores[firstSocket] ?? 0) + 1;
       } else {
@@ -222,6 +226,8 @@ export class RoomManager {
 
     const targetScore = TARGET_SCORES[room.gameId] ?? Infinity;
     const winnerId = room.players.find(player => (room.scores[player.id] ?? 0) >= targetScore)?.id ?? null;
+
+    const outcomeFor = (correct: boolean): 'player' | 'machine' | 'draw' => (bothWrong ? 'draw' : correct ? 'player' : 'machine');
 
     return {
       roomId,
@@ -234,7 +240,8 @@ export class RoomManager {
           opponentPrediction: secondChoice.prediction,
           sum,
           parity,
-          outcome: (isDraw ? 'draw' : firstCorrect ? 'player' : 'machine') as 'player' | 'machine' | 'draw'
+          outcome: outcomeFor(firstCorrect),
+          bothCorrect
         },
         {
           socketId: secondSocket,
@@ -244,7 +251,8 @@ export class RoomManager {
           opponentPrediction: firstChoice.prediction,
           sum,
           parity,
-          outcome: (isDraw ? 'draw' : secondCorrect ? 'player' : 'machine') as 'player' | 'machine' | 'draw'
+          outcome: outcomeFor(secondCorrect),
+          bothCorrect
         }
       ],
       scores: { ...room.scores },
@@ -762,6 +770,30 @@ export class RoomManager {
       matchOver: matchDone,
       isDraw,
       winnerId
+    };
+  }
+
+  getTwentyQuestionsState(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      return null;
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+
+    const state = room.gameData.twentyQuestions as TwentyQuestionsState | undefined;
+    if (!state) {
+      return null;
+    }
+
+    return {
+      setterId: state.setterId,
+      guesserId: state.guesserId,
+      attemptsRemaining: state.attemptsRemaining,
+      turnIndex: state.turnIndex
     };
   }
 
