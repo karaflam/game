@@ -10,11 +10,13 @@ type GameState = {
   players: Player[];
   status: GameStatus;
   error: string | null;
+  scores: Record<string, number>;
   setGameId: (gameId: string | null) => void;
   setRoomCode: (roomCode: string | null) => void;
   setPlayers: (players: Player[]) => void;
   setStatus: (status: GameStatus) => void;
   setError: (error: string | null) => void;
+  setScores: (scores: Record<string, number>) => void;
   reset: () => void;
 };
 
@@ -24,10 +26,12 @@ export const useGameStore = create<GameState>(set => ({
   players: [],
   status: 'idle',
   error: null,
+  scores: {},
   setGameId: gameId => set({ gameId }),
   setRoomCode: roomCode => set({ roomCode }),
   setPlayers: players => set({ players }),
   setStatus: status => set({ status }),
   setError: error => set({ error }),
-  reset: () => set({ gameId: null, roomCode: null, players: [], status: 'idle', error: null })
+  setScores: scores => set({ scores }),
+  reset: () => set({ gameId: null, roomCode: null, players: [], status: 'idle', error: null, scores: {} })
 }));

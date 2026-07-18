@@ -41,6 +41,7 @@ type RpsResultPayload = {
 export function RpsMultiplayer() {
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
+  const setStoreScores = useGameStore(state => state.setScores);
   const [waiting, setWaiting] = useState(false);
   const [round, setRound] = useState<RoundResult | null>(null);
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -56,12 +57,14 @@ export function RpsMultiplayer() {
       setWaiting(false);
       setRound({ yourMove: data.yourMove, opponentMove: data.opponentMove, outcome: data.outcome });
       setScores(data.scores);
+      setStoreScores(data.scores);
       setMatchOver(data.matchOver);
       setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
       setScores(data.scores);
+      setStoreScores(data.scores);
       setMatchOver(false);
       setWinner(null);
       setRound(null);
@@ -75,7 +78,7 @@ export function RpsMultiplayer() {
       socket.off(ServerEvents.RpsResult, handleResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
     };
-  }, [socket, socketId]);
+  }, [socket, socketId, setStoreScores]);
 
   const me = players.find(player => player.id === socketId) ?? null;
   const opponent = players.find(player => player.id !== socketId) ?? null;
