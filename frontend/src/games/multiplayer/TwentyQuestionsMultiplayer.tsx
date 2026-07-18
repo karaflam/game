@@ -97,6 +97,11 @@ export function TwentyQuestionsMultiplayer() {
     socket.on(ServerEvents.TwentyQuestionsRoundResult, handleRoundResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
 
+    // The server only broadcasts the initial TwentyQuestionsRoundReady once, right when the
+    // match starts (from the waiting room, before this component has mounted and subscribed).
+    // Actively request the current round state so we don't miss it and get stuck waiting forever.
+    socket.emit(ClientEvents.TwentyQuestionsRequestState);
+
     return () => {
       socket.off(ServerEvents.TwentyQuestionsRoundReady, handleRoundReady);
       socket.off(ServerEvents.TwentyQuestionsGuessSubmitted, handleGuessSubmitted);

@@ -41,5 +41,6 @@ export enum ClientEvents {
   CreateRoom = 'create-room',
   JoinRoom = 'join-room',
   LeaveRoom = 'leave-room',
-  ResetMatchScore = 'reset-match-score'
+  ResetMatchScore = 'reset-match-score',
+  TwentyQuestionsRequestState = 'twenty-questions:request-state'
 }

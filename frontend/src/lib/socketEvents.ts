@@ -14,6 +14,7 @@ export const ClientEvents = {
   TwentyQuestionsSetWord: 'twenty-questions:set-word',
   TwentyQuestionsGuess: 'twenty-questions:guess',
   TwentyQuestionsJudge: 'twenty-questions:judge',
+  TwentyQuestionsRequestState: 'twenty-questions:request-state',
   TwoTruthsOneLieSubmit: 'two-truths-one-lie:submit',
   TwoTruthsOneLieVote: 'two-truths-one-lie:vote',
   StartGame: 'start-game'
