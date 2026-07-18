@@ -2,6 +2,8 @@ import { truthOrDarePrompts, wouldYouRatherPrompts } from './gamePrompts.js';
 
 export type Player = { id: string; name: string };
 
+const MAX_PLAYERS_PER_ROOM = 2;
+
 const TARGET_SCORES: Record<string, number> = {
   rps: 5,
   'odd-or-even': 5,
@@ -124,12 +126,19 @@ export class RoomManager {
       };
     }
 
+    const previousEntry = Array.from(room.tokens.entries()).find(([, tok]) => tok === token);
+
+    // A genuinely new player (not a reconnect reclaiming their own seat) is rejected once the
+    // room already has 2 players — checked before touching anything else so a rejected join never
+    // has the side effect of evicting this socket from whatever room it was previously in.
+    if (!previousEntry && room.players.length >= MAX_PLAYERS_PER_ROOM) {
+      throw new Error('Ce salon est complet (2 joueurs maximum).');
+    }
+
     // A socket can only ever be "in" one room at a time — joining a different room always
     // leaves whichever room this connection was previously occupying.
     const currentRoomId = this.socketRoom.get(socketId);
     const previousRoom = currentRoomId && currentRoomId !== roomId ? this.leaveRoom(socketId) : null;
-
-    const previousEntry = Array.from(room.tokens.entries()).find(([, tok]) => tok === token);
 
     if (previousEntry) {
       const [oldSocketId] = previousEntry;
