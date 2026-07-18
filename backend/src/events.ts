@@ -21,6 +21,7 @@ export enum ServerEvents {
   TwentyQuestionsGuess = 'twenty-questions:guess',
   TwentyQuestionsJudge = 'twenty-questions:judge',
   TwentyQuestionsRoundReady = 'twenty-questions:round-ready',
+  TwentyQuestionsWordReady = 'twenty-questions:word-ready',
   TwentyQuestionsGuessSubmitted = 'twenty-questions:guess-submitted',
   TwentyQuestionsRoundResult = 'twenty-questions:round-result',
   TwoTruthsOneLieSubmit = 'two-truths-one-lie:submit',

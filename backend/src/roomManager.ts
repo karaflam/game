@@ -632,7 +632,8 @@ export class RoomManager {
       setterId: state.setterId,
       guesserId: state.guesserId,
       attemptsRemaining: state.attemptsRemaining,
-      turnIndex: state.turnIndex
+      turnIndex: state.turnIndex,
+      wordSet: state.word !== null
     };
   }
 
@@ -705,6 +706,10 @@ export class RoomManager {
 
     if (state.setterId !== socketId) {
       throw new Error('Vous n’êtes pas le meneur de cette manche.');
+    }
+
+    if (!correct && (!hint || !hint.trim())) {
+      throw new Error('Un indice est requis pour aider le devineur.');
     }
 
     if (!correct) {
@@ -803,7 +808,8 @@ export class RoomManager {
       setterId: state.setterId,
       guesserId: state.guesserId,
       attemptsRemaining: state.attemptsRemaining,
-      turnIndex: state.turnIndex
+      turnIndex: state.turnIndex,
+      wordSet: state.word !== null
     };
   }
 

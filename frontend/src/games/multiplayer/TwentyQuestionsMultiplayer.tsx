@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
+import { RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
 import { ClientEvents, ServerEvents } from '@/lib/socketEvents';
-import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import type { Winner } from '@/lib/soloScore';
@@ -49,17 +49,27 @@ export function TwentyQuestionsMultiplayer() {
       return;
     }
 
-    const handleRoundReady = (data: { setterId: string; guesserId: string; attemptsRemaining: number; turnIndex: number }) => {
+    const handleRoundReady = (data: {
+      setterId: string;
+      guesserId: string;
+      attemptsRemaining: number;
+      turnIndex: number;
+      wordSet: boolean;
+    }) => {
       setSetterId(data.setterId);
       setGuesserId(data.guesserId);
       setAttemptsRemaining(data.attemptsRemaining);
       setTurnIndex(data.turnIndex);
-      setWordSet(false);
+      setWordSet(data.wordSet);
       setWordDraft('');
       setGuessDraft('');
       setPendingGuess(null);
       setHint(null);
       setHintDraft('');
+    };
+
+    const handleWordReady = () => {
+      setWordSet(true);
     };
 
     const handleGuessSubmitted = (data: { guess: string; attemptsRemaining: number }) => {
@@ -93,6 +103,7 @@ export function TwentyQuestionsMultiplayer() {
     };
 
     socket.on(ServerEvents.TwentyQuestionsRoundReady, handleRoundReady);
+    socket.on(ServerEvents.TwentyQuestionsWordReady, handleWordReady);
     socket.on(ServerEvents.TwentyQuestionsGuessSubmitted, handleGuessSubmitted);
     socket.on(ServerEvents.TwentyQuestionsRoundResult, handleRoundResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
@@ -104,6 +115,7 @@ export function TwentyQuestionsMultiplayer() {
 
     return () => {
       socket.off(ServerEvents.TwentyQuestionsRoundReady, handleRoundReady);
+      socket.off(ServerEvents.TwentyQuestionsWordReady, handleWordReady);
       socket.off(ServerEvents.TwentyQuestionsGuessSubmitted, handleGuessSubmitted);
       socket.off(ServerEvents.TwentyQuestionsRoundResult, handleRoundResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
@@ -116,6 +128,7 @@ export function TwentyQuestionsMultiplayer() {
   const opponentScore = opponent ? scores[opponent.id] ?? 0 : 0;
   const isSetter = socketId !== null && socketId === setterId;
   const isGuesser = socketId !== null && socketId === guesserId;
+  const opponentName = opponent?.name ?? 'l’autre joueur';
 
   const submitWord = () => {
     if (!socket || !isSetter || !wordDraft.trim()) {
@@ -126,7 +139,7 @@ export function TwentyQuestionsMultiplayer() {
   };
 
   const submitGuess = () => {
-    if (!socket || !isGuesser || !guessDraft.trim() || pendingGuess) {
+    if (!socket || !isGuesser || !wordSet || !guessDraft.trim() || pendingGuess) {
       return;
     }
     socket.emit(ClientEvents.TwentyQuestionsGuess, { guess: guessDraft.trim() });
@@ -136,7 +149,10 @@ export function TwentyQuestionsMultiplayer() {
     if (!socket || !isSetter || !pendingGuess) {
       return;
     }
-    socket.emit(ClientEvents.TwentyQuestionsJudge, { correct, hint: correct ? undefined : hintDraft.trim() || undefined });
+    if (!correct && !hintDraft.trim()) {
+      return;
+    }
+    socket.emit(ClientEvents.TwentyQuestionsJudge, { correct, hint: correct ? undefined : hintDraft.trim() });
     setHintDraft('');
   };
 
@@ -169,18 +185,23 @@ export function TwentyQuestionsMultiplayer() {
     socket.emit(ClientEvents.ResetMatchScore);
   };
 
-  const scorePillTarget = Math.max(myScore, opponentScore, MAX_ATTEMPTS_PER_TURN);
-
   return (
     <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
-      <ScorePill
-        player={myScore}
-        machine={opponentScore}
-        targetScore={scorePillTarget}
-        onReset={handleReplay}
-        playerLabel={`${me?.name ?? 'Vous'} (vous)`}
-        machineLabel={opponent?.name ?? 'Adversaire'}
-      />
+      <div className="rounded-2xl bg-secondary px-4 py-3 text-secondary-foreground">
+        <div className="mb-3 flex items-center justify-end">
+          <Button type="button" variant="ghost" size="sm" onClick={handleReplay} className="gap-1.5">
+            <RotateCcw className="h-4 w-4" />
+            Réinitialiser
+          </Button>
+        </div>
+        <div className="flex items-center justify-between text-sm font-semibold text-foreground">
+          <span>{me?.name ?? 'Vous'} (vous) : {myScore} pt(s)</span>
+          <span>{opponentName} : {opponentScore} pt(s)</span>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          La partie se joue en {TOTAL_TURNS} tours. Celui qui a le plus de points à la fin gagne.
+        </p>
+      </div>
 
       {roundResult ? (
         <BurstReveal
@@ -188,9 +209,9 @@ export function TwentyQuestionsMultiplayer() {
           headline={
             roundResult.correct
               ? isGuesser
-                ? `Trouvé ! +${roundResult.attemptsRemaining} point(s).`
-                : `${opponent?.name ?? 'Le devineur'} a trouvé le mot.`
-              : 'Essais épuisés pour cette manche, 0 point.'
+                ? `Bravo, vous avez trouvé le mot ! +${roundResult.attemptsRemaining} point(s).`
+                : `${opponentName} a trouvé le mot secret.`
+              : 'Essais épuisés pour ce tour, personne ne marque de point.'
           }
           detail={`Tour ${roundResult.turnIndex} / ${TOTAL_TURNS} terminé.`}
           onComplete={handleRoundRevealComplete}
@@ -203,68 +224,89 @@ export function TwentyQuestionsMultiplayer() {
 
           {isSetter && !wordSet ? (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Vous êtes le meneur. Choisissez le mot secret.</p>
+              <p className="text-sm text-muted-foreground">
+                C'est vous le meneur ! Pensez à un mot secret que {opponentName} devra deviner, puis écrivez-le ci-dessous.
+                {opponentName} ne le verra pas.
+              </p>
               <input
                 value={wordDraft}
                 onChange={event => setWordDraft(event.target.value)}
-                placeholder="Mot secret"
+                placeholder="Écrivez ici le mot secret (ex : éléphant)"
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               <Button type="button" onClick={submitWord} disabled={!wordDraft.trim()}>
-                Valider le mot
+                Valider le mot secret
               </Button>
             </div>
           ) : isSetter && pendingGuess ? (
             <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {opponentName} propose ceci. Est-ce que ça correspond à votre mot secret ?
+              </p>
               <div className="rounded-2xl border border-border bg-muted p-4 text-sm text-foreground">
-                <strong>Proposition :</strong> {pendingGuess}
+                « {pendingGuess} »
               </div>
-              <input
-                value={hintDraft}
-                onChange={event => setHintDraft(event.target.value)}
-                placeholder="Indice à donner si incorrect (facultatif)"
-                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
+              <div>
+                <p className="mb-1 text-sm text-muted-foreground">
+                  Si ce n'est pas le bon mot, écrivez un indice pour aider {opponentName} :
+                </p>
+                <input
+                  value={hintDraft}
+                  onChange={event => setHintDraft(event.target.value)}
+                  placeholder="Ex : Il vit dans la savane"
+                  className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
               <div className="flex gap-3">
                 <Button type="button" onClick={() => judge(true)}>
-                  Correct
+                  Mot trouvé
                 </Button>
-                <Button type="button" variant="outline" onClick={() => judge(false)}>
-                  Incorrect
+                <Button type="button" variant="outline" onClick={() => judge(false)} disabled={!hintDraft.trim()}>
+                  Pas encore, donner l’indice
                 </Button>
               </div>
             </div>
           ) : isSetter ? (
-            <p className="text-sm text-muted-foreground">Mot défini. En attente d’une question de {opponent?.name ?? 'l’adversaire'}...</p>
+            <p className="text-sm text-muted-foreground">
+              Mot secret enregistré ! Attendez que {opponentName} propose une réponse.
+            </p>
           ) : isGuesser && pendingGuess ? (
-            <p className="text-sm text-muted-foreground">En attente du jugement de {opponent?.name ?? 'l’adversaire'}...</p>
-          ) : isGuesser ? (
+            <p className="text-sm text-muted-foreground">
+              Votre proposition a été envoyée. Attendez que {opponentName} vous dise si c'est le bon mot.
+            </p>
+          ) : isGuesser && wordSet ? (
             <div className="space-y-3">
               {hint ? (
                 <div className="rounded-2xl border border-border bg-muted p-4 text-sm text-foreground">
                   <strong>Indice :</strong> {hint}
                 </div>
               ) : null}
-              <p className="text-sm text-muted-foreground">Vous êtes le devineur. Posez une question ou proposez un mot.</p>
+              <p className="text-sm text-muted-foreground">
+                {opponentName} a choisi un mot secret. Essayez de le deviner !
+              </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input
                   value={guessDraft}
                   onChange={event => setGuessDraft(event.target.value)}
-                  placeholder="Votre question ou proposition"
+                  placeholder="Écrivez le mot que vous pensez être le bon"
                   className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <Button type="button" onClick={submitGuess} disabled={!guessDraft.trim()}>
-                  Envoyer
+                  Envoyer ma réponse
                 </Button>
               </div>
             </div>
+          ) : isGuesser ? (
+            <p className="text-sm text-muted-foreground">
+              C'est {opponentName} qui a choisi le mot secret. Patientez pendant qu'il/elle l'écrit...
+            </p>
           ) : (
             <p className="text-sm text-muted-foreground">En attente du début du tour...</p>
           )}
         </div>
       )}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
+      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponentName} />
     </div>
   );
 }

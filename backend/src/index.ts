@@ -202,7 +202,8 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.TwentyQuestionsSetWord, ({ word }) => {
     try {
-      roomManager.setTwentyQuestionsWord(socket.id, word);
+      const result = roomManager.setTwentyQuestionsWord(socket.id, word);
+      io.to(result.roomId).emit(ServerEvents.TwentyQuestionsWordReady, {});
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }
@@ -310,7 +311,8 @@ io.on(ClientEvents.Connect, socket => {
           setterId: round.setterId,
           guesserId: round.guesserId,
           attemptsRemaining: round.attemptsRemaining,
-          turnIndex: round.turnIndex
+          turnIndex: round.turnIndex,
+          wordSet: round.wordSet
         });
       }
     } catch (error) {

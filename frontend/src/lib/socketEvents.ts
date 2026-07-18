@@ -36,6 +36,7 @@ export const ServerEvents = {
   WouldYouRatherUpdate: 'would-you-rather:update',
   WouldYouRatherResult: 'would-you-rather:result',
   TwentyQuestionsRoundReady: 'twenty-questions:round-ready',
+  TwentyQuestionsWordReady: 'twenty-questions:word-ready',
   TwentyQuestionsGuessSubmitted: 'twenty-questions:guess-submitted',
   TwentyQuestionsRoundResult: 'twenty-questions:round-result',
   TwoTruthsOneLiePrompt: 'two-truths-one-lie:prompt',
