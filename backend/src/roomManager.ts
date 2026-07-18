@@ -1,6 +1,6 @@
 import { truthOrDarePrompts, wouldYouRatherPrompts } from './gamePrompts.js';
 
-export type Player = { id: string; name: string; connected: boolean };
+export type Player = { id: string; name: string };
 
 const TARGET_SCORES: Record<string, number> = {
   rps: 5,
@@ -70,7 +70,7 @@ export class RoomManager {
     const previousRoom = this.leaveRoom(socketId);
 
     const roomId = generateRoomId();
-    const player: Player = { id: socketId, name, connected: true };
+    const player: Player = { id: socketId, name };
     this.rooms.set(roomId, {
       gameId,
       players: [player],
@@ -133,14 +133,13 @@ export class RoomManager {
       room.tokens.set(socketId, token);
       const player = room.players.find(p => p.id === socketId);
       if (player) {
-        player.connected = true;
         player.name = name;
       }
       this.socketRoom.set(socketId, roomId);
       return { players: room.players, previousSocketId: oldSocketId, started: room.started, scores: { ...room.scores }, previousRoom };
     }
 
-    room.players.push({ id: socketId, name, connected: true });
+    room.players.push({ id: socketId, name });
     room.scores[socketId] = 0;
     room.tokens.set(socketId, token);
     this.socketRoom.set(socketId, roomId);
@@ -182,28 +181,14 @@ export class RoomManager {
   }
 
   markDisconnected(socketId: string) {
-    const roomId = this.socketRoom.get(socketId);
-    if (!roomId) {
-      return null;
-    }
-
-    const room = this.rooms.get(roomId);
-    if (!room) {
-      this.socketRoom.delete(socketId);
-      return null;
-    }
-
-    // The player stays in the room indefinitely — only an explicit "Quitter la partie"
-    // (leaveRoom) or a reconnect under the same token removes/reclaims their seat. This is
+    // The underlying transport closing (tab closed, backgrounded, network drop — any duration)
+    // is not something the server can prevent, but it has zero effect on room/game state: no
+    // flag flips, nothing is broadcast, the player list looks exactly as it did before. The
+    // only two ways a player is ever removed from a room are an explicit "Quitter la partie"
+    // (leaveRoom) and creating/joining a different room on the same connection. This is
     // deliberate: on mobile, sharing the room code means leaving the browser entirely, for an
-    // unpredictable amount of time, and that must never cost the player their spot.
-    const player = room.players.find(p => p.id === socketId);
-    if (player) {
-      player.connected = false;
-    }
+    // unpredictable amount of time, and that must never be visible as a "disconnected" state.
     this.socketRoom.delete(socketId);
-
-    return { roomId, players: room.players };
   }
 
   private remapPlayerId(room: RoomState, oldId: string, newId: string) {

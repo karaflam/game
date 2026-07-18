@@ -379,12 +379,8 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ClientEvents.Disconnect, reason => {
     console.log(`Client déconnecté: ${socket.id} (${reason})`);
-    const info = roomManager.markDisconnected(socket.id);
-    if (!info) {
-      return;
-    }
-
-    io.to(info.roomId).emit(ServerEvents.RoomUpdate, { roomId: info.roomId, players: info.players });
+    // Deliberately a no-op on room/game state — see markDisconnected's comment.
+    roomManager.markDisconnected(socket.id);
   });
 });
 

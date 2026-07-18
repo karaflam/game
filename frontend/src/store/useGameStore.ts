@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Player = { id: string; name: string; connected: boolean };
+export type Player = { id: string; name: string };
 
 type GameStatus = 'idle' | 'waiting' | 'in-game' | 'finished';
 

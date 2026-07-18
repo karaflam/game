@@ -17,10 +17,9 @@ import { TwentyQuestionsMultiplayer } from '../games/multiplayer/TwentyQuestions
 export function GamePlayPage() {
   const { gameId, roomCode } = useParams();
   const navigate = useNavigate();
-  const { socket, socketId } = useSocket();
+  const { socket } = useSocket();
   const players = useGameStore(state => state.players);
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
-  const opponent = players.find(player => player.id !== socketId) ?? null;
 
   const handleLeaveGame = () => {
     if (socket) {
@@ -57,13 +56,6 @@ export function GamePlayPage() {
             </Button>
           </div>
         </div>
-
-        {opponent && !opponent.connected ? (
-          <div className="mt-6 rounded-3xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-            ⚠️ {opponent.name} s'est déconnecté. Sa place est conservée quel que soit le temps que ça prend — la
-            partie reprendra dès qu'il/elle reviendra.
-          </div>
-        ) : null}
 
         <div className="mt-8">
           {gameId === 'rps' ? (

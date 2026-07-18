@@ -99,11 +99,8 @@ export function RoomWaitingPage() {
             <div className="mt-4 space-y-3 rounded-3xl border border-border bg-surface p-4">
               {players.length > 0 ? (
                 players.map(player => (
-                  <div key={player.id} className="flex items-center justify-between rounded-2xl bg-card p-3 text-sm text-foreground shadow-sm">
-                    <span>{player.name === host ? `${player.name} (hôte)` : player.name}</span>
-                    {!player.connected ? (
-                      <span className="text-xs font-semibold text-destructive">Déconnecté</span>
-                    ) : null}
+                  <div key={player.id} className="rounded-2xl bg-card p-3 text-sm text-foreground shadow-sm">
+                    {player.name === host ? `${player.name} (hôte)` : player.name}
                   </div>
                 ))
               ) : (
