@@ -4,7 +4,6 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { ServerEvents, ClientEvents } from './events.js';
 import { RoomManager } from './roomManager.js';
-import { truthOrDarePrompts, wouldYouRatherPrompts, twentyQuestionsWords } from './gamePrompts.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -104,8 +103,19 @@ io.on(ClientEvents.Connect, socket => {
         return;
       }
 
-      for (const entry of result.result) {
-        io.to(entry.socketId).emit(ServerEvents.OddOrEvenResult, entry);
+      for (const entry of result.entries) {
+        io.to(entry.socketId).emit(ServerEvents.OddOrEvenResult, {
+          yourValue: entry.yourValue,
+          yourPrediction: entry.yourPrediction,
+          opponentValue: entry.opponentValue,
+          opponentPrediction: entry.opponentPrediction,
+          sum: entry.sum,
+          parity: entry.parity,
+          outcome: entry.outcome,
+          scores: result.scores,
+          matchOver: result.matchOver,
+          winnerId: result.winnerId
+        });
       }
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
@@ -114,23 +124,10 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.TruthOrDareStart, () => {
     try {
-      const roomId = roomManager.getRoomId(socket.id);
-      if (!roomId) {
-        throw new Error('Vous n’êtes pas dans une salle.');
-      }
-
-      const players = roomManager.getPlayers(roomId);
-      if (!players.length) {
-        throw new Error('Aucun joueur dans la salle.');
-      }
-
-      const prompt = truthOrDarePrompts[Math.floor(Math.random() * truthOrDarePrompts.length)];
-      const activeIndex = Math.floor(Math.random() * players.length);
-      roomManager.setGameData(socket.id, 'truthOrDare', { prompt, activeIndex });
-
-      io.to(roomId).emit(ServerEvents.TruthOrDareUpdate, {
-        prompt,
-        activePlayer: players[activeIndex].name
+      const result = roomManager.startTruthOrDare(socket.id);
+      io.to(result.roomId).emit(ServerEvents.TruthOrDareSpin, {
+        activePlayerId: result.activePlayerId,
+        activePlayerName: result.activePlayerName
       });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
@@ -139,28 +136,32 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.TruthOrDareChoice, ({ type }) => {
     try {
-      const roomId = roomManager.getRoomId(socket.id);
-      if (!roomId) {
-        throw new Error('Vous n’êtes pas dans une salle.');
-      }
+      const result = roomManager.chooseTruthOrDareType(socket.id, type);
+      io.to(result.roomId).emit(ServerEvents.TruthOrDareContent, { type: result.type, text: result.text });
+    } catch (error) {
+      socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
 
-      const roomData = roomManager.getGameData(socket.id, 'truthOrDare');
-      if (!roomData) {
-        throw new Error('Aucun jeu Action ou Vérité en cours.');
-      }
+  socket.on(ServerEvents.TruthOrDareAnswer, ({ answer }) => {
+    try {
+      const result = roomManager.submitTruthOrDareAnswer(socket.id, answer);
+      io.to(result.roomId).emit(ServerEvents.TruthOrDareAnswerSubmitted, { answer: result.answer });
+    } catch (error) {
+      socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
 
-      roomManager.clearGameData(socket.id, 'truthOrDare');
-      const message = type === 'action' ? `Action : ${roomData.prompt.dare}` : `Vérité : ${roomData.prompt.truth}`;
-      const players = roomManager.getPlayers(roomId);
-
-      for (const player of players) {
-        const score = player.id === socket.id ? 1 : 0;
-        io.to(player.id).emit(ServerEvents.TruthOrDareResult, {
-          socketId: socket.id,
-          message,
-          score
-        });
-      }
+  socket.on(ServerEvents.TruthOrDareValidate, ({ approved }) => {
+    try {
+      const result = roomManager.validateTruthOrDare(socket.id, approved);
+      io.to(result.roomId).emit(ServerEvents.TruthOrDareResult, {
+        approved: result.approved,
+        activePlayerId: result.activePlayerId,
+        scores: result.scores,
+        matchOver: result.matchOver,
+        winnerId: result.winnerId
+      });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }
@@ -168,14 +169,8 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.WouldYouRatherStart, () => {
     try {
-      const roomId = roomManager.getRoomId(socket.id);
-      if (!roomId) {
-        throw new Error('Vous n’êtes pas dans une salle.');
-      }
-
-      const prompt = wouldYouRatherPrompts[Math.floor(Math.random() * wouldYouRatherPrompts.length)];
-      roomManager.setGameData(socket.id, 'wouldYouRather', { prompt });
-      io.to(roomId).emit(ServerEvents.WouldYouRatherUpdate, { prompt });
+      const result = roomManager.startWouldYouRatherRound(socket.id);
+      io.to(result.roomId).emit(ServerEvents.WouldYouRatherUpdate, { prompt: result.prompt });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }
@@ -183,26 +178,20 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.WouldYouRatherChoice, ({ selected }) => {
     try {
-      const roomId = roomManager.getRoomId(socket.id);
-      if (!roomId) {
-        throw new Error('Vous n’êtes pas dans une salle.');
+      const result = roomManager.setWouldYouRatherChoice(socket.id, selected);
+      if (!result) {
+        socket.emit(ServerEvents.Greeting, { type: ServerEvents.Greeting, payload: 'Choix reçu, en attente du second joueur.' });
+        return;
       }
 
-      const promptData = roomManager.getGameData(socket.id, 'wouldYouRather');
-      if (!promptData) {
-        throw new Error('Aucun jeu Tu Préfères ? en cours.');
-      }
-
-      roomManager.clearGameData(socket.id, 'wouldYouRather');
-      const message = `Le joueur a choisi : ${promptData.prompt[selected]}.`;
-      const players = roomManager.getPlayers(roomId);
-
-      for (const player of players) {
-        const score = player.id === socket.id ? 1 : 0;
-        io.to(player.id).emit(ServerEvents.WouldYouRatherResult, {
-          socketId: socket.id,
-          message,
-          score
+      for (const entry of result.entries) {
+        io.to(entry.socketId).emit(ServerEvents.WouldYouRatherResult, {
+          yourChoice: entry.yourChoice,
+          opponentChoice: entry.opponentChoice,
+          sameChoice: result.sameChoice,
+          scores: result.scores,
+          matchOver: result.matchOver,
+          winnerId: result.winnerId
         });
       }
     } catch (error) {
@@ -210,25 +199,9 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
-  socket.on(ServerEvents.TwentyQuestionsStart, () => {
+  socket.on(ServerEvents.TwentyQuestionsSetWord, ({ word }) => {
     try {
-      const roomId = roomManager.getRoomId(socket.id);
-      if (!roomId) {
-        throw new Error('Vous n’êtes pas dans une salle.');
-      }
-
-      const selected = twentyQuestionsWords[Math.floor(Math.random() * twentyQuestionsWords.length)];
-      roomManager.setGameData(socket.id, 'twentyQuestions', {
-        answer: selected.answer.toLowerCase(),
-        hints: selected.hints,
-        attempts: 0
-      });
-
-      io.to(roomId).emit(ServerEvents.TwentyQuestionsUpdate, {
-        hint: selected.hints[0],
-        message: 'Devinez le mot en 20 essais.',
-        attempts: 0
-      });
+      roomManager.setTwentyQuestionsWord(socket.id, word);
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }
@@ -236,51 +209,31 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.TwentyQuestionsGuess, ({ guess }) => {
     try {
-      const roomId = roomManager.getRoomId(socket.id);
-      if (!roomId) {
-        throw new Error('Vous n’êtes pas dans une salle.');
-      }
+      const result = roomManager.submitTwentyQuestionsGuess(socket.id, guess);
+      io.to(result.roomId).emit(ServerEvents.TwentyQuestionsGuessSubmitted, {
+        guess: result.guess,
+        attemptsRemaining: result.attemptsRemaining
+      });
+    } catch (error) {
+      socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
 
-      const gameData = roomManager.getGameData(socket.id, 'twentyQuestions');
-      if (!gameData) {
-        throw new Error('Aucun jeu 20 Questions en cours.');
-      }
-
-      gameData.attempts += 1;
-      const answer = gameData.answer as string;
-      const players = roomManager.getPlayers(roomId);
-
-      if (guess.toLowerCase().trim() === answer) {
-        roomManager.clearGameData(socket.id, 'twentyQuestions');
-        for (const player of players) {
-          const score = player.id === socket.id ? 1 : 0;
-          io.to(player.id).emit(ServerEvents.TwentyQuestionsResult, {
-            socketId: socket.id,
-            message: `Bravo ! Le mot était ${answer}.`,
-            score
-          });
-        }
-        return;
-      }
-
-      if (gameData.attempts >= 20) {
-        roomManager.clearGameData(socket.id, 'twentyQuestions');
-        for (const player of players) {
-          const score = player.id === socket.id ? 0 : 1;
-          io.to(player.id).emit(ServerEvents.TwentyQuestionsResult, {
-            socketId: socket.id,
-            message: `Temps écoulé. Le mot était ${answer}.`,
-            score
-          });
-        }
-        return;
-      }
-
-      const nextHint = gameData.hints[gameData.attempts % gameData.hints.length];
-      io.to(roomId).emit(ServerEvents.TwentyQuestionsUpdate, {
-        hint: nextHint,
-        message: `Non. Essaie ${gameData.attempts}/20.`,
-        attempts: gameData.attempts
+  socket.on(ServerEvents.TwentyQuestionsJudge, ({ correct, hint }) => {
+    try {
+      const result = roomManager.judgeTwentyQuestionsGuess(socket.id, correct, hint);
+      io.to(result.roomId).emit(ServerEvents.TwentyQuestionsRoundResult, {
+        correct: result.correct,
+        hint: result.hint,
+        attemptsRemaining: result.attemptsRemaining,
+        roundOver: result.roundOver,
+        turnIndex: result.turnIndex,
+        nextSetterId: result.nextSetterId,
+        nextGuesserId: result.nextGuesserId,
+        scores: result.scores,
+        matchOver: result.matchOver,
+        isDraw: result.isDraw,
+        winnerId: result.winnerId
       });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
@@ -307,30 +260,15 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.TwoTruthsOneLieVote, ({ voteIndex }) => {
     try {
-      const roomId = roomManager.getRoomId(socket.id);
-      if (!roomId) {
-        throw new Error('Vous n’êtes pas dans une salle.');
-      }
-
-      const gameData = roomManager.getGameData(socket.id, 'twoTruthsOneLie');
-      if (!gameData) {
-        throw new Error('Aucun jeu 2 Vérités 1 Mensonge en cours.');
-      }
-
-      roomManager.clearGameData(socket.id, 'twoTruthsOneLie');
-      const correct = voteIndex === gameData.lieIndex;
-      const submitter = gameData.submitter as string;
-      const players = roomManager.getPlayers(roomId);
-      const message = correct ? 'Vote correct !' : 'Vote incorrect...';
-
-      for (const player of players) {
-        const score = player.id === socket.id ? (correct ? 1 : 0) : player.id === submitter ? (correct ? 0 : 1) : 0;
-        io.to(player.id).emit(ServerEvents.TwoTruthsOneLieResult, {
-          socketId: socket.id,
-          message: `${message} La phrase ${gameData.lieIndex + 1} était le mensonge.`,
-          score
-        });
-      }
+      const result = roomManager.voteTwoTruthsOneLie(socket.id, voteIndex);
+      io.to(result.roomId).emit(ServerEvents.TwoTruthsOneLieResult, {
+        voterSocketId: result.voterSocketId,
+        correct: result.correct,
+        lieIndex: result.lieIndex,
+        scores: result.scores,
+        matchOver: result.matchOver,
+        winnerId: result.winnerId
+      });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }
@@ -349,6 +287,16 @@ io.on(ClientEvents.Connect, socket => {
       }
 
       io.to(roomId).emit(ServerEvents.GameStarted, { roomId });
+
+      if (roomManager.getGameId(roomId) === '20-questions') {
+        const round = roomManager.beginTwentyQuestionsMatch(socket.id);
+        io.to(roomId).emit(ServerEvents.TwentyQuestionsRoundReady, {
+          setterId: round.setterId,
+          guesserId: round.guesserId,
+          attemptsRemaining: round.attemptsRemaining,
+          turnIndex: round.turnIndex
+        });
+      }
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }
