@@ -26,6 +26,7 @@ export function WouldYouRatherMultiplayer() {
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [waiting, setWaiting] = useState(false);
   const [round, setRound] = useState<RoundResult | null>(null);
+  const [awaitingNextRound, setAwaitingNextRound] = useState(true);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
@@ -37,6 +38,8 @@ export function WouldYouRatherMultiplayer() {
 
     const handleUpdate = (data: { prompt: Prompt }) => {
       setPrompt(data.prompt);
+      setRound(null);
+      setAwaitingNextRound(false);
       setWaiting(false);
     };
 
@@ -56,6 +59,7 @@ export function WouldYouRatherMultiplayer() {
       setWinner(null);
       setRound(null);
       setPrompt(null);
+      setAwaitingNextRound(true);
       setWaiting(false);
     };
 
@@ -71,14 +75,14 @@ export function WouldYouRatherMultiplayer() {
   }, [socket, socketId, setStoreScores]);
 
   useEffect(() => {
-    if (!socket || matchOver || round || prompt) {
+    if (!socket || matchOver || !awaitingNextRound) {
       return;
     }
     if (players[0]?.id !== socketId) {
       return;
     }
     socket.emit(ClientEvents.WouldYouRatherStart);
-  }, [socket, socketId, players, matchOver, round, prompt]);
+  }, [socket, socketId, players, matchOver, awaitingNextRound]);
 
   const me = players.find(player => player.id === socketId) ?? null;
   const opponent = players.find(player => player.id !== socketId) ?? null;
@@ -95,7 +99,7 @@ export function WouldYouRatherMultiplayer() {
 
   const handleRevealComplete = () => {
     setRound(null);
-    setPrompt(null);
+    setAwaitingNextRound(true);
   };
 
   const handleReplay = () => {
@@ -125,7 +129,7 @@ export function WouldYouRatherMultiplayer() {
           }`}
           onComplete={handleRevealComplete}
         />
-      ) : prompt ? (
+      ) : prompt && !awaitingNextRound ? (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">{waiting ? 'Choix envoyé, en attente de l’adversaire...' : 'Tu préfères...'}</p>
 
