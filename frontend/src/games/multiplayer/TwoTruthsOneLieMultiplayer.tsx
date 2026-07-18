@@ -177,6 +177,11 @@ export function TwoTruthsOneLieMultiplayer() {
                 <input
                   value={text}
                   onChange={event => setStatements(prev => prev.map((item, idx) => (idx === index ? event.target.value : item)))}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') {
+                      submitStatements();
+                    }
+                  }}
                   placeholder={`Affirmation ${index + 1}`}
                   disabled={matchOver}
                   className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"

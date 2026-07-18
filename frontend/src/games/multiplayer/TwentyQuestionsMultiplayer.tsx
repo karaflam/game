@@ -228,15 +228,22 @@ export function TwentyQuestionsMultiplayer() {
                 C'est vous le meneur ! Pensez à un mot secret que {opponentName} devra deviner, puis écrivez-le ci-dessous.
                 {opponentName} ne le verra pas.
               </p>
-              <input
-                value={wordDraft}
-                onChange={event => setWordDraft(event.target.value)}
-                placeholder="Écrivez ici le mot secret (ex : éléphant)"
-                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-              <Button type="button" onClick={submitWord} disabled={!wordDraft.trim()}>
-                Valider le mot secret
-              </Button>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                <input
+                  value={wordDraft}
+                  onChange={event => setWordDraft(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') {
+                      submitWord();
+                    }
+                  }}
+                  placeholder="Écrivez ici le mot secret (ex : éléphant)"
+                  className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+                <Button type="button" onClick={submitWord} disabled={!wordDraft.trim()} className="h-auto px-6 py-3">
+                  Valider le mot secret
+                </Button>
+              </div>
             </div>
           ) : isSetter && pendingGuess ? (
             <div className="space-y-3">
@@ -253,6 +260,11 @@ export function TwentyQuestionsMultiplayer() {
                 <input
                   value={hintDraft}
                   onChange={event => setHintDraft(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') {
+                      judge(false);
+                    }
+                  }}
                   placeholder="Ex : Il vit dans la savane"
                   className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
@@ -288,6 +300,11 @@ export function TwentyQuestionsMultiplayer() {
                 <input
                   value={guessDraft}
                   onChange={event => setGuessDraft(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') {
+                      submitGuess();
+                    }
+                  }}
                   placeholder="Écrivez le mot que vous pensez être le bon"
                   className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />

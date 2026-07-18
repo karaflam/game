@@ -122,6 +122,11 @@ export function RoomLobbyPage() {
             id="pseudo"
             value={pseudo}
             onChange={event => handlePseudoChange(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') {
+                handleCreateRoom();
+              }
+            }}
             maxLength={PSEUDO_MAX_LENGTH}
             placeholder="Ex : Alex"
             className="mt-3 w-full max-w-sm rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -149,6 +154,11 @@ export function RoomLobbyPage() {
               <input
                 value={joinCode}
                 onChange={event => setJoinCode(event.target.value)}
+                onKeyDown={event => {
+                  if (event.key === 'Enter') {
+                    handleJoinRoom();
+                  }
+                }}
                 placeholder="Code du salon"
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
