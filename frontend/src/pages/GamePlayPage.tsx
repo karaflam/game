@@ -4,6 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { gameThemes } from '../data/gameThemes';
 import { useGameStore } from '../store/useGameStore';
+import { useSocket } from '../hooks/useSocket';
+import { ClientEvents } from '../lib/socketEvents';
 import { RpsMultiplayer } from '../games/multiplayer/RpsMultiplayer';
 import { OddOrEvenMultiplayer } from '../games/multiplayer/OddOrEvenMultiplayer';
 import { WouldYouRatherMultiplayer } from '../games/multiplayer/WouldYouRatherMultiplayer';
@@ -14,8 +16,16 @@ import { TwentyQuestionsMultiplayer } from '../games/multiplayer/TwentyQuestions
 export function GamePlayPage() {
   const { gameId, roomCode } = useParams();
   const navigate = useNavigate();
+  const { socket } = useSocket();
   const players = useGameStore(state => state.players);
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
+
+  const handleLeaveGame = () => {
+    if (socket) {
+      socket.emit(ClientEvents.LeaveRoom);
+    }
+    navigate('/');
+  };
 
   if (!game || !gameId || !roomCode) {
     return (
@@ -38,6 +48,9 @@ export function GamePlayPage() {
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={() => navigate(`/jeu/${gameId}/salon/${roomCode}/resultats`)}>
               Voir résultats
+            </Button>
+            <Button variant="outline" onClick={handleLeaveGame}>
+              Quitter la partie
             </Button>
           </div>
         </div>
