@@ -5,7 +5,7 @@ import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import { useSoloScore } from '@/hooks/useSoloScore';
 import { soloTwentyQuestionsWords } from '@/data/soloPrompts';
-import { pickRandomItem } from '@/lib/randomPick';
+import { pickRandomIndexExcluding } from '@/lib/randomPick';
 import { getHintForAttempt, isCorrectGuess } from '@/lib/twentyQuestionsLogic';
 
 const TWENTY_QUESTIONS_TARGET_SCORE = 3;
@@ -15,17 +15,30 @@ type RoundResult = { outcome: 'player' | 'machine'; answer: string; triesUsed: n
 
 export function TwentyQuestionsSolo() {
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(TWENTY_QUESTIONS_TARGET_SCORE);
-  const [word, setWord] = useState(() => pickRandomItem(soloTwentyQuestionsWords));
+  const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
+  const [wordIndex, setWordIndex] = useState<number>(() => Math.floor(Math.random() * soloTwentyQuestionsWords.length));
   const [attempts, setAttempts] = useState(0);
   const [guess, setGuess] = useState('');
   const [message, setMessage] = useState('Devinez le mot en 20 essais maximum.');
   const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
   const [roundOver, setRoundOver] = useState(false);
 
+  const word = soloTwentyQuestionsWords[wordIndex];
   const hint = getHintForAttempt(word.hints, attempts);
 
   const startNewRound = () => {
-    setWord(pickRandomItem(soloTwentyQuestionsWords));
+    const currentUsed = new Set(usedIndices);
+    currentUsed.add(wordIndex);
+
+    let activeUsed = currentUsed;
+    if (activeUsed.size >= soloTwentyQuestionsWords.length) {
+      activeUsed = new Set();
+    }
+    const nextIdx = pickRandomIndexExcluding(soloTwentyQuestionsWords.length, activeUsed);
+    const newUsed = new Set(activeUsed).add(nextIdx);
+
+    setUsedIndices(newUsed);
+    setWordIndex(nextIdx);
     setAttempts(0);
     setGuess('');
     setMessage('Nouveau mot ! Devinez-le en 20 essais maximum.');
