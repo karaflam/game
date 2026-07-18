@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import { soloWouldYouRatherPrompts } from '@/data/soloPrompts';
-import { pickRandomItem } from '@/lib/randomPick';
+import { pickRandomItem, pickRandomIndexExcluding } from '@/lib/randomPick';
 
 const SIDES = ['left', 'right'] as const;
 type Side = (typeof SIDES)[number];
@@ -10,9 +10,29 @@ type Side = (typeof SIDES)[number];
 type RoundResult = { playerChoice: Side; machineChoice: Side };
 
 export function WouldYouRatherSolo() {
-  const [dilemma, setDilemma] = useState(() => pickRandomItem(soloWouldYouRatherPrompts));
+  const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
+  const [dilemmaIndex, setDilemmaIndex] = useState<number>(() => Math.floor(Math.random() * soloWouldYouRatherPrompts.length));
   const [revealing, setRevealing] = useState(false);
   const [result, setResult] = useState<RoundResult | null>(null);
+
+  const dilemma = soloWouldYouRatherPrompts[dilemmaIndex];
+
+  const nextDilemma = () => {
+    const currentUsed = new Set(usedIndices);
+    currentUsed.add(dilemmaIndex);
+
+    let activeUsed = currentUsed;
+    if (activeUsed.size >= soloWouldYouRatherPrompts.length) {
+      activeUsed = new Set();
+    }
+    const nextIdx = pickRandomIndexExcluding(soloWouldYouRatherPrompts.length, activeUsed);
+    const newUsed = new Set(activeUsed).add(nextIdx);
+
+    setUsedIndices(newUsed);
+    setDilemmaIndex(nextIdx);
+    setResult(null);
+    setRevealing(false);
+  };
 
   const chooseOption = (side: Side) => {
     if (revealing || result) {
@@ -20,12 +40,6 @@ export function WouldYouRatherSolo() {
     }
     setResult({ playerChoice: side, machineChoice: pickRandomItem(SIDES) });
     setRevealing(true);
-  };
-
-  const nextDilemma = () => {
-    setDilemma(pickRandomItem(soloWouldYouRatherPrompts));
-    setResult(null);
-    setRevealing(false);
   };
 
   return (
