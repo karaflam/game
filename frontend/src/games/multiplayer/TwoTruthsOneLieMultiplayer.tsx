@@ -24,7 +24,7 @@ export function TwoTruthsOneLieMultiplayer() {
   const players = useGameStore(state => state.players);
   const setStoreScores = useGameStore(state => state.setScores);
   const [statements, setStatements] = useState(['', '', '']);
-  const [lieChoice, setLieChoice] = useState<number | null>(null);
+  const [lieChoice, setLieChoice] = useState<number | null>(0);
   const [votingStatements, setVotingStatements] = useState<string[] | null>(null);
   const [submitterId, setSubmitterId] = useState<string | null>(null);
   const [result, setResult] = useState<ResultPayload | null>(null);
@@ -59,7 +59,7 @@ export function TwoTruthsOneLieMultiplayer() {
       setVotingStatements(null);
       setSubmitterId(null);
       setStatements(['', '', '']);
-      setLieChoice(null);
+      setLieChoice(0);
     };
 
     socket.on(ServerEvents.TwoTruthsOneLiePrompt, handlePrompt);
@@ -102,7 +102,7 @@ export function TwoTruthsOneLieMultiplayer() {
     setVotingStatements(null);
     setSubmitterId(null);
     setStatements(['', '', '']);
-    setLieChoice(null);
+    setLieChoice(0);
   };
 
   const handleReplay = () => {
@@ -188,7 +188,7 @@ export function TwoTruthsOneLieMultiplayer() {
                   disabled={matchOver}
                   className="whitespace-nowrap"
                 >
-                  {lieChoice === index ? 'Mensonge ✓' : 'C’est le mensonge'}
+                  {lieChoice === index ? 'Mensonge ' : 'verité ✓'}
                 </Button>
               </div>
             ))}
