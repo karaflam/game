@@ -54,6 +54,10 @@ type RoomState = {
   wouldYouRatherMismatches: number;
   tokens: Map<string, string>;
   started: boolean;
+  // Timestamp since every single player in this room has had zero live connection, or null while
+  // at least one of them is still connected. Used only to garbage-collect rooms nobody will ever
+  // come back to — never to remove an individual player while anyone else is still around.
+  abandonedSince: number | null;
 };
 
 function generateRoomId() {
@@ -81,7 +85,8 @@ export class RoomManager {
       usedWouldYouRather: new Set(),
       wouldYouRatherMismatches: 0,
       tokens: new Map([[socketId, token]]),
-      started: false
+      started: false,
+      abandonedSince: null
     });
     this.socketRoom.set(socketId, roomId);
     return { roomId, players: [player], previousRoom };
@@ -136,6 +141,7 @@ export class RoomManager {
         player.name = name;
       }
       this.socketRoom.set(socketId, roomId);
+      room.abandonedSince = null;
       return { players: room.players, previousSocketId: oldSocketId, started: room.started, scores: { ...room.scores }, previousRoom };
     }
 
@@ -143,6 +149,7 @@ export class RoomManager {
     room.scores[socketId] = 0;
     room.tokens.set(socketId, token);
     this.socketRoom.set(socketId, roomId);
+    room.abandonedSince = null;
     return { players: room.players, previousSocketId: null, started: room.started, scores: { ...room.scores }, previousRoom };
   }
 
@@ -170,6 +177,13 @@ export class RoomManager {
       return null;
     }
 
+    // The player who just left might have been the only one still actually connected, leaving
+    // only disconnected ghosts behind — recheck so this room becomes eligible for reaping too.
+    const stillHasLivePlayer = room.players.some(player => this.socketRoom.get(player.id) === roomId);
+    if (!stillHasLivePlayer && room.abandonedSince === null) {
+      room.abandonedSince = Date.now();
+    }
+
     return { roomId, players: room.players };
   }
 
@@ -188,7 +202,44 @@ export class RoomManager {
     // (leaveRoom) and creating/joining a different room on the same connection. This is
     // deliberate: on mobile, sharing the room code means leaving the browser entirely, for an
     // unpredictable amount of time, and that must never be visible as a "disconnected" state.
+    const roomId = this.socketRoom.get(socketId);
     this.socketRoom.delete(socketId);
+
+    if (!roomId) {
+      return;
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return;
+    }
+
+    // Purely for later garbage collection (reapAbandonedRooms) — never removes a player, never
+    // broadcasts anything. Only starts the clock once *every* player in the room has no live
+    // connection left; reconnecting anyone (see joinRoom) resets it back to null immediately.
+    const stillHasLivePlayer = room.players.some(player => this.socketRoom.get(player.id) === roomId);
+    if (!stillHasLivePlayer && room.abandonedSince === null) {
+      room.abandonedSince = Date.now();
+    }
+  }
+
+  /**
+   * Deletes rooms where every player has had zero live connection for longer than `thresholdMs`.
+   * Never touches a room where at least one player is still connected, no matter how long their
+   * companion has been gone. Returns the ids of the rooms that were reaped, for logging only.
+   */
+  reapAbandonedRooms(thresholdMs: number): string[] {
+    const now = Date.now();
+    const reaped: string[] = [];
+
+    for (const [roomId, room] of this.rooms.entries()) {
+      if (room.abandonedSince !== null && now - room.abandonedSince > thresholdMs) {
+        this.rooms.delete(roomId);
+        reaped.push(roomId);
+      }
+    }
+
+    return reaped;
   }
 
   private remapPlayerId(room: RoomState, oldId: string, newId: string) {

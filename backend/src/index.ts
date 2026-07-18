@@ -16,6 +16,20 @@ const io = new Server(server, {
 
 const roomManager = new RoomManager();
 
+// Pure memory hygiene: a room is only ever eligible once EVERY player in it has had zero live
+// connection for this long — never while someone is still there, no matter how long their
+// companion has been gone. Far longer than any realistic "left the browser to share the code"
+// gap, so it never conflicts with that use case; it only reclaims rooms nobody is coming back to.
+const ABANDONED_ROOM_THRESHOLD_MS = 3 * 60 * 60 * 1000; // 3 hours
+const ABANDONED_ROOM_SWEEP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+
+setInterval(() => {
+  const reaped = roomManager.reapAbandonedRooms(ABANDONED_ROOM_THRESHOLD_MS);
+  if (reaped.length > 0) {
+    console.log(`Salons abandonnés nettoyés (${reaped.length}): ${reaped.join(', ')}`);
+  }
+}, ABANDONED_ROOM_SWEEP_INTERVAL_MS);
+
 app.use(cors({ origin: true }));
 app.use(express.json());
 
