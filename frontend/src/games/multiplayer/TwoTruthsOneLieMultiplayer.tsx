@@ -199,7 +199,7 @@ export function TwoTruthsOneLieMultiplayer() {
         </div>
       )}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} />
+      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
     </div>
   );
 }

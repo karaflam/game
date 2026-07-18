@@ -156,7 +156,7 @@ export function WouldYouRatherMultiplayer() {
         <p className="text-sm text-muted-foreground">Chargement du dilemme...</p>
       )}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} />
+      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
     </div>
   );
 }

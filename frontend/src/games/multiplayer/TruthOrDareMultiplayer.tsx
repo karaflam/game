@@ -260,7 +260,7 @@ export function TruthOrDareMultiplayer() {
         />
       ) : null}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} />
+      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
     </div>
   );
 }

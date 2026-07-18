@@ -5,9 +5,10 @@ import type { Winner } from '@/lib/soloScore';
 type MatchEndOverlayProps = {
   winner: Winner;
   onReplay: () => void;
+  opponentLabel?: string;
 };
 
-export function MatchEndOverlay({ winner, onReplay }: MatchEndOverlayProps) {
+export function MatchEndOverlay({ winner, onReplay, opponentLabel }: MatchEndOverlayProps) {
   return (
     <AnimatePresence>
       {winner ? (
@@ -52,11 +53,15 @@ export function MatchEndOverlay({ winner, onReplay }: MatchEndOverlayProps) {
               </motion.span>
             )}
             <h3 className="text-2xl font-bold text-foreground">
-              {winner === 'player' ? 'Vous avez gagné la partie !' : winner === 'draw' ? 'Égalité !' : 'L’IA a gagné cette fois...'}
+              {winner === 'player'
+                ? 'Vous avez gagné la partie !'
+                : winner === 'draw'
+                  ? 'Égalité !'
+                  : `${opponentLabel ?? 'L’IA'} a gagné cette fois...`}
             </h3>
             <p className="text-sm text-muted-foreground">
               {winner === 'player'
-                ? 'Belle performance face à la machine.'
+                ? `Belle performance face à ${opponentLabel ?? 'la machine'}.`
                 : winner === 'draw'
                   ? 'Personne ne prend l’avantage, belle partie serrée.'
                   : 'Retentez votre chance pour prendre votre revanche.'}
