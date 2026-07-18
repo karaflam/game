@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { PlayerWheel } from '@/components/solo/PlayerWheel';
 import { FlipReveal } from '@/components/solo/reveals/FlipReveal';
 import { soloTruthOrDarePrompts } from '@/data/soloPrompts';
-import { pickRandomItem } from '@/lib/randomPick';
+import { pickRandomIndexExcluding } from '@/lib/randomPick';
 
 type Phase = 'idle' | 'spinning' | 'landed' | 'revealing';
 
@@ -11,11 +11,27 @@ const PLAYER_NAME = 'Vous';
 
 export function TruthOrDareSolo() {
   const [phase, setPhase] = useState<Phase>('idle');
-  const [prompt, setPrompt] = useState(() => pickRandomItem(soloTruthOrDarePrompts));
+  const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
+  const [promptIndex, setPromptIndex] = useState<number>(() => {
+    return Math.floor(Math.random() * soloTruthOrDarePrompts.length);
+  });
   const [reveal, setReveal] = useState<'truth' | 'dare' | null>(null);
 
+  const prompt = soloTruthOrDarePrompts[promptIndex];
+
   const spin = () => {
-    setPrompt(pickRandomItem(soloTruthOrDarePrompts));
+    const currentUsed = new Set(usedIndices);
+    currentUsed.add(promptIndex);
+
+    let activeUsed = currentUsed;
+    if (activeUsed.size >= soloTruthOrDarePrompts.length) {
+      activeUsed = new Set();
+    }
+    const nextIdx = pickRandomIndexExcluding(soloTruthOrDarePrompts.length, activeUsed);
+    const newUsed = new Set(activeUsed).add(nextIdx);
+
+    setUsedIndices(newUsed);
+    setPromptIndex(nextIdx);
     setReveal(null);
     setPhase('spinning');
   };
