@@ -1,7 +1,41 @@
+import { truthOrDarePrompts, wouldYouRatherPrompts } from './gamePrompts.js';
+
 export type Player = { id: string; name: string };
 
 const TARGET_SCORES: Record<string, number> = {
-  rps: 5
+  rps: 5,
+  'odd-or-even': 5,
+  'would-you-rather': 5,
+  'two-truths-one-lie': 5,
+  'truth-or-dare': 5
+};
+
+const TWENTY_Q_MAX_ATTEMPTS = 10;
+const TWENTY_Q_MAX_TURNS = 6;
+
+type TruthOrDareState = {
+  promptIndex: number;
+  activePlayerId: string;
+  type: 'action' | 'truth' | null;
+  answer: string | null;
+};
+
+type WouldYouRatherState = {
+  promptIndex: number;
+};
+
+type TwoTruthsOneLieState = {
+  statements: string[];
+  lieIndex: number;
+  submitter: string;
+};
+
+type TwentyQuestionsState = {
+  turnIndex: number;
+  setterId: string;
+  guesserId: string;
+  word: string | null;
+  attemptsRemaining: number;
 };
 
 type RoomState = {
@@ -10,6 +44,8 @@ type RoomState = {
   choices: Map<string, string>;
   gameData: Record<string, any>;
   scores: Record<string, number>;
+  usedTruthOrDare: Set<number>;
+  usedWouldYouRather: Set<number>;
 };
 
 function generateRoomId() {
@@ -28,7 +64,9 @@ export class RoomManager {
       players: [player],
       choices: new Map(),
       gameData: {},
-      scores: { [socketId]: 0 }
+      scores: { [socketId]: 0 },
+      usedTruthOrDare: new Set(),
+      usedWouldYouRather: new Set()
     });
     this.socketRoom.set(socketId, roomId);
     return { roomId, players: [player] };
@@ -36,6 +74,10 @@ export class RoomManager {
 
   getRoomId(socketId: string) {
     return this.socketRoom.get(socketId) ?? null;
+  }
+
+  getGameId(roomId: string) {
+    return this.rooms.get(roomId)?.gameId ?? null;
   }
 
   getPlayers(roomId: string) {
@@ -164,39 +206,50 @@ export class RoomManager {
 
     room.choices.clear();
 
-    const firstSum = firstChoice.value + secondChoice.value;
-    const firstParity = firstSum % 2 === 0 ? 'pair' : 'impair';
-    const firstWon = firstChoice.prediction === firstParity;
-    const secondWon = secondChoice.prediction === firstParity;
+    const sum = firstChoice.value + secondChoice.value;
+    const parity = sum % 2 === 0 ? 'pair' : 'impair';
+    const firstCorrect = firstChoice.prediction === parity;
+    const secondCorrect = secondChoice.prediction === parity;
+    const isDraw = firstCorrect === secondCorrect;
 
-    if (firstWon === secondWon) {
-      return {
-        roomId,
-        result: [
-          { socketId: firstSocket, message: `Égalité (${firstChoice.value} + ${secondChoice.value} = ${firstSum} ${firstParity}).`, score: 0 },
-          { socketId: secondSocket, message: `Égalité (${firstChoice.value} + ${secondChoice.value} = ${firstSum} ${firstParity}).`, score: 0 }
-        ]
-      };
+    if (!isDraw) {
+      if (firstCorrect) {
+        room.scores[firstSocket] = (room.scores[firstSocket] ?? 0) + 1;
+      } else {
+        room.scores[secondSocket] = (room.scores[secondSocket] ?? 0) + 1;
+      }
     }
+
+    const targetScore = TARGET_SCORES[room.gameId] ?? Infinity;
+    const winnerId = room.players.find(player => (room.scores[player.id] ?? 0) >= targetScore)?.id ?? null;
 
     return {
       roomId,
-      result: [
+      entries: [
         {
           socketId: firstSocket,
-          message: firstWon
-            ? `Vous gagnez ! (${firstChoice.value} + ${secondChoice.value} = ${firstSum} ${firstParity}).`
-            : `Vous perdez... (${firstChoice.value} + ${secondChoice.value} = ${firstSum} ${firstParity}).`,
-          score: firstWon ? 1 : -1
+          yourValue: firstChoice.value,
+          yourPrediction: firstChoice.prediction,
+          opponentValue: secondChoice.value,
+          opponentPrediction: secondChoice.prediction,
+          sum,
+          parity,
+          outcome: (isDraw ? 'draw' : firstCorrect ? 'player' : 'machine') as 'player' | 'machine' | 'draw'
         },
         {
           socketId: secondSocket,
-          message: secondWon
-            ? `Vous gagnez ! (${firstChoice.value} + ${secondChoice.value} = ${firstSum} ${firstParity}).`
-            : `Vous perdez... (${firstChoice.value} + ${secondChoice.value} = ${firstSum} ${firstParity}).`,
-          score: secondWon ? 1 : -1
+          yourValue: secondChoice.value,
+          yourPrediction: secondChoice.prediction,
+          opponentValue: firstChoice.value,
+          opponentPrediction: firstChoice.prediction,
+          sum,
+          parity,
+          outcome: (isDraw ? 'draw' : secondCorrect ? 'player' : 'machine') as 'player' | 'machine' | 'draw'
         }
-      ]
+      ],
+      scores: { ...room.scores },
+      matchOver: winnerId !== null,
+      winnerId
     };
   }
 
@@ -284,6 +337,439 @@ export class RoomManager {
     }
 
     return { roomId, scores: { ...room.scores } };
+  }
+
+  startWouldYouRatherRound(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const index = this.pickIndexExcluding(wouldYouRatherPrompts.length, room.usedWouldYouRather);
+    room.usedWouldYouRather.add(index);
+    if (room.usedWouldYouRather.size >= wouldYouRatherPrompts.length) {
+      room.usedWouldYouRather.clear();
+    }
+
+    const state: WouldYouRatherState = { promptIndex: index };
+    room.gameData.wouldYouRather = state;
+
+    return { roomId, prompt: wouldYouRatherPrompts[index] };
+  }
+
+  setWouldYouRatherChoice(socketId: string, selected: 'left' | 'right') {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    if (!room.players.some(player => player.id === socketId)) {
+      throw new Error('Vous n’êtes pas membre de la salle.');
+    }
+
+    if (!room.gameData.wouldYouRather) {
+      throw new Error('Aucun dilemme en cours.');
+    }
+
+    room.choices.set(socketId, selected);
+
+    if (room.choices.size < 2) {
+      return null;
+    }
+
+    const [firstSocket, firstChoice] = Array.from(room.choices.entries())[0];
+    const [secondSocket, secondChoice] = Array.from(room.choices.entries())[1];
+
+    room.choices.clear();
+    delete room.gameData.wouldYouRather;
+
+    const sameChoice = firstChoice === secondChoice;
+    if (sameChoice) {
+      room.scores[firstSocket] = (room.scores[firstSocket] ?? 0) + 1;
+      room.scores[secondSocket] = (room.scores[secondSocket] ?? 0) + 1;
+    }
+
+    const targetScore = TARGET_SCORES[room.gameId] ?? Infinity;
+    const winnerId = room.players.find(player => (room.scores[player.id] ?? 0) >= targetScore)?.id ?? null;
+
+    return {
+      roomId,
+      entries: [
+        { socketId: firstSocket, yourChoice: firstChoice, opponentChoice: secondChoice },
+        { socketId: secondSocket, yourChoice: secondChoice, opponentChoice: firstChoice }
+      ],
+      sameChoice,
+      scores: { ...room.scores },
+      matchOver: winnerId !== null,
+      winnerId
+    };
+  }
+
+  voteTwoTruthsOneLie(socketId: string, voteIndex: number) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const state = room.gameData.twoTruthsOneLie as TwoTruthsOneLieState | undefined;
+    if (!state) {
+      throw new Error('Aucun jeu 2 Vérités 1 Mensonge en cours.');
+    }
+
+    delete room.gameData.twoTruthsOneLie;
+
+    const correct = voteIndex === state.lieIndex;
+    const submitterId = state.submitter;
+
+    if (correct) {
+      room.scores[socketId] = (room.scores[socketId] ?? 0) + 1;
+    } else {
+      room.scores[submitterId] = (room.scores[submitterId] ?? 0) + 1;
+    }
+
+    const targetScore = TARGET_SCORES[room.gameId] ?? Infinity;
+    const winnerId = room.players.find(player => (room.scores[player.id] ?? 0) >= targetScore)?.id ?? null;
+
+    return {
+      roomId,
+      voterSocketId: socketId,
+      correct,
+      lieIndex: state.lieIndex,
+      scores: { ...room.scores },
+      matchOver: winnerId !== null,
+      winnerId
+    };
+  }
+
+  startTruthOrDare(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    if (room.players.length < 2) {
+      throw new Error('Il faut au moins 2 joueurs pour jouer.');
+    }
+
+    const promptIndex = this.pickIndexExcluding(truthOrDarePrompts.length, room.usedTruthOrDare);
+    room.usedTruthOrDare.add(promptIndex);
+    if (room.usedTruthOrDare.size >= truthOrDarePrompts.length) {
+      room.usedTruthOrDare.clear();
+    }
+
+    const activeIndex = Math.floor(Math.random() * room.players.length);
+    const activePlayer = room.players[activeIndex];
+
+    const state: TruthOrDareState = { promptIndex, activePlayerId: activePlayer.id, type: null, answer: null };
+    room.gameData.truthOrDare = state;
+
+    return { roomId, activePlayerId: activePlayer.id, activePlayerName: activePlayer.name };
+  }
+
+  chooseTruthOrDareType(socketId: string, type: 'action' | 'truth') {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const state = room.gameData.truthOrDare as TruthOrDareState | undefined;
+    if (!state) {
+      throw new Error('Aucune manche Action ou Vérité en cours.');
+    }
+
+    if (state.activePlayerId !== socketId) {
+      throw new Error('Vous n’êtes pas le joueur actif de cette manche.');
+    }
+
+    state.type = type;
+    const prompt = truthOrDarePrompts[state.promptIndex];
+    const text = type === 'action' ? prompt.dare : prompt.truth;
+
+    return { roomId, type, text };
+  }
+
+  submitTruthOrDareAnswer(socketId: string, answer: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const state = room.gameData.truthOrDare as TruthOrDareState | undefined;
+    if (!state) {
+      throw new Error('Aucune manche Action ou Vérité en cours.');
+    }
+
+    if (state.activePlayerId !== socketId) {
+      throw new Error('Vous n’êtes pas le joueur actif de cette manche.');
+    }
+
+    if (state.type !== 'truth') {
+      throw new Error('Aucune réponse écrite attendue pour une action.');
+    }
+
+    state.answer = answer;
+    return { roomId, answer };
+  }
+
+  validateTruthOrDare(socketId: string, approved: boolean) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const state = room.gameData.truthOrDare as TruthOrDareState | undefined;
+    if (!state) {
+      throw new Error('Aucune manche Action ou Vérité en cours.');
+    }
+
+    if (!room.players.some(player => player.id === socketId)) {
+      throw new Error('Vous n’êtes pas membre de la salle.');
+    }
+
+    if (state.activePlayerId === socketId) {
+      throw new Error('Vous ne pouvez pas valider votre propre manche.');
+    }
+
+    delete room.gameData.truthOrDare;
+
+    if (approved) {
+      room.scores[state.activePlayerId] = (room.scores[state.activePlayerId] ?? 0) + 1;
+    }
+
+    const targetScore = TARGET_SCORES[room.gameId] ?? Infinity;
+    const winnerId = room.players.find(player => (room.scores[player.id] ?? 0) >= targetScore)?.id ?? null;
+
+    return {
+      roomId,
+      approved,
+      activePlayerId: state.activePlayerId,
+      scores: { ...room.scores },
+      matchOver: winnerId !== null,
+      winnerId
+    };
+  }
+
+  beginTwentyQuestionsMatch(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    if (room.players.length < 2) {
+      throw new Error('Il faut au moins 2 joueurs pour jouer.');
+    }
+
+    const [setter, guesser] = room.players;
+    const state: TwentyQuestionsState = {
+      turnIndex: 1,
+      setterId: setter.id,
+      guesserId: guesser.id,
+      word: null,
+      attemptsRemaining: TWENTY_Q_MAX_ATTEMPTS
+    };
+    room.gameData.twentyQuestions = state;
+
+    return {
+      roomId,
+      setterId: state.setterId,
+      guesserId: state.guesserId,
+      attemptsRemaining: state.attemptsRemaining,
+      turnIndex: state.turnIndex
+    };
+  }
+
+  setTwentyQuestionsWord(socketId: string, word: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const state = room.gameData.twentyQuestions as TwentyQuestionsState | undefined;
+    if (!state) {
+      throw new Error('Aucune manche 20 Questions en cours.');
+    }
+
+    if (state.setterId !== socketId) {
+      throw new Error('Vous n’êtes pas le meneur de cette manche.');
+    }
+
+    state.word = word.trim().toLowerCase();
+    return { roomId };
+  }
+
+  submitTwentyQuestionsGuess(socketId: string, guess: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const state = room.gameData.twentyQuestions as TwentyQuestionsState | undefined;
+    if (!state) {
+      throw new Error('Aucune manche 20 Questions en cours.');
+    }
+
+    if (state.guesserId !== socketId) {
+      throw new Error('Vous n’êtes pas le devineur de cette manche.');
+    }
+
+    if (!state.word) {
+      throw new Error('Le mot n’est pas encore défini.');
+    }
+
+    return { roomId, guess: guess.trim(), attemptsRemaining: state.attemptsRemaining };
+  }
+
+  judgeTwentyQuestionsGuess(socketId: string, correct: boolean, hint?: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const state = room.gameData.twentyQuestions as TwentyQuestionsState | undefined;
+    if (!state) {
+      throw new Error('Aucune manche 20 Questions en cours.');
+    }
+
+    if (state.setterId !== socketId) {
+      throw new Error('Vous n’êtes pas le meneur de cette manche.');
+    }
+
+    if (!correct) {
+      state.attemptsRemaining -= 1;
+    }
+
+    const roundOver = correct || state.attemptsRemaining <= 0;
+
+    if (!roundOver) {
+      return {
+        roomId,
+        correct: false,
+        hint,
+        attemptsRemaining: state.attemptsRemaining,
+        roundOver: false,
+        turnIndex: state.turnIndex,
+        nextSetterId: null as string | null,
+        nextGuesserId: null as string | null,
+        scores: { ...room.scores },
+        matchOver: false,
+        isDraw: false,
+        winnerId: null as string | null
+      };
+    }
+
+    const roundScore = correct ? state.attemptsRemaining : 0;
+    room.scores[state.guesserId] = (room.scores[state.guesserId] ?? 0) + roundScore;
+
+    const turnIndex = state.turnIndex;
+    const matchDone = turnIndex >= TWENTY_Q_MAX_TURNS;
+
+    let nextSetterId: string | null = null;
+    let nextGuesserId: string | null = null;
+
+    if (!matchDone) {
+      nextSetterId = state.guesserId;
+      nextGuesserId = state.setterId;
+      room.gameData.twentyQuestions = {
+        turnIndex: turnIndex + 1,
+        setterId: nextSetterId,
+        guesserId: nextGuesserId,
+        word: null,
+        attemptsRemaining: TWENTY_Q_MAX_ATTEMPTS
+      } as TwentyQuestionsState;
+    } else {
+      delete room.gameData.twentyQuestions;
+    }
+
+    let winnerId: string | null = null;
+    let isDraw = false;
+
+    if (matchDone) {
+      const [p0, p1] = room.players;
+      const s0 = room.scores[p0.id] ?? 0;
+      const s1 = room.scores[p1.id] ?? 0;
+      if (s0 === s1) {
+        isDraw = true;
+      } else {
+        winnerId = s0 > s1 ? p0.id : p1.id;
+      }
+    }
+
+    return {
+      roomId,
+      correct,
+      hint,
+      attemptsRemaining: state.attemptsRemaining,
+      roundOver: true,
+      turnIndex,
+      nextSetterId,
+      nextGuesserId,
+      scores: { ...room.scores },
+      matchOver: matchDone,
+      isDraw,
+      winnerId
+    };
+  }
+
+  private pickIndexExcluding(length: number, excluded: Set<number>): number {
+    const all = Array.from({ length }, (_, i) => i);
+    const available = all.filter(i => !excluded.has(i));
+    const pool = available.length > 0 ? available : all;
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   private getRpsWinner(firstChoice: string, secondChoice: string): 'first' | 'second' | 'draw' {
