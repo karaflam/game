@@ -3,7 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { ServerEvents, ClientEvents } from './events.js';
-import { RoomManager } from './roomManager.js';
+import { RoomManager, DISCONNECT_GRACE_MS } from './roomManager.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -15,6 +15,7 @@ const io = new Server(server, {
 });
 
 const roomManager = new RoomManager();
+const pendingRemovalTimers = new Map<string, NodeJS.Timeout>();
 
 app.use(cors({ origin: true }));
 app.use(express.json());
@@ -35,9 +36,9 @@ io.on(ClientEvents.Connect, socket => {
     });
   });
 
-  socket.on(ClientEvents.CreateRoom, ({ name, gameId }: { name: string; gameId: string }) => {
+  socket.on(ClientEvents.CreateRoom, ({ name, gameId, token }: { name: string; gameId: string; token: string }) => {
     try {
-      const { roomId, players } = roomManager.createRoom(socket.id, name, gameId);
+      const { roomId, players } = roomManager.createRoom(socket.id, name, gameId, token);
       socket.join(roomId);
       socket.emit(ServerEvents.RoomCreated, { roomId, players });
     } catch (error) {
@@ -45,15 +46,33 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
-  socket.on(ClientEvents.JoinRoom, ({ roomId, name, gameId }: { roomId: string; name: string; gameId: string }) => {
-    try {
-      const players = roomManager.joinRoom(roomId, socket.id, name, gameId);
-      socket.join(roomId);
-      io.to(roomId).emit(ServerEvents.RoomUpdate, { roomId, players });
-    } catch (error) {
-      socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+  socket.on(
+    ClientEvents.JoinRoom,
+    ({ roomId, name, gameId, token }: { roomId: string; name: string; gameId: string; token: string }) => {
+      try {
+        const result = roomManager.joinRoom(roomId, socket.id, name, gameId, token);
+        socket.join(roomId);
+
+        if (result.previousSocketId) {
+          const timerKey = `${roomId}:${result.previousSocketId}`;
+          const timer = pendingRemovalTimers.get(timerKey);
+          if (timer) {
+            clearTimeout(timer);
+            pendingRemovalTimers.delete(timerKey);
+          }
+        }
+
+        io.to(roomId).emit(ServerEvents.RoomUpdate, {
+          roomId,
+          players: result.players,
+          started: result.started,
+          scores: result.scores
+        });
+      } catch (error) {
+        socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+      }
     }
-  });
+  );
 
   socket.on(ClientEvents.LeaveRoom, () => {
     const room = roomManager.leaveRoom(socket.id);
@@ -299,6 +318,7 @@ io.on(ClientEvents.Connect, socket => {
         throw new Error('Il faut au moins 2 joueurs pour démarrer la partie.');
       }
 
+      roomManager.markStarted(roomId);
       io.to(roomId).emit(ServerEvents.GameStarted, { roomId });
 
       if (roomManager.getGameId(roomId) === '20-questions') {
@@ -326,10 +346,28 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ClientEvents.Disconnect, reason => {
     console.log(`Client déconnecté: ${socket.id} (${reason})`);
-    const room = roomManager.leaveRoom(socket.id);
-    if (room) {
-      io.to(room.roomId).emit(ServerEvents.RoomUpdate, { roomId: room.roomId, players: room.players });
+    const info = roomManager.markDisconnected(socket.id);
+    if (!info) {
+      return;
     }
+
+    const { roomId, token, players } = info;
+    io.to(roomId).emit(ServerEvents.RoomUpdate, { roomId, players });
+
+    if (!token) {
+      return;
+    }
+
+    const disconnectedSocketId = socket.id;
+    const timerKey = `${roomId}:${disconnectedSocketId}`;
+    const timer = setTimeout(() => {
+      pendingRemovalTimers.delete(timerKey);
+      const result = roomManager.finalizeDisconnect(roomId, disconnectedSocketId, token);
+      if (result) {
+        io.to(roomId).emit(ServerEvents.RoomUpdate, { roomId, players: result.players });
+      }
+    }, DISCONNECT_GRACE_MS);
+    pendingRemovalTimers.set(timerKey, timer);
   });
 });
 

@@ -6,8 +6,8 @@ import { gameThemes } from '../data/gameThemes';
 import { useSocket } from '../hooks/useSocket';
 import { ClientEvents, ServerEvents } from '../lib/socketEvents';
 import { useGameStore } from '../store/useGameStore';
+import { getPlayerToken, getStoredPseudo, setStoredPseudo, saveActiveRoom } from '../lib/playerSession';
 
-const PSEUDO_STORAGE_KEY = 'game:pseudo';
 const PSEUDO_MAX_LENGTH = 20;
 
 export function RoomLobbyPage() {
@@ -15,13 +15,7 @@ export function RoomLobbyPage() {
   const navigate = useNavigate();
   const { socket } = useSocket();
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
-  const [pseudo, setPseudo] = useState(() => {
-    try {
-      return localStorage.getItem(PSEUDO_STORAGE_KEY) ?? '';
-    } catch {
-      return '';
-    }
-  });
+  const [pseudo, setPseudo] = useState(() => getStoredPseudo());
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const setGameId = useGameStore(state => state.setGameId);
@@ -40,11 +34,7 @@ export function RoomLobbyPage() {
 
   const handlePseudoChange = (value: string) => {
     setPseudo(value);
-    try {
-      localStorage.setItem(PSEUDO_STORAGE_KEY, value);
-    } catch {
-      // ignore
-    }
+    setStoredPseudo(value);
   };
 
   const trimmedPseudo = pseudo.trim();
@@ -60,12 +50,13 @@ export function RoomLobbyPage() {
       return;
     }
 
-    socket.emit(ClientEvents.CreateRoom, { name: trimmedPseudo, gameId });
+    socket.emit(ClientEvents.CreateRoom, { name: trimmedPseudo, gameId, token: getPlayerToken() });
     socket.once(ServerEvents.RoomCreated, ({ roomId, players }) => {
       setGameId(gameId);
       setRoomCode(roomId);
       setPlayers(players);
       setStatus('waiting');
+      saveActiveRoom({ gameId, roomCode: roomId });
       navigate(`/jeu/${gameId}/salon/${roomId}`);
     });
     socket.once(ServerEvents.RoomError, ({ message }) => {
@@ -90,12 +81,13 @@ export function RoomLobbyPage() {
       return;
     }
 
-    socket.emit(ClientEvents.JoinRoom, { roomId: code, name: trimmedPseudo, gameId });
+    socket.emit(ClientEvents.JoinRoom, { roomId: code, name: trimmedPseudo, gameId, token: getPlayerToken() });
     socket.once(ServerEvents.RoomUpdate, ({ players }) => {
       setGameId(gameId);
       setRoomCode(code);
       setPlayers(players);
       setStatus('waiting');
+      saveActiveRoom({ gameId, roomCode: code });
       navigate(`/jeu/${gameId}/salon/${code}`);
     });
     socket.once(ServerEvents.RoomError, ({ message }) => {

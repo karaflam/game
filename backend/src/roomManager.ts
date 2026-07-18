@@ -1,6 +1,6 @@
 import { truthOrDarePrompts, wouldYouRatherPrompts } from './gamePrompts.js';
 
-export type Player = { id: string; name: string };
+export type Player = { id: string; name: string; connected: boolean };
 
 const TARGET_SCORES: Record<string, number> = {
   rps: 5,
@@ -52,7 +52,11 @@ type RoomState = {
   usedTruthOrDare: Set<number>;
   usedWouldYouRather: Set<number>;
   wouldYouRatherMismatches: number;
+  tokens: Map<string, string>;
+  started: boolean;
 };
+
+export const DISCONNECT_GRACE_MS = 30_000;
 
 function generateRoomId() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -62,9 +66,9 @@ export class RoomManager {
   private rooms = new Map<string, RoomState>();
   private socketRoom = new Map<string, string>();
 
-  createRoom(socketId: string, name: string, gameId: string) {
+  createRoom(socketId: string, name: string, gameId: string, token: string) {
     const roomId = generateRoomId();
-    const player: Player = { id: socketId, name };
+    const player: Player = { id: socketId, name, connected: true };
     this.rooms.set(roomId, {
       gameId,
       players: [player],
@@ -73,7 +77,9 @@ export class RoomManager {
       scores: { [socketId]: 0 },
       usedTruthOrDare: new Set(),
       usedWouldYouRather: new Set(),
-      wouldYouRatherMismatches: 0
+      wouldYouRatherMismatches: 0,
+      tokens: new Map([[socketId, token]]),
+      started: false
     });
     this.socketRoom.set(socketId, roomId);
     return { roomId, players: [player] };
@@ -91,7 +97,7 @@ export class RoomManager {
     return this.rooms.get(roomId)?.players ?? [];
   }
 
-  joinRoom(roomId: string, socketId: string, name: string, gameId: string) {
+  joinRoom(roomId: string, socketId: string, name: string, gameId: string, token: string) {
     if (!this.rooms.has(roomId)) {
       throw new Error('Salle introuvable.');
     }
@@ -102,13 +108,30 @@ export class RoomManager {
     }
 
     if (room.players.some(player => player.id === socketId)) {
-      return room.players;
+      return { players: room.players, previousSocketId: null as string | null, started: room.started, scores: { ...room.scores } };
     }
 
-    room.players.push({ id: socketId, name });
+    const previousEntry = Array.from(room.tokens.entries()).find(([, tok]) => tok === token);
+
+    if (previousEntry) {
+      const [oldSocketId] = previousEntry;
+      this.remapPlayerId(room, oldSocketId, socketId);
+      room.tokens.delete(oldSocketId);
+      room.tokens.set(socketId, token);
+      const player = room.players.find(p => p.id === socketId);
+      if (player) {
+        player.connected = true;
+        player.name = name;
+      }
+      this.socketRoom.set(socketId, roomId);
+      return { players: room.players, previousSocketId: oldSocketId, started: room.started, scores: { ...room.scores } };
+    }
+
+    room.players.push({ id: socketId, name, connected: true });
     room.scores[socketId] = 0;
+    room.tokens.set(socketId, token);
     this.socketRoom.set(socketId, roomId);
-    return room.players;
+    return { players: room.players, previousSocketId: null, started: room.started, scores: { ...room.scores } };
   }
 
   leaveRoom(socketId: string) {
@@ -127,6 +150,7 @@ export class RoomManager {
     room.choices.delete(socketId);
     delete room.gameData[socketId];
     delete room.scores[socketId];
+    room.tokens.delete(socketId);
     this.socketRoom.delete(socketId);
 
     if (room.players.length === 0) {
@@ -135,6 +159,89 @@ export class RoomManager {
     }
 
     return { roomId, players: room.players };
+  }
+
+  markStarted(roomId: string) {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      room.started = true;
+    }
+  }
+
+  markDisconnected(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      return null;
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      this.socketRoom.delete(socketId);
+      return null;
+    }
+
+    const token = room.tokens.get(socketId) ?? null;
+    const player = room.players.find(p => p.id === socketId);
+    if (player) {
+      player.connected = false;
+    }
+    this.socketRoom.delete(socketId);
+
+    return { roomId, token, players: room.players };
+  }
+
+  finalizeDisconnect(roomId: string, socketId: string, token: string) {
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+
+    if (room.tokens.get(socketId) !== token) {
+      // The player already reconnected under a new socket id — nothing to clean up.
+      return null;
+    }
+
+    room.players = room.players.filter(player => player.id !== socketId);
+    room.choices.delete(socketId);
+    delete room.gameData[socketId];
+    delete room.scores[socketId];
+    room.tokens.delete(socketId);
+
+    if (room.players.length === 0) {
+      this.rooms.delete(roomId);
+      return { roomId, players: [] as Player[] };
+    }
+
+    return { roomId, players: room.players };
+  }
+
+  private remapPlayerId(room: RoomState, oldId: string, newId: string) {
+    room.players = room.players.map(player => (player.id === oldId ? { ...player, id: newId } : player));
+
+    if (room.scores[oldId] !== undefined) {
+      room.scores[newId] = room.scores[oldId];
+      delete room.scores[oldId];
+    }
+
+    if (room.choices.has(oldId)) {
+      room.choices.set(newId, room.choices.get(oldId)!);
+      room.choices.delete(oldId);
+    }
+
+    const replaceInObject = (obj: any) => {
+      if (!obj || typeof obj !== 'object') {
+        return;
+      }
+      for (const key of Object.keys(obj)) {
+        const value = obj[key];
+        if (value === oldId) {
+          obj[key] = newId;
+        } else if (value && typeof value === 'object') {
+          replaceInObject(value);
+        }
+      }
+    };
+    replaceInObject(room.gameData);
   }
 
   setGameData(socketId: string, key: string, data: any) {

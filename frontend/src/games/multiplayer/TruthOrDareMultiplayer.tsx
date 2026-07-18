@@ -25,7 +25,7 @@ export function TruthOrDareMultiplayer() {
   const [answer, setAnswer] = useState<string | null>(null);
   const [answerDraft, setAnswerDraft] = useState('');
   const [resultApproved, setResultApproved] = useState(false);
-  const [scores, setScores] = useState<Record<string, number>>({});
+  const [scores, setScores] = useState<Record<string, number>>(() => useGameStore.getState().scores);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
 

@@ -40,7 +40,7 @@ export function TwentyQuestionsMultiplayer() {
   const [hint, setHint] = useState<string | null>(null);
   const [hintDraft, setHintDraft] = useState('');
   const [roundResult, setRoundResult] = useState<RoundResultPayload | null>(null);
-  const [scores, setScores] = useState<Record<string, number>>({});
+  const [scores, setScores] = useState<Record<string, number>>(() => useGameStore.getState().scores);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
 

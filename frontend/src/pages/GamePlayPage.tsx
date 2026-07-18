@@ -6,6 +6,7 @@ import { gameThemes } from '../data/gameThemes';
 import { useGameStore } from '../store/useGameStore';
 import { useSocket } from '../hooks/useSocket';
 import { ClientEvents } from '../lib/socketEvents';
+import { clearActiveRoom } from '../lib/playerSession';
 import { RpsMultiplayer } from '../games/multiplayer/RpsMultiplayer';
 import { OddOrEvenMultiplayer } from '../games/multiplayer/OddOrEvenMultiplayer';
 import { WouldYouRatherMultiplayer } from '../games/multiplayer/WouldYouRatherMultiplayer';
@@ -16,14 +17,16 @@ import { TwentyQuestionsMultiplayer } from '../games/multiplayer/TwentyQuestions
 export function GamePlayPage() {
   const { gameId, roomCode } = useParams();
   const navigate = useNavigate();
-  const { socket } = useSocket();
+  const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
+  const opponent = players.find(player => player.id !== socketId) ?? null;
 
   const handleLeaveGame = () => {
     if (socket) {
       socket.emit(ClientEvents.LeaveRoom);
     }
+    clearActiveRoom();
     navigate('/');
   };
 
@@ -54,6 +57,13 @@ export function GamePlayPage() {
             </Button>
           </div>
         </div>
+
+        {opponent && !opponent.connected ? (
+          <div className="mt-6 rounded-3xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+            ⚠️ {opponent.name} s'est déconnecté. La partie l'attend (jusqu'à 30 secondes) — si {opponent.name} ne
+            revient pas, il/elle sera retiré(e) du salon.
+          </div>
+        ) : null}
 
         <div className="mt-8">
           {gameId === 'rps' ? (

@@ -31,7 +31,7 @@ export function TwoTruthsOneLieMultiplayer() {
   const [lieChoice, setLieChoice] = useState<number | null>(0);
   const [votingStatements, setVotingStatements] = useState<string[] | null>(null);
   const [result, setResult] = useState<ResultPayload | null>(null);
-  const [scores, setScores] = useState<Record<string, number>>({});
+  const [scores, setScores] = useState<Record<string, number>>(() => useGameStore.getState().scores);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
 
