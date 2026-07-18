@@ -1,10 +1,17 @@
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { useGameStore } from '../store/useGameStore';
 
 export function ResultsPage() {
   const navigate = useNavigate();
   const { gameId, roomCode } = useParams();
+  const players = useGameStore(state => state.players);
+  const scores = useGameStore(state => state.scores);
+
+  const ranking = [...players]
+    .map(player => ({ ...player, score: scores[player.id] ?? 0 }))
+    .sort((a, b) => b.score - a.score);
 
   return (
     <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
@@ -18,14 +25,18 @@ export function ResultsPage() {
         </div>
 
         <div className="mt-8 space-y-4 rounded-3xl border border-border bg-background p-6">
-          <div className="rounded-3xl bg-surface p-4">
-            <p className="text-sm font-semibold text-foreground">1. Joueur A</p>
-            <p className="text-sm text-muted-foreground">15 points</p>
-          </div>
-          <div className="rounded-3xl bg-surface p-4">
-            <p className="text-sm font-semibold text-foreground">2. Joueur B</p>
-            <p className="text-sm text-muted-foreground">12 points</p>
-          </div>
+          {ranking.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucun score enregistré pour l’instant.</p>
+          ) : (
+            ranking.map((player, index) => (
+              <div key={player.id} className="rounded-3xl bg-surface p-4">
+                <p className="text-sm font-semibold text-foreground">
+                  {index + 1}. {player.name}
+                </p>
+                <p className="text-sm text-muted-foreground">{player.score} point(s)</p>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
