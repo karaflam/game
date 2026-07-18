@@ -9,7 +9,7 @@ import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import type { Winner } from '@/lib/soloScore';
 
 const MAX_ATTEMPTS_PER_TURN = 10;
-const TOTAL_TURNS = 6;
+const TOTAL_TURNS = 2;
 
 type RoundResultPayload = {
   correct: boolean;
@@ -222,6 +222,12 @@ export function TwentyQuestionsMultiplayer() {
             Tour {turnIndex} / {TOTAL_TURNS} — {attemptsRemaining} essai(s) restant(s)
           </p>
 
+          {isSetter && wordSet && wordDraft ? (
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              Votre mot secret : {wordDraft}
+            </div>
+          ) : null}
+
           {isSetter && !wordSet ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
@@ -248,33 +254,32 @@ export function TwentyQuestionsMultiplayer() {
           ) : isSetter && pendingGuess ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {opponentName} propose ceci. Est-ce que ça correspond à votre mot secret ?
+                {opponentName} vous a envoyé ceci — une question ou une proposition de mot :
               </p>
               <div className="rounded-2xl border border-border bg-muted p-4 text-sm text-foreground">
                 « {pendingGuess} »
               </div>
-              <div>
-                <p className="mb-1 text-sm text-muted-foreground">
-                  Si ce n'est pas le bon mot, écrivez un indice pour aider {opponentName} :
-                </p>
-                <input
-                  value={hintDraft}
-                  onChange={event => setHintDraft(event.target.value)}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter') {
-                      judge(false);
-                    }
-                  }}
-                  placeholder="Ex : Il vit dans la savane"
-                  className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Est-ce exactement votre mot secret ? Si oui, cliquez sur « Mot trouvé ». Sinon, répondez à sa
+                question et/ou donnez-lui un indice ci-dessous, puis cliquez sur « Répondre ».
+              </p>
+              <input
+                value={hintDraft}
+                onChange={event => setHintDraft(event.target.value)}
+                onKeyDown={event => {
+                  if (event.key === 'Enter') {
+                    judge(false);
+                  }
+                }}
+                placeholder="Ex : Oui, et il vit dans la savane"
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
               <div className="flex gap-3">
                 <Button type="button" onClick={() => judge(true)}>
                   Mot trouvé
                 </Button>
                 <Button type="button" variant="outline" onClick={() => judge(false)} disabled={!hintDraft.trim()}>
-                  Pas encore, donner l’indice
+                  Répondre
                 </Button>
               </div>
             </div>
@@ -290,11 +295,13 @@ export function TwentyQuestionsMultiplayer() {
             <div className="space-y-3">
               {hint ? (
                 <div className="rounded-2xl border border-border bg-muted p-4 text-sm text-foreground">
-                  <strong>Indice :</strong> {hint}
+                  <strong>Réponse de {opponentName} :</strong> {hint}
                 </div>
               ) : null}
               <p className="text-sm text-muted-foreground">
-                {opponentName} a choisi un mot secret. Essayez de le deviner !
+                {opponentName} a choisi un mot secret. À chaque essai, vous pouvez soit poser une question (par
+                exemple « Est-ce que ça se mange ? »), soit proposer directement un mot. {opponentName} vous
+                répondra et pourra vous donner un indice si ce n'est pas encore ça.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input
@@ -305,11 +312,11 @@ export function TwentyQuestionsMultiplayer() {
                       submitGuess();
                     }
                   }}
-                  placeholder="Écrivez le mot que vous pensez être le bon"
+                  placeholder="Votre question ou votre proposition de mot"
                   className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <Button type="button" onClick={submitGuess} disabled={!guessDraft.trim()}>
-                  Envoyer ma réponse
+                  Envoyer
                 </Button>
               </div>
             </div>

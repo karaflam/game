@@ -11,7 +11,7 @@ const TARGET_SCORES: Record<string, number> = {
 };
 
 const TWENTY_Q_MAX_ATTEMPTS = 10;
-const TWENTY_Q_MAX_TURNS = 6;
+const TWENTY_Q_MAX_TURNS = 2;
 
 type TruthOrDareState = {
   promptIndex: number;
