@@ -5,7 +5,7 @@ import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import { useSoloScore } from '@/hooks/useSoloScore';
 import { soloTwoTruthsOneLieTriplets } from '@/data/soloPrompts';
-import { pickRandomItem } from '@/lib/randomPick';
+import { pickRandomIndexExcluding } from '@/lib/randomPick';
 import { shuffleTriplet } from '@/lib/twoTruthsLogic';
 
 const TWO_TRUTHS_TARGET_SCORE = 5;
@@ -14,12 +14,26 @@ type RoundResult = { outcome: 'player' | 'machine'; lieText: string };
 
 export function TwoTruthsOneLieSolo() {
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(TWO_TRUTHS_TARGET_SCORE);
-  const [triplet, setTriplet] = useState(() => shuffleTriplet(pickRandomItem(soloTwoTruthsOneLieTriplets)));
+  const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
+  const [tripletIndex, setTripletIndex] = useState<number>(() => Math.floor(Math.random() * soloTwoTruthsOneLieTriplets.length));
+  const [triplet, setTriplet] = useState(() => shuffleTriplet(soloTwoTruthsOneLieTriplets[tripletIndex]));
   const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
   const [roundOver, setRoundOver] = useState(false);
 
   const nextRound = () => {
-    setTriplet(shuffleTriplet(pickRandomItem(soloTwoTruthsOneLieTriplets)));
+    const currentUsed = new Set(usedIndices);
+    currentUsed.add(tripletIndex);
+
+    let activeUsed = currentUsed;
+    if (activeUsed.size >= soloTwoTruthsOneLieTriplets.length) {
+      activeUsed = new Set();
+    }
+    const nextIdx = pickRandomIndexExcluding(soloTwoTruthsOneLieTriplets.length, activeUsed);
+    const newUsed = new Set(activeUsed).add(nextIdx);
+
+    setUsedIndices(newUsed);
+    setTripletIndex(nextIdx);
+    setTriplet(shuffleTriplet(soloTwoTruthsOneLieTriplets[nextIdx]));
     setRoundOver(false);
   };
 
