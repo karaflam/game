@@ -71,12 +71,22 @@ export function RpsMultiplayer() {
       setWaiting(false);
     };
 
+    const handleState = (data: { waiting: boolean }) => {
+      setWaiting(data.waiting);
+    };
+
     socket.on(ServerEvents.RpsResult, handleResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
+    socket.on(ServerEvents.RpsState, handleState);
+
+    // If we reconnect mid-round (after already having played our move), resync that fact
+    // instead of showing the move picker again as if nothing had been chosen yet.
+    socket.emit(ClientEvents.RpsRequestState);
 
     return () => {
       socket.off(ServerEvents.RpsResult, handleResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
+      socket.off(ServerEvents.RpsState, handleState);
     };
   }, [socket, socketId, setStoreScores]);
 

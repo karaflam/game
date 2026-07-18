@@ -18,6 +18,10 @@ export const ClientEvents = {
   TwoTruthsOneLieSubmit: 'two-truths-one-lie:submit',
   TwoTruthsOneLieVote: 'two-truths-one-lie:vote',
   TwoTruthsOneLieRequestState: 'two-truths-one-lie:request-state',
+  RpsRequestState: 'rps:request-state',
+  OddOrEvenRequestState: 'odd-or-even:request-state',
+  WouldYouRatherRequestState: 'would-you-rather:request-state',
+  TruthOrDareRequestState: 'truth-or-dare:request-state',
   StartGame: 'start-game'
 } as const;
 
@@ -29,13 +33,17 @@ export const ServerEvents = {
   RoomError: 'room:error',
   ScoreReset: 'score:reset',
   RpsResult: 'rps:result',
+  RpsState: 'rps:state',
   OddOrEvenResult: 'odd-or-even:result',
+  OddOrEvenState: 'odd-or-even:state',
   TruthOrDareSpin: 'truth-or-dare:spin',
   TruthOrDareContent: 'truth-or-dare:content',
   TruthOrDareAnswerSubmitted: 'truth-or-dare:answer-submitted',
   TruthOrDareResult: 'truth-or-dare:result',
+  TruthOrDareState: 'truth-or-dare:state',
   WouldYouRatherUpdate: 'would-you-rather:update',
   WouldYouRatherResult: 'would-you-rather:result',
+  WouldYouRatherState: 'would-you-rather:state',
   TwentyQuestionsRoundReady: 'twenty-questions:round-ready',
   TwentyQuestionsWordReady: 'twenty-questions:word-ready',
   TwentyQuestionsGuessSubmitted: 'twenty-questions:guess-submitted',

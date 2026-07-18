@@ -105,6 +105,13 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
+  socket.on(ClientEvents.RpsRequestState, () => {
+    const state = roomManager.getRpsState(socket.id);
+    if (state) {
+      socket.emit(ServerEvents.RpsState, state);
+    }
+  });
+
   socket.on(ClientEvents.ResetMatchScore, () => {
     try {
       const { roomId, scores } = roomManager.resetScores(socket.id);
@@ -139,6 +146,20 @@ io.on(ClientEvents.Connect, socket => {
       }
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
+
+  socket.on(ClientEvents.OddOrEvenRequestState, () => {
+    const state = roomManager.getOddOrEvenState(socket.id);
+    if (state) {
+      socket.emit(ServerEvents.OddOrEvenState, state);
+    }
+  });
+
+  socket.on(ClientEvents.TruthOrDareRequestState, () => {
+    const state = roomManager.getTruthOrDareState(socket.id);
+    if (state) {
+      socket.emit(ServerEvents.TruthOrDareState, state);
     }
   });
 
@@ -184,6 +205,13 @@ io.on(ClientEvents.Connect, socket => {
       });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
+
+  socket.on(ClientEvents.WouldYouRatherRequestState, () => {
+    const state = roomManager.getWouldYouRatherState(socket.id);
+    if (state) {
+      socket.emit(ServerEvents.WouldYouRatherState, state);
     }
   });
 

@@ -1013,6 +1013,82 @@ export class RoomManager {
     };
   }
 
+  getRpsState(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      return null;
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+
+    return { waiting: room.choices.has(socketId) };
+  }
+
+  getOddOrEvenState(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      return null;
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+
+    return { waiting: room.choices.has(socketId) };
+  }
+
+  getWouldYouRatherState(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      return null;
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+
+    const state = room.gameData.wouldYouRather as WouldYouRatherState | undefined;
+    if (!state) {
+      return { prompt: null as { left: string; right: string } | null, waiting: false };
+    }
+
+    return { prompt: wouldYouRatherPrompts[state.promptIndex], waiting: room.choices.has(socketId) };
+  }
+
+  getTruthOrDareState(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      return null;
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+
+    const state = room.gameData.truthOrDare as TruthOrDareState | undefined;
+    if (!state) {
+      return null;
+    }
+
+    const prompt = truthOrDarePrompts[state.promptIndex];
+    const text = state.type ? (state.type === 'action' ? prompt.dare : prompt.truth) : null;
+    const activePlayerName = room.players.find(player => player.id === state.activePlayerId)?.name ?? '';
+
+    return {
+      activePlayerId: state.activePlayerId,
+      activePlayerName,
+      type: state.type,
+      text,
+      answer: state.answer
+    };
+  }
+
   private pickIndexExcluding(length: number, excluded: Set<number>): number {
     const all = Array.from({ length }, (_, i) => i);
     const available = all.filter(i => !excluded.has(i));

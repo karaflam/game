@@ -74,11 +74,36 @@ export function TruthOrDareMultiplayer() {
       setAnswerDraft('');
     };
 
+    const handleState = (data: {
+      activePlayerId: string;
+      activePlayerName: string;
+      type: ContentType | null;
+      text: string | null;
+      answer: string | null;
+    }) => {
+      setActivePlayerId(data.activePlayerId);
+      setActivePlayerName(data.activePlayerName);
+      if (data.type) {
+        setContent({ type: data.type, text: data.text ?? '' });
+        setAnswer(data.answer);
+        setPhase('content');
+      } else {
+        setContent(null);
+        setAnswer(null);
+        setPhase('choosing');
+      }
+    };
+
     socket.on(ServerEvents.TruthOrDareSpin, handleSpin);
     socket.on(ServerEvents.TruthOrDareContent, handleContent);
     socket.on(ServerEvents.TruthOrDareAnswerSubmitted, handleAnswerSubmitted);
     socket.on(ServerEvents.TruthOrDareResult, handleResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
+    socket.on(ServerEvents.TruthOrDareState, handleState);
+
+    // If we reconnect mid-manche (wheel already landed, or a choice/answer already made),
+    // resync straight into that phase instead of showing the "spin the wheel" screen again.
+    socket.emit(ClientEvents.TruthOrDareRequestState);
 
     return () => {
       socket.off(ServerEvents.TruthOrDareSpin, handleSpin);
@@ -86,6 +111,7 @@ export function TruthOrDareMultiplayer() {
       socket.off(ServerEvents.TruthOrDareAnswerSubmitted, handleAnswerSubmitted);
       socket.off(ServerEvents.TruthOrDareResult, handleResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
+      socket.off(ServerEvents.TruthOrDareState, handleState);
     };
   }, [socket, socketId, setStoreScores]);
 
