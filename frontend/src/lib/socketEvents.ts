@@ -17,6 +17,7 @@ export const ClientEvents = {
   TwentyQuestionsRequestState: 'twenty-questions:request-state',
   TwoTruthsOneLieSubmit: 'two-truths-one-lie:submit',
   TwoTruthsOneLieVote: 'two-truths-one-lie:vote',
+  TwoTruthsOneLieRequestState: 'two-truths-one-lie:request-state',
   StartGame: 'start-game'
 } as const;
 
@@ -41,5 +42,6 @@ export const ServerEvents = {
   TwentyQuestionsRoundResult: 'twenty-questions:round-result',
   TwoTruthsOneLiePrompt: 'two-truths-one-lie:prompt',
   TwoTruthsOneLieResult: 'two-truths-one-lie:result',
+  TwoTruthsOneLieRoundReady: 'two-truths-one-lie:round-ready',
   GameStarted: 'game:started'
 } as const;

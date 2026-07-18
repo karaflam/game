@@ -251,23 +251,10 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ServerEvents.TwoTruthsOneLieSubmit, ({ statements, lieIndex }) => {
     try {
-      const roomId = roomManager.getRoomId(socket.id);
-      if (!roomId) {
-        throw new Error('Vous n’êtes pas dans une salle.');
-      }
-
-      if (roomManager.getGameData(socket.id, 'twoTruthsOneLie')) {
-        throw new Error('Une manche est déjà en cours. Attendez le vote avant de soumettre à nouveau.');
-      }
-
-      if (!Array.isArray(statements) || statements.length !== 3 || !Number.isInteger(lieIndex) || lieIndex < 0 || lieIndex > 2) {
-        throw new Error('Il faut exactement 3 affirmations et indiquer laquelle est le mensonge.');
-      }
-
-      roomManager.setGameData(socket.id, 'twoTruthsOneLie', { statements, lieIndex, submitter: socket.id });
-      io.to(roomId).emit(ServerEvents.TwoTruthsOneLiePrompt, {
-        statements,
-        submitterId: socket.id,
+      const result = roomManager.submitTwoTruthsOneLie(socket.id, statements, lieIndex);
+      io.to(result.roomId).emit(ServerEvents.TwoTruthsOneLiePrompt, {
+        statements: result.statements,
+        submitterId: result.submitterId,
         message: 'Un joueur a soumis 2 vérités et 1 mensonge. Votez pour la phrase mensonge.'
       });
     } catch (error) {
@@ -284,10 +271,19 @@ io.on(ClientEvents.Connect, socket => {
         lieIndex: result.lieIndex,
         scores: result.scores,
         matchOver: result.matchOver,
-        winnerId: result.winnerId
+        winnerId: result.winnerId,
+        nextSubmitterId: result.nextSubmitterId,
+        nextVoterId: result.nextVoterId
       });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
+
+  socket.on(ClientEvents.TwoTruthsOneLieRequestState, () => {
+    const state = roomManager.getTwoTruthsOneLieState(socket.id);
+    if (state) {
+      socket.emit(ServerEvents.TwoTruthsOneLieRoundReady, state);
     }
   });
 
@@ -313,6 +309,14 @@ io.on(ClientEvents.Connect, socket => {
           attemptsRemaining: round.attemptsRemaining,
           turnIndex: round.turnIndex,
           wordSet: round.wordSet
+        });
+      }
+
+      if (roomManager.getGameId(roomId) === 'two-truths-one-lie') {
+        const round = roomManager.beginTwoTruthsOneLieMatch(socket.id);
+        io.to(roomId).emit(ServerEvents.TwoTruthsOneLieRoundReady, {
+          submitterId: round.submitterId,
+          voterId: round.voterId
         });
       }
     } catch (error) {

@@ -17,16 +17,19 @@ type ResultPayload = {
   scores: Record<string, number>;
   matchOver: boolean;
   winnerId: string | null;
+  nextSubmitterId: string | null;
+  nextVoterId: string | null;
 };
 
 export function TwoTruthsOneLieMultiplayer() {
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const setStoreScores = useGameStore(state => state.setScores);
+  const [submitterId, setSubmitterId] = useState<string | null>(null);
+  const [voterId, setVoterId] = useState<string | null>(null);
   const [statements, setStatements] = useState(['', '', '']);
   const [lieChoice, setLieChoice] = useState<number | null>(0);
   const [votingStatements, setVotingStatements] = useState<string[] | null>(null);
-  const [submitterId, setSubmitterId] = useState<string | null>(null);
   const [result, setResult] = useState<ResultPayload | null>(null);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [matchOver, setMatchOver] = useState(false);
@@ -37,9 +40,16 @@ export function TwoTruthsOneLieMultiplayer() {
       return;
     }
 
-    const handlePrompt = (data: { statements: string[]; submitterId: string }) => {
-      setVotingStatements(data.statements);
+    const handleRoundReady = (data: { submitterId: string; voterId: string }) => {
       setSubmitterId(data.submitterId);
+      setVoterId(data.voterId);
+      setVotingStatements(null);
+      setStatements(['', '', '']);
+      setLieChoice(0);
+    };
+
+    const handlePrompt = (data: { statements: string[] }) => {
+      setVotingStatements(data.statements);
     };
 
     const handleResult = (data: ResultPayload) => {
@@ -57,16 +67,22 @@ export function TwoTruthsOneLieMultiplayer() {
       setWinner(null);
       setResult(null);
       setVotingStatements(null);
-      setSubmitterId(null);
       setStatements(['', '', '']);
       setLieChoice(0);
     };
 
+    socket.on(ServerEvents.TwoTruthsOneLieRoundReady, handleRoundReady);
     socket.on(ServerEvents.TwoTruthsOneLiePrompt, handlePrompt);
     socket.on(ServerEvents.TwoTruthsOneLieResult, handleResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
 
+    // The server only broadcasts the initial TwoTruthsOneLieRoundReady once, right when the
+    // match starts (from the waiting room, before this component has mounted and subscribed).
+    // Actively request the current round state so we don't miss it and get stuck waiting forever.
+    socket.emit(ClientEvents.TwoTruthsOneLieRequestState);
+
     return () => {
+      socket.off(ServerEvents.TwoTruthsOneLieRoundReady, handleRoundReady);
       socket.off(ServerEvents.TwoTruthsOneLiePrompt, handlePrompt);
       socket.off(ServerEvents.TwoTruthsOneLieResult, handleResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
@@ -75,12 +91,14 @@ export function TwoTruthsOneLieMultiplayer() {
 
   const me = players.find(player => player.id === socketId) ?? null;
   const opponent = players.find(player => player.id !== socketId) ?? null;
+  const opponentName = opponent?.name ?? 'Adversaire';
   const myScore = socketId ? scores[socketId] ?? 0 : 0;
   const opponentScore = opponent ? scores[opponent.id] ?? 0 : 0;
-  const iAmSubmitter = submitterId !== null && submitterId === socketId;
+  const isSubmitter = socketId !== null && socketId === submitterId;
+  const isVoter = socketId !== null && socketId === voterId;
 
   const submitStatements = () => {
-    if (!socket || matchOver || lieChoice === null) {
+    if (!socket || !isSubmitter || matchOver || lieChoice === null) {
       return;
     }
     const cleaned = statements.map(statement => statement.trim());
@@ -91,18 +109,26 @@ export function TwoTruthsOneLieMultiplayer() {
   };
 
   const vote = (voteIndex: number) => {
-    if (!socket || matchOver) {
+    if (!socket || !isVoter || matchOver) {
       return;
     }
     socket.emit(ClientEvents.TwoTruthsOneLieVote, { voteIndex });
   };
 
   const handleRevealComplete = () => {
+    if (!result) {
+      return;
+    }
+
     setResult(null);
     setVotingStatements(null);
-    setSubmitterId(null);
     setStatements(['', '', '']);
     setLieChoice(0);
+
+    if (!result.matchOver) {
+      setSubmitterId(result.nextSubmitterId);
+      setVoterId(result.nextVoterId);
+    }
   };
 
   const handleReplay = () => {
@@ -130,7 +156,7 @@ export function TwoTruthsOneLieMultiplayer() {
         targetScore={TARGET_SCORE}
         onReset={handleReplay}
         playerLabel={`${me?.name ?? 'Vous'} (vous)`}
-        machineLabel={opponent?.name ?? 'Adversaire'}
+        machineLabel={opponentName}
       />
 
       {result && myOutcome ? (
@@ -142,15 +168,15 @@ export function TwoTruthsOneLieMultiplayer() {
                 ? 'Bien joué, vous avez trouvé le mensonge !'
                 : 'Perdu, ce n’était pas le mensonge.'
               : result.correct
-                ? `${opponent?.name ?? 'Adversaire'} a trouvé votre mensonge.`
-                : `${opponent?.name ?? 'Adversaire'} s’est trompé, vous gagnez le point !`
+                ? `${opponentName} a trouvé votre mensonge.`
+                : `${opponentName} s’est trompé, vous gagnez le point !`
           }
           detail={`La phrase ${result.lieIndex + 1} était le mensonge.`}
           onComplete={handleRevealComplete}
         />
-      ) : votingStatements && !iAmSubmitter ? (
+      ) : votingStatements && isVoter ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Un joueur a soumis 3 affirmations. Votez pour le mensonge.</p>
+          <p className="text-sm text-muted-foreground">{opponentName} a soumis 3 affirmations. Votez pour le mensonge.</p>
           <div className="grid gap-3">
             {votingStatements.map((statement, index) => (
               <Button
@@ -166,11 +192,13 @@ export function TwoTruthsOneLieMultiplayer() {
             ))}
           </div>
         </div>
-      ) : iAmSubmitter ? (
-        <p className="text-sm text-muted-foreground">Affirmations envoyées. En attente du vote de l’adversaire...</p>
-      ) : (
+      ) : votingStatements && isSubmitter ? (
+        <p className="text-sm text-muted-foreground">Affirmations envoyées. En attente du vote de {opponentName}...</p>
+      ) : isSubmitter ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Écrivez 2 vérités et 1 mensonge sur vous, puis indiquez laquelle est fausse.</p>
+          <p className="text-sm text-muted-foreground">
+            C'est à vous ! Écrivez 2 vérités et 1 mensonge sur vous, puis indiquez laquelle est fausse.
+          </p>
           <div className="grid gap-3">
             {statements.map((text, index) => (
               <div key={index} className="flex items-center gap-3">
@@ -202,9 +230,15 @@ export function TwoTruthsOneLieMultiplayer() {
             Soumettre
           </Button>
         </div>
+      ) : isVoter ? (
+        <p className="text-sm text-muted-foreground">
+          C'est au tour de {opponentName} de rédiger ses 3 affirmations. Patientez...
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">En attente du début de la manche...</p>
       )}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
+      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponentName} />
     </div>
   );
 }

@@ -28,6 +28,7 @@ export enum ServerEvents {
   TwoTruthsOneLieVote = 'two-truths-one-lie:vote',
   TwoTruthsOneLiePrompt = 'two-truths-one-lie:prompt',
   TwoTruthsOneLieResult = 'two-truths-one-lie:result',
+  TwoTruthsOneLieRoundReady = 'two-truths-one-lie:round-ready',
   StartGame = 'start-game',
   GameStarted = 'game:started',
   RoomCreated = 'room:created',
@@ -43,5 +44,6 @@ export enum ClientEvents {
   JoinRoom = 'join-room',
   LeaveRoom = 'leave-room',
   ResetMatchScore = 'reset-match-score',
-  TwentyQuestionsRequestState = 'twenty-questions:request-state'
+  TwentyQuestionsRequestState = 'twenty-questions:request-state',
+  TwoTruthsOneLieRequestState = 'two-truths-one-lie:request-state'
 }

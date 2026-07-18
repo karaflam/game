@@ -30,6 +30,11 @@ type TwoTruthsOneLieState = {
   submitter: string;
 };
 
+type TwoTruthsOneLieRoles = {
+  submitterId: string;
+  voterId: string;
+};
+
 type TwentyQuestionsState = {
   turnIndex: number;
   setterId: string;
@@ -433,6 +438,77 @@ export class RoomManager {
     };
   }
 
+  beginTwoTruthsOneLieMatch(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    if (room.players.length < 2) {
+      throw new Error('Il faut au moins 2 joueurs pour jouer.');
+    }
+
+    const [first, second] = room.players;
+    const roles: TwoTruthsOneLieRoles = { submitterId: first.id, voterId: second.id };
+    room.gameData.twoTruthsOneLieRoles = roles;
+
+    return { roomId, submitterId: roles.submitterId, voterId: roles.voterId };
+  }
+
+  getTwoTruthsOneLieState(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      return null;
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+
+    const roles = room.gameData.twoTruthsOneLieRoles as TwoTruthsOneLieRoles | undefined;
+    if (!roles) {
+      return null;
+    }
+
+    return { submitterId: roles.submitterId, voterId: roles.voterId };
+  }
+
+  submitTwoTruthsOneLie(socketId: string, statements: string[], lieIndex: number) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    const roles = room.gameData.twoTruthsOneLieRoles as TwoTruthsOneLieRoles | undefined;
+    if (roles && roles.submitterId !== socketId) {
+      throw new Error('Ce n’est pas à vous de soumettre pour cette manche.');
+    }
+
+    if (room.gameData.twoTruthsOneLie) {
+      throw new Error('Une manche est déjà en cours. Attendez le vote avant de soumettre à nouveau.');
+    }
+
+    if (!Array.isArray(statements) || statements.length !== 3 || !Number.isInteger(lieIndex) || lieIndex < 0 || lieIndex > 2) {
+      throw new Error('Il faut exactement 3 affirmations et indiquer laquelle est le mensonge.');
+    }
+
+    const state: TwoTruthsOneLieState = { statements, lieIndex, submitter: socketId };
+    room.gameData.twoTruthsOneLie = state;
+
+    return { roomId, statements, submitterId: socketId };
+  }
+
   voteTwoTruthsOneLie(socketId: string, voteIndex: number) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
@@ -449,6 +525,11 @@ export class RoomManager {
       throw new Error('Aucun jeu 2 Vérités 1 Mensonge en cours.');
     }
 
+    const roles = room.gameData.twoTruthsOneLieRoles as TwoTruthsOneLieRoles | undefined;
+    if (roles && roles.voterId !== socketId) {
+      throw new Error('Ce n’est pas à vous de voter pour cette manche.');
+    }
+
     delete room.gameData.twoTruthsOneLie;
 
     const correct = voteIndex === state.lieIndex;
@@ -462,6 +543,16 @@ export class RoomManager {
 
     const targetScore = TARGET_SCORES[room.gameId] ?? Infinity;
     const winnerId = room.players.find(player => (room.scores[player.id] ?? 0) >= targetScore)?.id ?? null;
+    const matchOver = winnerId !== null;
+
+    let nextSubmitterId: string | null = null;
+    let nextVoterId: string | null = null;
+
+    if (!matchOver && roles) {
+      nextSubmitterId = roles.voterId;
+      nextVoterId = roles.submitterId;
+      room.gameData.twoTruthsOneLieRoles = { submitterId: nextSubmitterId, voterId: nextVoterId };
+    }
 
     return {
       roomId,
@@ -469,8 +560,10 @@ export class RoomManager {
       correct,
       lieIndex: state.lieIndex,
       scores: { ...room.scores },
-      matchOver: winnerId !== null,
-      winnerId
+      matchOver,
+      winnerId,
+      nextSubmitterId,
+      nextVoterId
     };
   }
 
