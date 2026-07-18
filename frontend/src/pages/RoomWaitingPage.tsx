@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Check, Copy } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useGameStore } from '../store/useGameStore';
@@ -15,6 +16,7 @@ export function RoomWaitingPage() {
   const status = useGameStore(state => state.status);
   const setStatus = useGameStore(state => state.setStatus);
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!socket || !roomCode) {
@@ -56,6 +58,20 @@ export function RoomWaitingPage() {
     socket.emit(ClientEvents.StartGame, { roomId: roomCode });
   };
 
+  const handleCopyCode = async () => {
+    if (!roomCode) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable (e.g. insecure context) — nothing more we can do silently.
+    }
+  };
+
   return (
     <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
       <section className="rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
@@ -65,9 +81,16 @@ export function RoomWaitingPage() {
             <h1 className="mt-3 text-4xl font-bold text-foreground">Salon {roomCode}</h1>
             <p className="mt-3 text-base leading-7 text-muted-foreground">Partagez ce code avec vos amis et préparez-vous à lancer la partie.</p>
           </div>
-          <div className="rounded-3xl bg-secondary px-4 py-3 text-sm text-secondary-foreground">
-            Code du salon : <strong>{roomCode}</strong>
-          </div>
+          <button
+            type="button"
+            onClick={handleCopyCode}
+            className="flex items-center gap-2 rounded-3xl bg-secondary px-4 py-3 text-sm text-secondary-foreground transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]"
+          >
+            <span>
+              Code du salon : <strong>{roomCode}</strong>
+            </span>
+            {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+          </button>
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">

@@ -60,8 +60,8 @@ export function GamePlayPage() {
 
         {opponent && !opponent.connected ? (
           <div className="mt-6 rounded-3xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-            ⚠️ {opponent.name} s'est déconnecté. La partie l'attend (jusqu'à 30 secondes) — si {opponent.name} ne
-            revient pas, il/elle sera retiré(e) du salon.
+            ⚠️ {opponent.name} s'est déconnecté. Sa place est conservée quel que soit le temps que ça prend — la
+            partie reprendra dès qu'il/elle reviendra.
           </div>
         ) : null}
 

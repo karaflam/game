@@ -56,8 +56,6 @@ type RoomState = {
   started: boolean;
 };
 
-export const DISCONNECT_GRACE_MS = 30_000;
-
 function generateRoomId() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
@@ -67,6 +65,10 @@ export class RoomManager {
   private socketRoom = new Map<string, string>();
 
   createRoom(socketId: string, name: string, gameId: string, token: string) {
+    // A socket can only ever be "in" one room at a time — creating a new one always leaves
+    // whichever room this connection was previously occupying.
+    const previousRoom = this.leaveRoom(socketId);
+
     const roomId = generateRoomId();
     const player: Player = { id: socketId, name, connected: true };
     this.rooms.set(roomId, {
@@ -82,7 +84,7 @@ export class RoomManager {
       started: false
     });
     this.socketRoom.set(socketId, roomId);
-    return { roomId, players: [player] };
+    return { roomId, players: [player], previousRoom };
   }
 
   getRoomId(socketId: string) {
@@ -108,8 +110,19 @@ export class RoomManager {
     }
 
     if (room.players.some(player => player.id === socketId)) {
-      return { players: room.players, previousSocketId: null as string | null, started: room.started, scores: { ...room.scores } };
+      return {
+        players: room.players,
+        previousSocketId: null as string | null,
+        started: room.started,
+        scores: { ...room.scores },
+        previousRoom: null as { roomId: string; players: Player[] } | null
+      };
     }
+
+    // A socket can only ever be "in" one room at a time — joining a different room always
+    // leaves whichever room this connection was previously occupying.
+    const currentRoomId = this.socketRoom.get(socketId);
+    const previousRoom = currentRoomId && currentRoomId !== roomId ? this.leaveRoom(socketId) : null;
 
     const previousEntry = Array.from(room.tokens.entries()).find(([, tok]) => tok === token);
 
@@ -124,14 +137,14 @@ export class RoomManager {
         player.name = name;
       }
       this.socketRoom.set(socketId, roomId);
-      return { players: room.players, previousSocketId: oldSocketId, started: room.started, scores: { ...room.scores } };
+      return { players: room.players, previousSocketId: oldSocketId, started: room.started, scores: { ...room.scores }, previousRoom };
     }
 
     room.players.push({ id: socketId, name, connected: true });
     room.scores[socketId] = 0;
     room.tokens.set(socketId, token);
     this.socketRoom.set(socketId, roomId);
-    return { players: room.players, previousSocketId: null, started: room.started, scores: { ...room.scores } };
+    return { players: room.players, previousSocketId: null, started: room.started, scores: { ...room.scores }, previousRoom };
   }
 
   leaveRoom(socketId: string) {
@@ -180,37 +193,15 @@ export class RoomManager {
       return null;
     }
 
-    const token = room.tokens.get(socketId) ?? null;
+    // The player stays in the room indefinitely — only an explicit "Quitter la partie"
+    // (leaveRoom) or a reconnect under the same token removes/reclaims their seat. This is
+    // deliberate: on mobile, sharing the room code means leaving the browser entirely, for an
+    // unpredictable amount of time, and that must never cost the player their spot.
     const player = room.players.find(p => p.id === socketId);
     if (player) {
       player.connected = false;
     }
     this.socketRoom.delete(socketId);
-
-    return { roomId, token, players: room.players };
-  }
-
-  finalizeDisconnect(roomId: string, socketId: string, token: string) {
-    const room = this.rooms.get(roomId);
-    if (!room) {
-      return null;
-    }
-
-    if (room.tokens.get(socketId) !== token) {
-      // The player already reconnected under a new socket id — nothing to clean up.
-      return null;
-    }
-
-    room.players = room.players.filter(player => player.id !== socketId);
-    room.choices.delete(socketId);
-    delete room.gameData[socketId];
-    delete room.scores[socketId];
-    room.tokens.delete(socketId);
-
-    if (room.players.length === 0) {
-      this.rooms.delete(roomId);
-      return { roomId, players: [] as Player[] };
-    }
 
     return { roomId, players: room.players };
   }

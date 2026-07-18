@@ -3,7 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { ServerEvents, ClientEvents } from './events.js';
-import { RoomManager, DISCONNECT_GRACE_MS } from './roomManager.js';
+import { RoomManager } from './roomManager.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +15,6 @@ const io = new Server(server, {
 });
 
 const roomManager = new RoomManager();
-const pendingRemovalTimers = new Map<string, NodeJS.Timeout>();
 
 app.use(cors({ origin: true }));
 app.use(express.json());
@@ -38,7 +37,13 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(ClientEvents.CreateRoom, ({ name, gameId, token }: { name: string; gameId: string; token: string }) => {
     try {
-      const { roomId, players } = roomManager.createRoom(socket.id, name, gameId, token);
+      const { roomId, players, previousRoom } = roomManager.createRoom(socket.id, name, gameId, token);
+
+      if (previousRoom) {
+        socket.leave(previousRoom.roomId);
+        io.to(previousRoom.roomId).emit(ServerEvents.RoomUpdate, { roomId: previousRoom.roomId, players: previousRoom.players });
+      }
+
       socket.join(roomId);
       socket.emit(ServerEvents.RoomCreated, { roomId, players });
     } catch (error) {
@@ -51,16 +56,16 @@ io.on(ClientEvents.Connect, socket => {
     ({ roomId, name, gameId, token }: { roomId: string; name: string; gameId: string; token: string }) => {
       try {
         const result = roomManager.joinRoom(roomId, socket.id, name, gameId, token);
-        socket.join(roomId);
 
-        if (result.previousSocketId) {
-          const timerKey = `${roomId}:${result.previousSocketId}`;
-          const timer = pendingRemovalTimers.get(timerKey);
-          if (timer) {
-            clearTimeout(timer);
-            pendingRemovalTimers.delete(timerKey);
-          }
+        if (result.previousRoom) {
+          socket.leave(result.previousRoom.roomId);
+          io.to(result.previousRoom.roomId).emit(ServerEvents.RoomUpdate, {
+            roomId: result.previousRoom.roomId,
+            players: result.previousRoom.players
+          });
         }
+
+        socket.join(roomId);
 
         io.to(roomId).emit(ServerEvents.RoomUpdate, {
           roomId,
@@ -379,23 +384,7 @@ io.on(ClientEvents.Connect, socket => {
       return;
     }
 
-    const { roomId, token, players } = info;
-    io.to(roomId).emit(ServerEvents.RoomUpdate, { roomId, players });
-
-    if (!token) {
-      return;
-    }
-
-    const disconnectedSocketId = socket.id;
-    const timerKey = `${roomId}:${disconnectedSocketId}`;
-    const timer = setTimeout(() => {
-      pendingRemovalTimers.delete(timerKey);
-      const result = roomManager.finalizeDisconnect(roomId, disconnectedSocketId, token);
-      if (result) {
-        io.to(roomId).emit(ServerEvents.RoomUpdate, { roomId, players: result.players });
-      }
-    }, DISCONNECT_GRACE_MS);
-    pendingRemovalTimers.set(timerKey, timer);
+    io.to(info.roomId).emit(ServerEvents.RoomUpdate, { roomId: info.roomId, players: info.players });
   });
 });
 
