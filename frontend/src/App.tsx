@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from './components/layout/Header';
+import { Footer } from './components/layout/Footer';
 import { ReconnectingOverlay } from './components/ReconnectingOverlay';
 import { HomePage } from './pages/HomePage';
 import { GameModePage } from './pages/GameModePage';
@@ -21,10 +22,10 @@ function App() {
   const location = useLocation();
 
   return (
-    <div className="app-shell min-h-screen bg-background text-foreground">
+    <div className="app-shell flex min-h-screen flex-col bg-background text-foreground">
       <ReconnectingOverlay />
       <Header />
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}
@@ -49,6 +50,7 @@ function App() {
         </motion.div>
         </AnimatePresence>
       </main>
+      <Footer />
     </div>
   );
 }
