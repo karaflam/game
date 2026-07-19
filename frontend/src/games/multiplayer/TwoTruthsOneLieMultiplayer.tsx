@@ -71,21 +71,44 @@ export function TwoTruthsOneLieMultiplayer() {
       setLieChoice(0);
     };
 
+    const handleGameState = (data: {
+      gameId: string;
+      state: {
+        submitterId: string;
+        voterId: string;
+        votingStatements: string[] | null;
+        lieIndex: number | null;
+      };
+    }) => {
+      if (data.gameId !== 'two-truths-one-lie') {
+        return;
+      }
+      setSubmitterId(data.state.submitterId);
+      setVoterId(data.state.voterId);
+      setVotingStatements(data.state.votingStatements);
+      if (data.state.lieIndex !== null) {
+        setLieChoice(data.state.lieIndex);
+      }
+    };
+
     socket.on(ServerEvents.TwoTruthsOneLieRoundReady, handleRoundReady);
     socket.on(ServerEvents.TwoTruthsOneLiePrompt, handlePrompt);
     socket.on(ServerEvents.TwoTruthsOneLieResult, handleResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
+    socket.on(ServerEvents.GameState, handleGameState);
 
     // The server only broadcasts the initial TwoTruthsOneLieRoundReady once, right when the
     // match starts (from the waiting room, before this component has mounted and subscribed).
-    // Actively request the current round state so we don't miss it and get stuck waiting forever.
-    socket.emit(ClientEvents.TwoTruthsOneLieRequestState);
+    // Actively request the current round state so we don't miss it and get stuck waiting forever
+    // — this also covers every later (re)connect, since socketId changes each time one happens.
+    socket.emit(ClientEvents.RequestGameState);
 
     return () => {
       socket.off(ServerEvents.TwoTruthsOneLieRoundReady, handleRoundReady);
       socket.off(ServerEvents.TwoTruthsOneLiePrompt, handlePrompt);
       socket.off(ServerEvents.TwoTruthsOneLieResult, handleResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
+      socket.off(ServerEvents.GameState, handleGameState);
     };
   }, [socket, socketId, setStoreScores]);
 

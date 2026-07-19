@@ -11,7 +11,13 @@ const io = new Server(server, {
   cors: {
     origin: true,
     methods: ['GET', 'POST']
-  }
+  },
+  // Lets a socket that reconnects within 2 minutes (default) keep its original socket.id and
+  // automatically rejoin the socket.io rooms it was in, with any broadcasts it missed replayed.
+  // This is a transport-level safety net for brief interruptions (app-switch, weak signal) —
+  // it does not replace the token-based reconnect in RoomManager, which is what handles the
+  // "gone for a while" case and restores game-specific state, not just room membership.
+  connectionStateRecovery: {}
 });
 
 const roomManager = new RoomManager();
@@ -124,13 +130,6 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
-  socket.on(ClientEvents.RpsRequestState, () => {
-    const state = roomManager.getRpsState(socket.id);
-    if (state) {
-      socket.emit(ServerEvents.RpsState, state);
-    }
-  });
-
   socket.on(ClientEvents.ResetMatchScore, () => {
     try {
       const { roomId, scores } = roomManager.resetScores(socket.id);
@@ -165,20 +164,6 @@ io.on(ClientEvents.Connect, socket => {
       }
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
-    }
-  });
-
-  socket.on(ClientEvents.OddOrEvenRequestState, () => {
-    const state = roomManager.getOddOrEvenState(socket.id);
-    if (state) {
-      socket.emit(ServerEvents.OddOrEvenState, state);
-    }
-  });
-
-  socket.on(ClientEvents.TruthOrDareRequestState, () => {
-    const state = roomManager.getTruthOrDareState(socket.id);
-    if (state) {
-      socket.emit(ServerEvents.TruthOrDareState, state);
     }
   });
 
@@ -224,13 +209,6 @@ io.on(ClientEvents.Connect, socket => {
       });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
-    }
-  });
-
-  socket.on(ClientEvents.WouldYouRatherRequestState, () => {
-    const state = roomManager.getWouldYouRatherState(socket.id);
-    if (state) {
-      socket.emit(ServerEvents.WouldYouRatherState, state);
     }
   });
 
@@ -287,13 +265,6 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
-  socket.on(ClientEvents.TwentyQuestionsRequestState, () => {
-    const state = roomManager.getTwentyQuestionsState(socket.id);
-    if (state) {
-      socket.emit(ServerEvents.TwentyQuestionsRoundReady, state);
-    }
-  });
-
   socket.on(ServerEvents.TwentyQuestionsJudge, ({ correct, hint }) => {
     try {
       const result = roomManager.judgeTwentyQuestionsGuess(socket.id, correct, hint);
@@ -346,13 +317,6 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
-  socket.on(ClientEvents.TwoTruthsOneLieRequestState, () => {
-    const state = roomManager.getTwoTruthsOneLieState(socket.id);
-    if (state) {
-      socket.emit(ServerEvents.TwoTruthsOneLieRoundReady, state);
-    }
-  });
-
   socket.on(ServerEvents.StartGame, ({ roomId }) => {
     try {
       const ownerRoomId = roomManager.getRoomId(socket.id);
@@ -388,6 +352,37 @@ io.on(ClientEvents.Connect, socket => {
       }
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
+
+  // A single, generic resync handshake used by every game instead of one bespoke pair of events
+  // each — the client asks "what's going on in my room right now" and gets back exactly the same
+  // shape it would have received live, computed by the same per-game getters. Used both right
+  // after a (re)join and defensively any time a client suspects it might have missed something.
+  socket.on(ClientEvents.RequestGameState, () => {
+    const roomId = roomManager.getRoomId(socket.id);
+    if (!roomId) {
+      return;
+    }
+
+    const gameId = roomManager.getGameId(roomId);
+    const state =
+      gameId === 'rps'
+        ? roomManager.getRpsState(socket.id)
+        : gameId === 'odd-or-even'
+          ? roomManager.getOddOrEvenState(socket.id)
+          : gameId === 'would-you-rather'
+            ? roomManager.getWouldYouRatherState(socket.id)
+            : gameId === 'truth-or-dare'
+              ? roomManager.getTruthOrDareState(socket.id)
+              : gameId === '20-questions'
+                ? roomManager.getTwentyQuestionsState(socket.id)
+                : gameId === 'two-truths-one-lie'
+                  ? roomManager.getTwoTruthsOneLieState(socket.id)
+                  : null;
+
+    if (state) {
+      socket.emit(ServerEvents.GameState, { gameId, state });
     }
   });
 

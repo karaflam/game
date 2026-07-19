@@ -102,16 +102,44 @@ export function TwentyQuestionsMultiplayer() {
       setRoundResult(null);
     };
 
+    const handleGameState = (data: {
+      gameId: string;
+      state: {
+        setterId: string;
+        guesserId: string;
+        attemptsRemaining: number;
+        turnIndex: number;
+        wordSet: boolean;
+        pendingGuess: string | null;
+        word: string | null;
+      };
+    }) => {
+      if (data.gameId !== '20-questions') {
+        return;
+      }
+      setSetterId(data.state.setterId);
+      setGuesserId(data.state.guesserId);
+      setAttemptsRemaining(data.state.attemptsRemaining);
+      setTurnIndex(data.state.turnIndex);
+      setWordSet(data.state.wordSet);
+      setPendingGuess(data.state.pendingGuess);
+      if (data.state.word) {
+        setWordDraft(data.state.word);
+      }
+    };
+
     socket.on(ServerEvents.TwentyQuestionsRoundReady, handleRoundReady);
     socket.on(ServerEvents.TwentyQuestionsWordReady, handleWordReady);
     socket.on(ServerEvents.TwentyQuestionsGuessSubmitted, handleGuessSubmitted);
     socket.on(ServerEvents.TwentyQuestionsRoundResult, handleRoundResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
+    socket.on(ServerEvents.GameState, handleGameState);
 
     // The server only broadcasts the initial TwentyQuestionsRoundReady once, right when the
     // match starts (from the waiting room, before this component has mounted and subscribed).
-    // Actively request the current round state so we don't miss it and get stuck waiting forever.
-    socket.emit(ClientEvents.TwentyQuestionsRequestState);
+    // Actively request the current round state so we don't miss it and get stuck waiting forever
+    // — this also covers every later (re)connect, since socketId changes each time one happens.
+    socket.emit(ClientEvents.RequestGameState);
 
     return () => {
       socket.off(ServerEvents.TwentyQuestionsRoundReady, handleRoundReady);
@@ -119,6 +147,7 @@ export function TwentyQuestionsMultiplayer() {
       socket.off(ServerEvents.TwentyQuestionsGuessSubmitted, handleGuessSubmitted);
       socket.off(ServerEvents.TwentyQuestionsRoundResult, handleRoundResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
+      socket.off(ServerEvents.GameState, handleGameState);
     };
   }, [socket, socketId, setStoreScores]);
 

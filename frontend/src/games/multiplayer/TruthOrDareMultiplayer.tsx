@@ -74,18 +74,24 @@ export function TruthOrDareMultiplayer() {
       setAnswerDraft('');
     };
 
-    const handleState = (data: {
-      activePlayerId: string;
-      activePlayerName: string;
-      type: ContentType | null;
-      text: string | null;
-      answer: string | null;
+    const handleGameState = (data: {
+      gameId: string;
+      state: {
+        activePlayerId: string;
+        activePlayerName: string;
+        type: ContentType | null;
+        text: string | null;
+        answer: string | null;
+      };
     }) => {
-      setActivePlayerId(data.activePlayerId);
-      setActivePlayerName(data.activePlayerName);
-      if (data.type) {
-        setContent({ type: data.type, text: data.text ?? '' });
-        setAnswer(data.answer);
+      if (data.gameId !== 'truth-or-dare') {
+        return;
+      }
+      setActivePlayerId(data.state.activePlayerId);
+      setActivePlayerName(data.state.activePlayerName);
+      if (data.state.type) {
+        setContent({ type: data.state.type, text: data.state.text ?? '' });
+        setAnswer(data.state.answer);
         setPhase('content');
       } else {
         setContent(null);
@@ -99,11 +105,11 @@ export function TruthOrDareMultiplayer() {
     socket.on(ServerEvents.TruthOrDareAnswerSubmitted, handleAnswerSubmitted);
     socket.on(ServerEvents.TruthOrDareResult, handleResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
-    socket.on(ServerEvents.TruthOrDareState, handleState);
+    socket.on(ServerEvents.GameState, handleGameState);
 
-    // If we reconnect mid-manche (wheel already landed, or a choice/answer already made),
+    // If we (re)connect mid-manche (wheel already landed, or a choice/answer already made),
     // resync straight into that phase instead of showing the "spin the wheel" screen again.
-    socket.emit(ClientEvents.TruthOrDareRequestState);
+    socket.emit(ClientEvents.RequestGameState);
 
     return () => {
       socket.off(ServerEvents.TruthOrDareSpin, handleSpin);
@@ -111,7 +117,7 @@ export function TruthOrDareMultiplayer() {
       socket.off(ServerEvents.TruthOrDareAnswerSubmitted, handleAnswerSubmitted);
       socket.off(ServerEvents.TruthOrDareResult, handleResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
-      socket.off(ServerEvents.TruthOrDareState, handleState);
+      socket.off(ServerEvents.GameState, handleGameState);
     };
   }, [socket, socketId, setStoreScores]);
 

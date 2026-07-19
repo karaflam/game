@@ -5,66 +5,40 @@ import { gameThemes } from '../data/gameThemes';
 import { GameCard } from '../components/GameCard';
 import type { GameTheme } from '../types/game';
 import { useSocket } from '../hooks/useSocket';
-import { useGameStore, type Player } from '../store/useGameStore';
-import { ClientEvents, ServerEvents } from '../lib/socketEvents';
-import { getActiveRoom, clearActiveRoom, getPlayerToken, getStoredPseudo } from '../lib/playerSession';
+import { useGameStore } from '../store/useGameStore';
+import { getActiveRoom } from '../lib/playerSession';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { socket, connected } = useSocket();
-  const [rejoining, setRejoining] = useState(false);
-  const setGameId = useGameStore(state => state.setGameId);
-  const setRoomCode = useGameStore(state => state.setRoomCode);
-  const setPlayers = useGameStore(state => state.setPlayers);
-  const setStatus = useGameStore(state => state.setStatus);
-  const setScores = useGameStore(state => state.setScores);
+  // The actual (re)join handshake lives in useSocket — calling it here just ensures the shared
+  // socket exists and its "resume my active room" logic runs even if HomePage is the very first
+  // page the app renders (fresh load / bookmark landing on "/").
+  useSocket();
+  const roomCode = useGameStore(state => state.roomCode);
+  const status = useGameStore(state => state.status);
+  const [showRejoining, setShowRejoining] = useState(() => getActiveRoom() !== null);
 
   useEffect(() => {
-    if (!socket || !connected) {
+    if (!showRejoining) {
       return;
     }
+    // Purely a courtesy message — self-clears whether the rejoin succeeds (we've navigated away
+    // by then) or fails (nothing left to wait for), without needing extra state plumbing.
+    const timer = setTimeout(() => setShowRejoining(false), 4000);
+    return () => clearTimeout(timer);
+  }, [showRejoining]);
 
+  useEffect(() => {
     const session = getActiveRoom();
-    const pseudo = getStoredPseudo().trim();
-    if (!session || !pseudo) {
+    if (!session || roomCode !== session.roomCode) {
       return;
     }
-
-    setRejoining(true);
-    socket.emit(ClientEvents.JoinRoom, { roomId: session.roomCode, name: pseudo, gameId: session.gameId, token: getPlayerToken() });
-
-    const handleUpdate = ({
-      players,
-      started,
-      scores
-    }: {
-      roomId: string;
-      players: Player[];
-      started?: boolean;
-      scores?: Record<string, number>;
-    }) => {
-      setRejoining(false);
-      setGameId(session.gameId);
-      setRoomCode(session.roomCode);
-      setPlayers(players);
-      setScores(scores ?? {});
-      setStatus(started ? 'in-game' : 'waiting');
-      navigate(started ? `/jeu/${session.gameId}/salon/${session.roomCode}/partie` : `/jeu/${session.gameId}/salon/${session.roomCode}`);
-    };
-
-    const handleError = () => {
-      setRejoining(false);
-      clearActiveRoom();
-    };
-
-    socket.once(ServerEvents.RoomUpdate, handleUpdate);
-    socket.once(ServerEvents.RoomError, handleError);
-
-    return () => {
-      socket.off(ServerEvents.RoomUpdate, handleUpdate);
-      socket.off(ServerEvents.RoomError, handleError);
-    };
-  }, [socket, connected, navigate, setGameId, setRoomCode, setPlayers, setStatus, setScores]);
+    navigate(
+      status === 'in-game'
+        ? `/jeu/${session.gameId}/salon/${session.roomCode}/partie`
+        : `/jeu/${session.gameId}/salon/${session.roomCode}`
+    );
+  }, [roomCode, status, navigate]);
 
   const handleSelectGame = (game: GameTheme) => {
     navigate(`/jeu/${game.id}/mode`);
@@ -84,7 +58,7 @@ export function HomePage() {
             <h1 className="mt-4 text-4xl font-bold text-foreground sm:text-5xl">Choisissez un jeu et lancez une partie.</h1>
           </div>
           <p className="max-w-2xl text-lg leading-8 text-muted-foreground">Sélectionnez votre jeu favori, choisissez Solo ou Multijoueur, puis rejoignez un salon en ligne avec un code unique.</p>
-          {rejoining ? (
+          {showRejoining ? (
             <p className="text-sm font-semibold text-primary">Reconnexion à votre salon en cours...</p>
           ) : null}
         </div>

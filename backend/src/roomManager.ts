@@ -43,6 +43,7 @@ type TwentyQuestionsState = {
   guesserId: string;
   word: string | null;
   attemptsRemaining: number;
+  pendingGuess: string | null;
 };
 
 type RoomState = {
@@ -619,7 +620,17 @@ export class RoomManager {
       return null;
     }
 
-    return { submitterId: roles.submitterId, voterId: roles.voterId };
+    const pending = room.gameData.twoTruthsOneLie as TwoTruthsOneLieState | undefined;
+
+    return {
+      submitterId: roles.submitterId,
+      voterId: roles.voterId,
+      // The statements are safe for anyone to see once submitted, but the lie index must never
+      // leak to the voter before they vote — only the submitter (who already wrote it) gets it,
+      // purely so their own "which one is the lie" selection survives a reconnect.
+      votingStatements: pending ? pending.statements : null,
+      lieIndex: pending && socketId === pending.submitter ? pending.lieIndex : null
+    };
   }
 
   submitTwoTruthsOneLie(socketId: string, statements: string[], lieIndex: number) {
@@ -859,7 +870,8 @@ export class RoomManager {
       setterId: setter.id,
       guesserId: guesser.id,
       word: null,
-      attemptsRemaining: TWENTY_Q_MAX_ATTEMPTS
+      attemptsRemaining: TWENTY_Q_MAX_ATTEMPTS,
+      pendingGuess: null
     };
     room.gameData.twentyQuestions = state;
 
@@ -921,7 +933,8 @@ export class RoomManager {
       throw new Error('Le mot n’est pas encore défini.');
     }
 
-    return { roomId, guess: guess.trim(), attemptsRemaining: state.attemptsRemaining };
+    state.pendingGuess = guess.trim();
+    return { roomId, guess: state.pendingGuess, attemptsRemaining: state.attemptsRemaining };
   }
 
   judgeTwentyQuestionsGuess(socketId: string, correct: boolean, hint?: string) {
@@ -951,6 +964,9 @@ export class RoomManager {
     if (!correct) {
       state.attemptsRemaining -= 1;
     }
+
+    // Judged either way — the guesser needs to submit a fresh one before the setter can judge again.
+    state.pendingGuess = null;
 
     const roundOver = correct || state.attemptsRemaining <= 0;
 
@@ -988,7 +1004,8 @@ export class RoomManager {
         setterId: nextSetterId,
         guesserId: nextGuesserId,
         word: null,
-        attemptsRemaining: TWENTY_Q_MAX_ATTEMPTS
+        attemptsRemaining: TWENTY_Q_MAX_ATTEMPTS,
+        pendingGuess: null
       } as TwentyQuestionsState;
     } else {
       delete room.gameData.twentyQuestions;
@@ -1045,7 +1062,11 @@ export class RoomManager {
       guesserId: state.guesserId,
       attemptsRemaining: state.attemptsRemaining,
       turnIndex: state.turnIndex,
-      wordSet: state.word !== null
+      wordSet: state.word !== null,
+      pendingGuess: state.pendingGuess,
+      // Never leaks to the guesser — only echoed back to the setter, purely so their own
+      // "reminder badge" for the word they typed survives a reconnect.
+      word: socketId === state.setterId ? state.word : null
     };
   }
 

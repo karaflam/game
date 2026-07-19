@@ -74,22 +74,25 @@ export function OddOrEvenMultiplayer() {
       setWaiting(false);
     };
 
-    const handleState = (data: { waiting: boolean }) => {
-      setWaiting(data.waiting);
+    const handleGameState = (data: { gameId: string; state: { waiting: boolean } }) => {
+      if (data.gameId !== 'odd-or-even') {
+        return;
+      }
+      setWaiting(data.state.waiting);
     };
 
     socket.on(ServerEvents.OddOrEvenResult, handleResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
-    socket.on(ServerEvents.OddOrEvenState, handleState);
+    socket.on(ServerEvents.GameState, handleGameState);
 
-    // If we reconnect mid-round (after already having played our choice), resync that fact
+    // If we (re)connect mid-round (after already having played our choice), resync that fact
     // instead of showing the picker again as if nothing had been chosen yet.
-    socket.emit(ClientEvents.OddOrEvenRequestState);
+    socket.emit(ClientEvents.RequestGameState);
 
     return () => {
       socket.off(ServerEvents.OddOrEvenResult, handleResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
-      socket.off(ServerEvents.OddOrEvenState, handleState);
+      socket.off(ServerEvents.GameState, handleGameState);
     };
   }, [socket, socketId, setStoreScores]);
 

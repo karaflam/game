@@ -63,11 +63,14 @@ export function WouldYouRatherMultiplayer() {
       setWaiting(false);
     };
 
-    const handleState = (data: { prompt: Prompt | null; waiting: boolean }) => {
-      if (data.prompt) {
-        setPrompt(data.prompt);
+    const handleGameState = (data: { gameId: string; state: { prompt: Prompt | null; waiting: boolean } }) => {
+      if (data.gameId !== 'would-you-rather') {
+        return;
+      }
+      if (data.state.prompt) {
+        setPrompt(data.state.prompt);
         setAwaitingNextRound(false);
-        setWaiting(data.waiting);
+        setWaiting(data.state.waiting);
       } else {
         // No dilemma is active yet — let the normal players[0]-requests-a-round flow kick in.
         setAwaitingNextRound(true);
@@ -77,17 +80,17 @@ export function WouldYouRatherMultiplayer() {
     socket.on(ServerEvents.WouldYouRatherUpdate, handleUpdate);
     socket.on(ServerEvents.WouldYouRatherResult, handleResult);
     socket.on(ServerEvents.ScoreReset, handleScoreReset);
-    socket.on(ServerEvents.WouldYouRatherState, handleState);
+    socket.on(ServerEvents.GameState, handleGameState);
 
     // On (re)connect, ask what round state already exists instead of assuming none does —
     // this avoids re-requesting a fresh dilemma over one that's already in progress.
-    socket.emit(ClientEvents.WouldYouRatherRequestState);
+    socket.emit(ClientEvents.RequestGameState);
 
     return () => {
       socket.off(ServerEvents.WouldYouRatherUpdate, handleUpdate);
       socket.off(ServerEvents.WouldYouRatherResult, handleResult);
       socket.off(ServerEvents.ScoreReset, handleScoreReset);
-      socket.off(ServerEvents.WouldYouRatherState, handleState);
+      socket.off(ServerEvents.GameState, handleGameState);
     };
   }, [socket, socketId, setStoreScores]);
 
