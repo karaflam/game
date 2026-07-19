@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { useGameStore } from '../store/useGameStore';
 import { useSocket } from '../hooks/useSocket';
 import { ClientEvents, ServerEvents } from '../lib/socketEvents';
+import { clearActiveRoom } from '../lib/playerSession';
 import { gameThemes } from '../data/gameThemes';
 
 export function RoomWaitingPage() {
@@ -58,6 +59,14 @@ export function RoomWaitingPage() {
     }
 
     socket.emit(ClientEvents.StartGame, { roomId: roomCode });
+  };
+
+  const handleLeaveRoom = () => {
+    if (socket) {
+      socket.emit(ClientEvents.LeaveRoom);
+    }
+    clearActiveRoom();
+    navigate('/');
   };
 
   const handleCopyCode = async () => {
@@ -124,7 +133,7 @@ export function RoomWaitingPage() {
               <Button disabled={!canStart} onClick={handleStartClick}>
                 {isHost ? 'Démarrer la partie' : 'En attente de l’hôte'}
               </Button>
-              <Button variant="secondary" onClick={() => navigate('/')}>Retour à l’accueil</Button>
+              <Button variant="secondary" onClick={handleLeaveRoom}>Quitter le salon</Button>
             </div>
           </div>
         </div>
