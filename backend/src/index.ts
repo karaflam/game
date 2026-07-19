@@ -100,6 +100,20 @@ io.on(ClientEvents.Connect, socket => {
           started: result.started,
           scores: result.scores
         });
+
+        if (gameId === 'truth-or-dare') {
+          // Covers both a genuinely new join (the other player needs to see the current
+          // selection) and a reconnect/page-refresh rejoin (this player needs it restored) —
+          // rejoinActiveRoomIfAny() on the client always re-emits JoinRoom for exactly this case.
+          const categoryState = roomManager.getTruthOrDareCategoryState(socket.id);
+          if (categoryState) {
+            io.to(roomId).emit(ServerEvents.TruthOrDareCategoriesUpdate, {
+              categories: categoryState.categories,
+              validatedBy: categoryState.validatedBy,
+              allValidated: categoryState.allValidated
+            });
+          }
+        }
       } catch (error) {
         socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
       }
@@ -225,6 +239,32 @@ io.on(ClientEvents.Connect, socket => {
     }
   });
 
+  socket.on(ServerEvents.TruthOrDareSetCategories, ({ categories }: { categories: string[] }) => {
+    try {
+      const result = roomManager.setTruthOrDareCategories(socket.id, categories);
+      io.to(result.roomId).emit(ServerEvents.TruthOrDareCategoriesUpdate, {
+        categories: result.categories,
+        validatedBy: result.validatedBy,
+        allValidated: result.allValidated
+      });
+    } catch (error) {
+      socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
+
+  socket.on(ServerEvents.TruthOrDareValidateCategories, () => {
+    try {
+      const result = roomManager.validateTruthOrDareCategories(socket.id);
+      io.to(result.roomId).emit(ServerEvents.TruthOrDareCategoriesUpdate, {
+        categories: result.categories,
+        validatedBy: result.validatedBy,
+        allValidated: result.allValidated
+      });
+    } catch (error) {
+      socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
+    }
+  });
+
   socket.on(ServerEvents.WouldYouRatherStart, () => {
     try {
       const result = roomManager.startWouldYouRatherRound(socket.id);
@@ -340,6 +380,13 @@ io.on(ClientEvents.Connect, socket => {
       const roomPlayers = roomManager.getPlayers(roomId);
       if (roomPlayers.length < 2) {
         throw new Error('Il faut au moins 2 joueurs pour démarrer la partie.');
+      }
+
+      if (roomManager.getGameId(roomId) === 'truth-or-dare') {
+        const categoryState = roomManager.getTruthOrDareCategoryState(socket.id);
+        if (!categoryState?.allValidated) {
+          throw new Error('Les deux joueurs doivent valider les catégories avant de démarrer la partie.');
+        }
       }
 
       roomManager.markStarted(roomId);

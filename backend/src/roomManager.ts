@@ -1,4 +1,10 @@
-import { truthOrDarePrompts, wouldYouRatherPrompts } from './gamePrompts.js';
+import {
+  truthOrDarePrompts,
+  wouldYouRatherPrompts,
+  DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS,
+  TRUTH_OR_DARE_CATEGORIES,
+  type TruthOrDareCategoryId
+} from './gamePrompts.js';
 
 export type Player = { id: string; name: string };
 
@@ -55,6 +61,11 @@ type RoomState = {
   usedTruthOrDare: Set<number>;
   usedWouldYouRather: Set<number>;
   wouldYouRatherMismatches: number;
+  // Shared, live-edited by both players in the waiting room before the match can start — either
+  // player can toggle a category, which resets both players' validation (see below), so nobody
+  // can silently start a match with a category the other never agreed to.
+  truthOrDareCategories: TruthOrDareCategoryId[];
+  truthOrDareValidatedBy: Set<string>;
   tokens: Map<string, string>;
   started: boolean;
   // Timestamp since every single player in this room has had zero live connection, or null while
@@ -87,6 +98,8 @@ export class RoomManager {
       usedTruthOrDare: new Set(),
       usedWouldYouRather: new Set(),
       wouldYouRatherMismatches: 0,
+      truthOrDareCategories: [...DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS],
+      truthOrDareValidatedBy: new Set(),
       tokens: new Map([[socketId, token]]),
       started: false,
       abandonedSince: null
@@ -190,6 +203,7 @@ export class RoomManager {
     delete room.gameData[socketId];
     delete room.scores[socketId];
     room.tokens.delete(socketId);
+    room.truthOrDareValidatedBy.delete(socketId);
     this.socketRoom.delete(socketId);
 
     if (room.players.length === 0) {
@@ -206,6 +220,9 @@ export class RoomManager {
       room.gameData = {};
       room.choices.clear();
       room.scores = {};
+      // Keep the last-agreed category selection (no need to redo that), but require both
+      // players to re-validate before the next match can start.
+      room.truthOrDareValidatedBy.clear();
       for (const player of room.players) {
         room.scores[player.id] = 0;
       }
@@ -751,6 +768,77 @@ export class RoomManager {
     };
   }
 
+  private truthOrDareCategoryState(room: RoomState) {
+    const allValidated = room.players.length >= 2 && room.players.every(player => room.truthOrDareValidatedBy.has(player.id));
+    return {
+      categories: room.truthOrDareCategories,
+      validatedBy: Array.from(room.truthOrDareValidatedBy),
+      allValidated
+    };
+  }
+
+  getTruthOrDareCategoryState(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      return null;
+    }
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+    return { roomId, ...this.truthOrDareCategoryState(room) };
+  }
+
+  setTruthOrDareCategories(socketId: string, categories: string[]) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    if (!room.players.some(player => player.id === socketId)) {
+      throw new Error('Vous n’êtes pas membre de la salle.');
+    }
+
+    const knownIds = new Set(TRUTH_OR_DARE_CATEGORIES.map(category => category.id));
+    const sanitized = Array.from(new Set(categories.filter((id): id is TruthOrDareCategoryId => knownIds.has(id as TruthOrDareCategoryId))));
+    if (sanitized.length === 0) {
+      throw new Error('Sélectionnez au moins une catégorie.');
+    }
+
+    room.truthOrDareCategories = sanitized;
+    // Any change to the shared list invalidates whatever agreement existed before it — both
+    // players must confirm the new set explicitly, so nobody can toggle something the other
+    // hasn't seen and slip straight into starting the match.
+    room.truthOrDareValidatedBy.clear();
+
+    return { roomId, ...this.truthOrDareCategoryState(room) };
+  }
+
+  validateTruthOrDareCategories(socketId: string) {
+    const roomId = this.socketRoom.get(socketId);
+    if (!roomId) {
+      throw new Error('Vous n’êtes pas dans une salle.');
+    }
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Salle introuvable.');
+    }
+
+    if (!room.players.some(player => player.id === socketId)) {
+      throw new Error('Vous n’êtes pas membre de la salle.');
+    }
+
+    room.truthOrDareValidatedBy.add(socketId);
+
+    return { roomId, ...this.truthOrDareCategoryState(room) };
+  }
+
   startTruthOrDare(socketId: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
@@ -766,10 +854,21 @@ export class RoomManager {
       throw new Error('Il faut au moins 2 joueurs pour jouer.');
     }
 
-    const promptIndex = this.pickIndexExcluding(truthOrDarePrompts.length, room.usedTruthOrDare);
+    const activeCategories = new Set(room.truthOrDareCategories);
+    const eligibleIndices = truthOrDarePrompts.reduce<number[]>((acc, prompt, index) => {
+      if (activeCategories.has(prompt.category)) {
+        acc.push(index);
+      }
+      return acc;
+    }, []);
+    const candidates = eligibleIndices.length > 0 ? eligibleIndices : truthOrDarePrompts.map((_, index) => index);
+
+    const promptIndex = this.pickIndexFromCandidates(candidates, room.usedTruthOrDare);
     room.usedTruthOrDare.add(promptIndex);
-    if (room.usedTruthOrDare.size >= truthOrDarePrompts.length) {
-      room.usedTruthOrDare.clear();
+    if (candidates.every(index => room.usedTruthOrDare.has(index))) {
+      for (const index of candidates) {
+        room.usedTruthOrDare.delete(index);
+      }
     }
 
     const activeIndex = Math.floor(Math.random() * room.players.length);
@@ -1180,6 +1279,12 @@ export class RoomManager {
     const all = Array.from({ length }, (_, i) => i);
     const available = all.filter(i => !excluded.has(i));
     const pool = available.length > 0 ? available : all;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  private pickIndexFromCandidates(candidates: number[], excluded: Set<number>): number {
+    const available = candidates.filter(i => !excluded.has(i));
+    const pool = available.length > 0 ? available : candidates;
     return pool[Math.floor(Math.random() * pool.length)];
   }
 

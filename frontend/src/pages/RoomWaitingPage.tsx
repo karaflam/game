@@ -8,6 +8,7 @@ import { useSocket } from '../hooks/useSocket';
 import { ClientEvents, ServerEvents } from '../lib/socketEvents';
 import { clearActiveRoom } from '../lib/playerSession';
 import { gameThemes } from '../data/gameThemes';
+import { TRUTH_OR_DARE_CATEGORIES, DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS, type TruthOrDareCategoryId } from '../data/soloPrompts';
 
 export function RoomWaitingPage() {
   const { gameId, roomCode } = useParams();
@@ -20,6 +21,10 @@ export function RoomWaitingPage() {
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
   const [copied, setCopied] = useState(false);
   const opponentLeftName = (location.state as { opponentLeftName?: string | null } | null)?.opponentLeftName ?? null;
+  const isTruthOrDare = gameId === 'truth-or-dare';
+  const [categories, setCategories] = useState<TruthOrDareCategoryId[]>(DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS);
+  const [validatedBy, setValidatedBy] = useState<string[]>([]);
+  const [allValidated, setAllValidated] = useState(false);
 
   useEffect(() => {
     if (!socket || !roomCode) {
@@ -34,9 +39,17 @@ export function RoomWaitingPage() {
       navigate(`/jeu/${gameId}/salon/${roomCode}/partie`);
     };
 
+    const handleCategoriesUpdate = (data: { categories: TruthOrDareCategoryId[]; validatedBy: string[]; allValidated: boolean }) => {
+      setCategories(data.categories);
+      setValidatedBy(data.validatedBy);
+      setAllValidated(data.allValidated);
+    };
+
     socket.on(ServerEvents.GameStarted, handleGameStarted);
+    socket.on(ServerEvents.TruthOrDareCategoriesUpdate, handleCategoriesUpdate);
     return () => {
       socket.off(ServerEvents.GameStarted, handleGameStarted);
+      socket.off(ServerEvents.TruthOrDareCategoriesUpdate, handleCategoriesUpdate);
     };
   }, [socket, roomCode, gameId, navigate, setStatus]);
 
@@ -50,8 +63,9 @@ export function RoomWaitingPage() {
   }
 
   const isHost = socketId !== null && socketId === players[0]?.id;
-  const canStart = players.length > 1 && isHost;
+  const canStart = players.length > 1 && isHost && (!isTruthOrDare || allValidated);
   const host = players[0]?.name ?? 'Hôte';
+  const hasValidated = socketId !== null && validatedBy.includes(socketId);
 
   const handleStartClick = () => {
     if (!socket || !roomCode) {
@@ -59,6 +73,21 @@ export function RoomWaitingPage() {
     }
 
     socket.emit(ClientEvents.StartGame, { roomId: roomCode });
+  };
+
+  const toggleCategory = (id: TruthOrDareCategoryId) => {
+    if (!socket) {
+      return;
+    }
+    const next = categories.includes(id) ? categories.filter(c => c !== id) : [...categories, id];
+    socket.emit(ClientEvents.TruthOrDareSetCategories, { categories: next });
+  };
+
+  const handleValidateCategories = () => {
+    if (!socket) {
+      return;
+    }
+    socket.emit(ClientEvents.TruthOrDareValidateCategories);
   };
 
   const handleLeaveRoom = () => {
@@ -110,6 +139,63 @@ export function RoomWaitingPage() {
           </div>
         ) : null}
 
+        {isTruthOrDare ? (
+          <div className="mt-6 rounded-3xl border border-border bg-background p-4 sm:p-6">
+            <h2 className="text-xl font-semibold text-foreground">Catégories de la partie</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Cochez les catégories à inclure. Dès que l’un de vous change une case, les deux validations sont annulées —
+              il faut que chacun reclique sur « Valider » pour se remettre d’accord.
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {TRUTH_OR_DARE_CATEGORIES.map(category => (
+                <label
+                  key={category.id}
+                  className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-surface p-3 text-sm transition-colors hover:border-primary/40"
+                >
+                  <input
+                    type="checkbox"
+                    checked={categories.includes(category.id)}
+                    onChange={() => toggleCategory(category.id)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                  />
+                  <span>
+                    <span className="block font-semibold text-foreground">{category.label}</span>
+                    <span className="block text-xs text-muted-foreground">{category.description}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <div className="mt-4 space-y-2 rounded-2xl border border-dashed border-border p-3">
+              {players.map(player => {
+                const validated = validatedBy.includes(player.id);
+                const isMe = player.id === socketId;
+                return (
+                  <div key={player.id} className="flex items-center gap-2 text-sm">
+                    <span className={validated ? 'text-primary' : 'text-muted-foreground'}>{validated ? '✓' : '⏳'}</span>
+                    <span className="font-medium text-foreground">
+                      {player.name}
+                      {isMe ? ' (vous)' : ''}
+                    </span>
+                    <span className="text-muted-foreground">{validated ? 'a validé cette sélection' : "n’a pas encore validé"}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                {allValidated
+                  ? '✅ Les deux joueurs ont validé — l’hôte peut maintenant démarrer la partie ci-dessous.'
+                  : '➜ Une fois validé par les deux, le bouton « Démarrer la partie » se débloquera.'}
+              </p>
+              <Button type="button" variant={hasValidated ? 'secondary' : 'default'} onClick={handleValidateCategories} disabled={hasValidated}>
+                {hasValidated ? 'Validé ✓' : 'Valider ces catégories'}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">
             <h2 className="text-xl font-semibold text-foreground">Joueurs connectés</h2>
@@ -128,10 +214,22 @@ export function RoomWaitingPage() {
 
           <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">
             <h2 className="text-xl font-semibold text-foreground">Statut de la salle</h2>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">{status === 'waiting' ? 'En attente de joueurs...' : 'Prêt à démarrer.'}</p>
+            <p className="mt-3 text-base leading-7 text-muted-foreground">
+              {status !== 'waiting'
+                ? 'Prêt à démarrer.'
+                : players.length < 2
+                  ? 'En attente de joueurs...'
+                  : isTruthOrDare && !allValidated
+                    ? 'En attente de la validation des catégories...'
+                    : 'Prêt à démarrer.'}
+            </p>
             <div className="mt-6 flex flex-col gap-3">
               <Button disabled={!canStart} onClick={handleStartClick}>
-                {isHost ? 'Démarrer la partie' : 'En attente de l’hôte'}
+                {!isHost
+                  ? 'En attente de l’hôte'
+                  : isTruthOrDare && !allValidated
+                    ? 'Validez les catégories pour démarrer'
+                    : 'Démarrer la partie'}
               </Button>
               <Button variant="secondary" onClick={handleLeaveRoom}>Quitter le salon</Button>
             </div>
