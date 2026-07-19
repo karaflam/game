@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -17,9 +17,23 @@ import { TwentyQuestionsMultiplayer } from '../games/multiplayer/TwentyQuestions
 export function GamePlayPage() {
   const { gameId, roomCode } = useParams();
   const navigate = useNavigate();
-  const { socket } = useSocket();
+  const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
+
+  const opponent = players.find(player => player.id !== socketId) ?? null;
+  const [lastOpponentName, setLastOpponentName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (opponent) {
+      setLastOpponentName(opponent.name);
+    }
+  }, [opponent]);
+
+  // GamePlayPage is only reachable once the match has started, which requires 2 players — so
+  // dropping below 2 here can only mean the opponent deliberately left via "Quitter la partie"
+  // (a raw disconnect never removes anyone from room.players).
+  const opponentLeft = players.length < 2 && lastOpponentName !== null;
 
   const handleLeaveGame = () => {
     if (socket) {
@@ -40,11 +54,11 @@ export function GamePlayPage() {
 
   return (
     <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-      <section className="rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
+      <section className="rounded-[2rem] bg-card p-6 shadow-lg shadow-slate-900/5 sm:p-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">Partie en cours</p>
-            <h1 className="mt-3 text-4xl font-bold text-foreground">{game.title} — Salon {roomCode}</h1>
+            <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">{game.title} — Salon {roomCode}</h1>
             <p className="mt-3 text-base leading-7 text-muted-foreground">{players.length} joueur(s) dans la salle.</p>
           </div>
           <div className="flex items-center gap-2">
@@ -56,6 +70,12 @@ export function GamePlayPage() {
             </Button>
           </div>
         </div>
+
+        {opponentLeft ? (
+          <div className="mt-6 rounded-3xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+            🚪 {lastOpponentName} a quitté la partie.
+          </div>
+        ) : null}
 
         <div className="mt-8">
           {gameId === 'rps' ? (

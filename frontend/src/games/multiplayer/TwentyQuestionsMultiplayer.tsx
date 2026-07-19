@@ -28,6 +28,7 @@ type RoundResultPayload = {
 export function TwentyQuestionsMultiplayer() {
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
+  const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
   const [setterId, setSetterId] = useState<string | null>(null);
   const [guesserId, setGuesserId] = useState<string | null>(null);
@@ -40,7 +41,6 @@ export function TwentyQuestionsMultiplayer() {
   const [hint, setHint] = useState<string | null>(null);
   const [hintDraft, setHintDraft] = useState('');
   const [roundResult, setRoundResult] = useState<RoundResultPayload | null>(null);
-  const [scores, setScores] = useState<Record<string, number>>(() => useGameStore.getState().scores);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
 
@@ -78,7 +78,6 @@ export function TwentyQuestionsMultiplayer() {
     };
 
     const handleRoundResult = (data: RoundResultPayload) => {
-      setScores(data.scores);
       setStoreScores(data.scores);
 
       if (!data.roundOver) {
@@ -95,7 +94,6 @@ export function TwentyQuestionsMultiplayer() {
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(false);
       setWinner(null);
@@ -215,7 +213,7 @@ export function TwentyQuestionsMultiplayer() {
   };
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <div className="rounded-2xl bg-secondary px-4 py-3 text-secondary-foreground">
         <div className="mb-3 flex items-center justify-end">
           <Button type="button" variant="ghost" size="sm" onClick={handleReplay} className="gap-1.5">
@@ -223,9 +221,9 @@ export function TwentyQuestionsMultiplayer() {
             Réinitialiser
           </Button>
         </div>
-        <div className="flex items-center justify-between text-sm font-semibold text-foreground">
-          <span>{me?.name ?? 'Vous'} (vous) : {myScore} pt(s)</span>
-          <span>{opponentName} : {opponentScore} pt(s)</span>
+        <div className="flex flex-col gap-1 text-sm font-semibold text-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span className="min-w-0 truncate">{me?.name ?? 'Vous'} (vous) : {myScore} pt(s)</span>
+          {opponent ? <span className="min-w-0 truncate">{opponentName} : {opponentScore} pt(s)</span> : null}
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           La partie se joue en {TOTAL_TURNS} tours. Celui qui a le plus de points à la fin gagne.
@@ -273,9 +271,9 @@ export function TwentyQuestionsMultiplayer() {
                     }
                   }}
                   placeholder="Écrivez ici le mot secret (ex : éléphant)"
-                  className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="min-w-0 flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
-                <Button type="button" onClick={submitWord} disabled={!wordDraft.trim()} className="h-auto px-6 py-3">
+                <Button type="button" onClick={submitWord} disabled={!wordDraft.trim()} className="h-auto shrink-0 px-6 py-3">
                   Valider le mot secret
                 </Button>
               </div>
@@ -303,7 +301,7 @@ export function TwentyQuestionsMultiplayer() {
                 placeholder="Ex : Oui, et il vit dans la savane"
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Button type="button" onClick={() => judge(true)}>
                   Mot trouvé
                 </Button>
@@ -342,9 +340,9 @@ export function TwentyQuestionsMultiplayer() {
                     }
                   }}
                   placeholder="Votre question ou votre proposition de mot"
-                  className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="min-w-0 flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
-                <Button type="button" onClick={submitGuess} disabled={!guessDraft.trim()}>
+                <Button type="button" onClick={submitGuess} disabled={!guessDraft.trim()} className="shrink-0">
                   Envoyer
                 </Button>
               </div>

@@ -17,6 +17,7 @@ type ContentType = 'action' | 'truth';
 export function TruthOrDareMultiplayer() {
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
+  const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
   const [phase, setPhase] = useState<Phase>('idle');
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
@@ -25,7 +26,6 @@ export function TruthOrDareMultiplayer() {
   const [answer, setAnswer] = useState<string | null>(null);
   const [answerDraft, setAnswerDraft] = useState('');
   const [resultApproved, setResultApproved] = useState(false);
-  const [scores, setScores] = useState<Record<string, number>>(() => useGameStore.getState().scores);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
 
@@ -54,7 +54,6 @@ export function TruthOrDareMultiplayer() {
 
     const handleResult = (data: { approved: boolean; scores: Record<string, number>; matchOver: boolean; winnerId: string | null }) => {
       setResultApproved(data.approved);
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(data.matchOver);
       setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
@@ -62,7 +61,6 @@ export function TruthOrDareMultiplayer() {
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(false);
       setWinner(null);
@@ -179,7 +177,7 @@ export function TruthOrDareMultiplayer() {
   const readyToValidate = content && (content.type === 'action' || answer);
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill
         player={myScore}
         machine={opponentScore}
@@ -187,6 +185,7 @@ export function TruthOrDareMultiplayer() {
         onReset={handleReplay}
         playerLabel={`${me?.name ?? 'Vous'} (vous)`}
         machineLabel={opponent?.name ?? 'Adversaire'}
+        hasOpponent={!!opponent}
       />
 
       {phase === 'idle' ? (
@@ -211,7 +210,7 @@ export function TruthOrDareMultiplayer() {
         isActive ? (
           <div className="space-y-3">
             <p className="text-sm font-semibold text-foreground">À vous de choisir : Action ou Vérité ?</p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button type="button" variant="outline" onClick={() => chooseType('truth')}>
                 Vérité
               </Button>
@@ -263,7 +262,7 @@ export function TruthOrDareMultiplayer() {
             isActive ? (
               <p className="text-sm text-muted-foreground">En attente de la validation de {opponent?.name ?? 'l’adversaire'}...</p>
             ) : (
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Button type="button" onClick={() => validate(true)}>
                   Valider
                 </Button>

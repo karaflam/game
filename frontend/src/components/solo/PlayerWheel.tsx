@@ -23,9 +23,9 @@ export function PlayerWheel({ players, landedOn, spinning, onSpinComplete }: Pla
   const otherPlayers = players.filter(player => player !== landedOn).slice(0, 2);
 
   return (
-    <div className="flex items-center justify-center gap-3 rounded-2xl bg-muted py-8">
+    <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-muted px-3 py-8">
       {Array.from({ length: DECORATIVE_DOTS }).map((_, index) => (
-        <div key={`left-${index}`} className="h-10 w-10 rounded-full bg-border opacity-40" />
+        <div key={`left-${index}`} className="hidden h-10 w-10 shrink-0 rounded-full bg-border opacity-40 sm:block" />
       ))}
 
       <motion.div
@@ -35,22 +35,22 @@ export function PlayerWheel({ players, landedOn, spinning, onSpinComplete }: Pla
             : { x: 0, opacity: 1 }
         }
         transition={{ duration: SPIN_DURATION_MS / 1000, ease: 'easeInOut' }}
-        className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-card bg-primary text-center text-sm font-bold text-primary-foreground shadow-lg shadow-primary/40"
+        className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-card bg-primary p-1 text-center text-xs font-bold text-primary-foreground shadow-lg shadow-primary/40 sm:h-20 sm:w-20 sm:text-sm"
       >
-        {landedOn}
+        <span className="truncate">{landedOn}</span>
       </motion.div>
 
       {otherPlayers.map(player => (
         <div
           key={player}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-card text-xs font-semibold text-muted-foreground opacity-70"
+          className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-card p-1 text-[10px] font-semibold text-muted-foreground opacity-70 sm:h-14 sm:w-14 sm:text-xs"
         >
-          {player}
+          <span className="truncate">{player}</span>
         </div>
       ))}
 
       {Array.from({ length: DECORATIVE_DOTS }).map((_, index) => (
-        <div key={`right-${index}`} className="h-10 w-10 rounded-full bg-border opacity-40" />
+        <div key={`right-${index}`} className="hidden h-10 w-10 shrink-0 rounded-full bg-border opacity-40 sm:block" />
       ))}
     </div>
   );

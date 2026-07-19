@@ -74,17 +74,17 @@ export function RoomWaitingPage() {
 
   return (
     <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-      <section className="rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
+      <section className="rounded-[2rem] bg-card p-6 shadow-lg shadow-slate-900/5 sm:p-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">Salle d’attente</p>
-            <h1 className="mt-3 text-4xl font-bold text-foreground">Salon {roomCode}</h1>
+            <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">Salon {roomCode}</h1>
             <p className="mt-3 text-base leading-7 text-muted-foreground">Partagez ce code avec vos amis et préparez-vous à lancer la partie.</p>
           </div>
           <button
             type="button"
             onClick={handleCopyCode}
-            className="flex items-center gap-2 rounded-3xl bg-secondary px-4 py-3 text-sm text-secondary-foreground transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]"
+            className="flex shrink-0 items-center gap-2 rounded-3xl bg-secondary px-4 py-3 text-sm text-secondary-foreground transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]"
           >
             <span>
               Code du salon : <strong>{roomCode}</strong>
@@ -94,7 +94,7 @@ export function RoomWaitingPage() {
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <div className="rounded-3xl border border-border bg-background p-6">
+          <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">
             <h2 className="text-xl font-semibold text-foreground">Joueurs connectés</h2>
             <div className="mt-4 space-y-3 rounded-3xl border border-border bg-surface p-4">
               {players.length > 0 ? (
@@ -109,7 +109,7 @@ export function RoomWaitingPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border bg-background p-6">
+          <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">
             <h2 className="text-xl font-semibold text-foreground">Statut de la salle</h2>
             <p className="mt-3 text-base leading-7 text-muted-foreground">{status === 'waiting' ? 'En attente de joueurs...' : 'Prêt à démarrer.'}</p>
             <div className="mt-6 flex flex-col gap-3">

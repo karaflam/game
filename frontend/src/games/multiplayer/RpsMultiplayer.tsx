@@ -41,10 +41,10 @@ type RpsResultPayload = {
 export function RpsMultiplayer() {
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
+  const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
   const [waiting, setWaiting] = useState(false);
   const [round, setRound] = useState<RoundResult | null>(null);
-  const [scores, setScores] = useState<Record<string, number>>(() => useGameStore.getState().scores);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
 
@@ -56,14 +56,12 @@ export function RpsMultiplayer() {
     const handleResult = (data: RpsResultPayload) => {
       setWaiting(false);
       setRound({ yourMove: data.yourMove, opponentMove: data.opponentMove, outcome: data.outcome });
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(data.matchOver);
       setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(false);
       setWinner(null);
@@ -118,7 +116,7 @@ export function RpsMultiplayer() {
   };
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill
         player={myScore}
         machine={opponentScore}
@@ -126,6 +124,7 @@ export function RpsMultiplayer() {
         onReset={handleReplay}
         playerLabel={`${me?.name ?? 'Vous'} (vous)`}
         machineLabel={opponent?.name ?? 'Adversaire'}
+        hasOpponent={!!opponent}
       />
 
       {round ? (

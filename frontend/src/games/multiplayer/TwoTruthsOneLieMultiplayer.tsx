@@ -24,6 +24,7 @@ type ResultPayload = {
 export function TwoTruthsOneLieMultiplayer() {
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
+  const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
   const [submitterId, setSubmitterId] = useState<string | null>(null);
   const [voterId, setVoterId] = useState<string | null>(null);
@@ -31,7 +32,6 @@ export function TwoTruthsOneLieMultiplayer() {
   const [lieChoice, setLieChoice] = useState<number | null>(0);
   const [votingStatements, setVotingStatements] = useState<string[] | null>(null);
   const [result, setResult] = useState<ResultPayload | null>(null);
-  const [scores, setScores] = useState<Record<string, number>>(() => useGameStore.getState().scores);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
 
@@ -54,14 +54,12 @@ export function TwoTruthsOneLieMultiplayer() {
 
     const handleResult = (data: ResultPayload) => {
       setResult(data);
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(data.matchOver);
       setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(false);
       setWinner(null);
@@ -172,7 +170,7 @@ export function TwoTruthsOneLieMultiplayer() {
     : null;
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill
         player={myScore}
         machine={opponentScore}
@@ -180,6 +178,7 @@ export function TwoTruthsOneLieMultiplayer() {
         onReset={handleReplay}
         playerLabel={`${me?.name ?? 'Vous'} (vous)`}
         machineLabel={opponentName}
+        hasOpponent={!!opponent}
       />
 
       {result && myOutcome ? (
@@ -224,7 +223,7 @@ export function TwoTruthsOneLieMultiplayer() {
           </p>
           <div className="grid gap-3">
             {statements.map((text, index) => (
-              <div key={index} className="flex items-center gap-3">
+              <div key={index} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <input
                   value={text}
                   onChange={event => setStatements(prev => prev.map((item, idx) => (idx === index ? event.target.value : item)))}
@@ -235,14 +234,14 @@ export function TwoTruthsOneLieMultiplayer() {
                   }}
                   placeholder={`Affirmation ${index + 1}`}
                   disabled={matchOver}
-                  className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="min-w-0 flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <Button
                   type="button"
                   variant={lieChoice === index ? 'default' : 'outline'}
                   onClick={() => setLieChoice(index)}
                   disabled={matchOver}
-                  className="whitespace-nowrap"
+                  className="shrink-0 whitespace-nowrap"
                 >
                   {lieChoice === index ? 'Mensonge ' : 'verité ✓'}
                 </Button>

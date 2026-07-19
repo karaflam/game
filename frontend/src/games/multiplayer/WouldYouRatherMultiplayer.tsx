@@ -22,12 +22,12 @@ type WouldYouRatherResultPayload = RoundResult & {
 export function WouldYouRatherMultiplayer() {
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
+  const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [waiting, setWaiting] = useState(false);
   const [round, setRound] = useState<RoundResult | null>(null);
   const [awaitingNextRound, setAwaitingNextRound] = useState(false);
-  const [scores, setScores] = useState<Record<string, number>>(() => useGameStore.getState().scores);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
 
@@ -46,14 +46,12 @@ export function WouldYouRatherMultiplayer() {
     const handleResult = (data: WouldYouRatherResultPayload) => {
       setWaiting(false);
       setRound({ yourChoice: data.yourChoice, opponentChoice: data.opponentChoice, sameChoice: data.sameChoice });
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(data.matchOver);
       setWinner(data.teamResult === 'win' ? 'player' : data.teamResult === 'lose' ? 'machine' : null);
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
-      setScores(data.scores);
       setStoreScores(data.scores);
       setMatchOver(false);
       setWinner(null);
@@ -130,7 +128,7 @@ export function WouldYouRatherMultiplayer() {
   };
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill
         player={myScore}
         machine={opponentScore}
@@ -138,6 +136,7 @@ export function WouldYouRatherMultiplayer() {
         onReset={handleReplay}
         playerLabel={`${me?.name ?? 'Vous'} (vous)`}
         machineLabel={opponent?.name ?? 'Adversaire'}
+        hasOpponent={!!opponent}
       />
 
       {round && prompt ? (

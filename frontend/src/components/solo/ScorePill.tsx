@@ -8,6 +8,9 @@ type ScorePillProps = {
   onReset: () => void;
   playerLabel?: string;
   machineLabel?: string;
+  // Set to false once the opponent has deliberately left the room — hides the second row
+  // entirely instead of showing it frozen at 0 for someone who's no longer there.
+  hasOpponent?: boolean;
 };
 
 type RaceBarProps = {
@@ -22,9 +25,9 @@ function RaceBar({ label, value, targetScore, colorClassName }: RaceBarProps) {
 
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between text-xs font-semibold text-foreground">
-        <span>{label}</span>
-        <span>
+      <div className="mb-1 flex items-center justify-between gap-2 text-xs font-semibold text-foreground">
+        <span className="min-w-0 truncate">{label}</span>
+        <span className="shrink-0">
           {value} / {targetScore}
         </span>
       </div>
@@ -38,7 +41,15 @@ function RaceBar({ label, value, targetScore, colorClassName }: RaceBarProps) {
   );
 }
 
-export function ScorePill({ player, machine, targetScore, onReset, playerLabel = 'Vous', machineLabel = 'IA' }: ScorePillProps) {
+export function ScorePill({
+  player,
+  machine,
+  targetScore,
+  onReset,
+  playerLabel = 'Vous',
+  machineLabel = 'IA',
+  hasOpponent = true
+}: ScorePillProps) {
   return (
     <div className="rounded-2xl bg-secondary px-4 py-3 text-secondary-foreground">
       <div className="mb-3 flex items-center justify-end">
@@ -49,7 +60,9 @@ export function ScorePill({ player, machine, targetScore, onReset, playerLabel =
       </div>
       <div className="space-y-3">
         <RaceBar label={playerLabel} value={player} targetScore={targetScore} colorClassName="bg-primary" />
-        <RaceBar label={machineLabel} value={machine} targetScore={targetScore} colorClassName="bg-muted-foreground" />
+        {hasOpponent ? (
+          <RaceBar label={machineLabel} value={machine} targetScore={targetScore} colorClassName="bg-muted-foreground" />
+        ) : null}
       </div>
     </div>
   );
