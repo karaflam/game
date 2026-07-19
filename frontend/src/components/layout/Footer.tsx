@@ -3,17 +3,17 @@ const AUTHOR_EMAIL = 'landryfangue2@gmail.com';
 
 export function Footer() {
   return (
-    <div className="group pointer-events-none fixed bottom-3 right-4 z-40">
+    <div className="fixed bottom-3 right-4 z-40">
       <a
         href={`mailto:${AUTHOR_EMAIL}`}
         aria-label={`Contacter ${AUTHOR_NAME}`}
-        className="pointer-events-auto relative block h-4 overflow-hidden text-right text-xs"
+        className="group flex items-center whitespace-nowrap text-xs"
       >
-        <span className="absolute inset-0 block whitespace-nowrap font-serif italic tracking-wide text-muted-foreground/35 transition-all duration-300 ease-out group-hover:-translate-y-3 group-hover:opacity-0">
-          {AUTHOR_NAME}
-        </span>
-        <span className="absolute inset-0 block translate-y-3 whitespace-nowrap tracking-wide text-primary opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
+        <span className="max-w-0 overflow-hidden text-primary opacity-0 transition-all duration-300 ease-out group-hover:mr-2 group-hover:max-w-[220px] group-hover:opacity-100">
           {AUTHOR_EMAIL}
+        </span>
+        <span className="font-serif italic tracking-wide text-muted-foreground/40 transition-colors duration-300 ease-out group-hover:text-foreground">
+          {AUTHOR_NAME}
         </span>
       </a>
     </div>
