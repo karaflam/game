@@ -181,9 +181,9 @@ export function WouldYouRatherMultiplayer() {
         headlineOverride={winner === 'player' ? 'Vous avez gagné ensemble !' : winner === 'machine' ? 'Vous avez perdu ensemble...' : undefined}
         detailOverride={
           winner === 'player'
-            ? `${opponent?.name ?? 'Vous'} et vous avez trouvé 5 choix identiques !`
+            ? `${opponent?.name ?? 'Adversaire'} et vous avez trouvé 5 choix identiques !`
             : winner === 'machine'
-              ? `${opponent?.name ?? 'Vous'} et vous avez fait 5 choix différents avant de vous accorder. Retentez votre chance !`
+              ? `${opponent?.name ?? 'Adversaire'} et vous avez fait 5 choix différents avant de vous accorder. Retentez votre chance !`
               : undefined
         }
       />

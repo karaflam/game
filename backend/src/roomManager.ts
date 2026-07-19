@@ -384,7 +384,12 @@ export class RoomManager {
     }
 
     const targetScore = TARGET_SCORES[room.gameId] ?? Infinity;
-    const winnerId = room.players.find(player => (room.scores[player.id] ?? 0) >= targetScore)?.id ?? null;
+    const playersOverTarget = room.players.filter(player => (room.scores[player.id] ?? 0) >= targetScore);
+    // bothCorrect awards both players a point on the same round, so they can cross the target
+    // score together — that's a tie, not an arbitrary win for whoever appears first in the array.
+    const isDraw = playersOverTarget.length > 1;
+    const winnerId = !isDraw ? (playersOverTarget[0]?.id ?? null) : null;
+    const matchOver = playersOverTarget.length > 0;
 
     const outcomeFor = (correct: boolean): 'player' | 'machine' | 'draw' => (bothWrong ? 'draw' : correct ? 'player' : 'machine');
 
@@ -415,7 +420,8 @@ export class RoomManager {
         }
       ],
       scores: { ...room.scores },
-      matchOver: winnerId !== null,
+      matchOver,
+      isDraw,
       winnerId
     };
   }

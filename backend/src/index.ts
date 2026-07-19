@@ -159,6 +159,7 @@ io.on(ClientEvents.Connect, socket => {
           bothCorrect: entry.bothCorrect,
           scores: result.scores,
           matchOver: result.matchOver,
+          isDraw: result.isDraw,
           winnerId: result.winnerId
         });
       }

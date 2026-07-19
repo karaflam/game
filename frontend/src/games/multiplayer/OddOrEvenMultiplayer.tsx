@@ -27,6 +27,7 @@ type RoundResult = {
 type OddOrEvenResultPayload = RoundResult & {
   scores: Record<string, number>;
   matchOver: boolean;
+  isDraw: boolean;
   winnerId: string | null;
 };
 
@@ -61,7 +62,7 @@ export function OddOrEvenMultiplayer() {
       });
       setStoreScores(data.scores);
       setMatchOver(data.matchOver);
-      setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
+      setWinner(data.matchOver ? (data.isDraw ? 'draw' : data.winnerId === socketId ? 'player' : 'machine') : null);
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
