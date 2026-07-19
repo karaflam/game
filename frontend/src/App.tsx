@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from './components/layout/Header';
+import { ReconnectingOverlay } from './components/ReconnectingOverlay';
 import { HomePage } from './pages/HomePage';
 import { GameModePage } from './pages/GameModePage';
 import { RoomLobbyPage } from './pages/RoomLobbyPage';
@@ -21,6 +22,7 @@ function App() {
 
   return (
     <div className="app-shell min-h-screen bg-background text-foreground">
+      <ReconnectingOverlay />
       <Header />
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <AnimatePresence mode="wait" initial={false}>

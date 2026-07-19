@@ -14,6 +14,7 @@ export function useSocket() {
   const setStatus = useGameStore(state => state.setStatus);
   const setError = useGameStore(state => state.setError);
   const setScores = useGameStore(state => state.setScores);
+  const setReconnecting = useGameStore(state => state.setReconnecting);
 
   useEffect(() => {
     const nextSocket = getSocket();
@@ -31,10 +32,18 @@ export function useSocket() {
 
       if (!session || !pseudo) {
         setSocketId(nextSocket.id ?? null);
+        setReconnecting(false);
         return;
       }
 
-      const unlock = () => setSocketId(nextSocket.id ?? null);
+      // Also covers the cold-start case (fresh page load landing with a stored session) — not
+      // just the mid-session disconnect-then-reconnect case already flagged in handleDisconnect.
+      setReconnecting(true);
+
+      const unlock = () => {
+        setSocketId(nextSocket.id ?? null);
+        setReconnecting(false);
+      };
 
       nextSocket.once(ServerEvents.RoomUpdate, unlock);
       nextSocket.once(ServerEvents.RoomError, () => {
@@ -67,6 +76,9 @@ export function useSocket() {
       setConnected(false);
       setSocketId(null);
       setMessage('Déconnecté du serveur, reconnexion en cours...');
+      if (getActiveRoom()) {
+        setReconnecting(true);
+      }
     };
 
     const handleGreeting = (data: { type: string; payload: string }) => {
@@ -98,7 +110,7 @@ export function useSocket() {
       nextSocket.off(ServerEvents.RoomUpdate, handleRoomUpdate);
       nextSocket.off(ServerEvents.RoomError, handleRoomError);
     };
-  }, [setError, setPlayers, setStatus, setScores]);
+  }, [setError, setPlayers, setStatus, setScores, setReconnecting]);
 
   const connection = useMemo(() => ({ connected, message, socket, socketId }), [connected, message, socket, socketId]);
   return connection;

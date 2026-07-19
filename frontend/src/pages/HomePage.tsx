@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { gameThemes } from '../data/gameThemes';
@@ -12,21 +12,11 @@ export function HomePage() {
   const navigate = useNavigate();
   // The actual (re)join handshake lives in useSocket — calling it here just ensures the shared
   // socket exists and its "resume my active room" logic runs even if HomePage is the very first
-  // page the app renders (fresh load / bookmark landing on "/").
+  // page the app renders (fresh load / bookmark landing on "/"). The global ReconnectingOverlay
+  // (driven by the same hook) already shows a "please wait" state while that's in flight.
   useSocket();
   const roomCode = useGameStore(state => state.roomCode);
   const status = useGameStore(state => state.status);
-  const [showRejoining, setShowRejoining] = useState(() => getActiveRoom() !== null);
-
-  useEffect(() => {
-    if (!showRejoining) {
-      return;
-    }
-    // Purely a courtesy message — self-clears whether the rejoin succeeds (we've navigated away
-    // by then) or fails (nothing left to wait for), without needing extra state plumbing.
-    const timer = setTimeout(() => setShowRejoining(false), 4000);
-    return () => clearTimeout(timer);
-  }, [showRejoining]);
 
   useEffect(() => {
     const session = getActiveRoom();
@@ -58,9 +48,6 @@ export function HomePage() {
             <h1 className="mt-4 text-4xl font-bold text-foreground sm:text-5xl">Choisissez un jeu et lancez une partie.</h1>
           </div>
           <p className="max-w-2xl text-lg leading-8 text-muted-foreground">Sélectionnez votre jeu favori, choisissez Solo ou Multijoueur, puis rejoignez un salon en ligne avec un code unique.</p>
-          {showRejoining ? (
-            <p className="text-sm font-semibold text-primary">Reconnexion à votre salon en cours...</p>
-          ) : null}
         </div>
       </section>
 
