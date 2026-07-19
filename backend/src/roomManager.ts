@@ -118,6 +118,14 @@ export class RoomManager {
     }
 
     if (room.players.some(player => player.id === socketId)) {
+      // This exact socket.id is already listed as a player — typically Socket.IO's own
+      // connectionStateRecovery having preserved the id across a brief disconnect. That recovery
+      // is purely transport-level though: markDisconnected already deleted this socket.id from
+      // socketRoom the moment it dropped, and nothing else would ever re-add it. Without this,
+      // the player list looks completely normal (it was never touched) while every subsequent
+      // action from this socket — including starting the game — would fail with "not in a room".
+      this.socketRoom.set(socketId, roomId);
+      room.abandonedSince = null;
       return {
         players: room.players,
         previousSocketId: null as string | null,
