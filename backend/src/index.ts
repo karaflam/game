@@ -245,7 +245,8 @@ io.on(ClientEvents.Connect, socket => {
       io.to(result.roomId).emit(ServerEvents.TruthOrDareCategoriesUpdate, {
         categories: result.categories,
         validatedBy: result.validatedBy,
-        allValidated: result.allValidated
+        allValidated: result.allValidated,
+        changedBy: socket.id
       });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });

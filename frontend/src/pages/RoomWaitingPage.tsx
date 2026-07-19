@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Copy } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -25,6 +25,18 @@ export function RoomWaitingPage() {
   const [categories, setCategories] = useState<TruthOrDareCategoryId[]>(DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS);
   const [validatedBy, setValidatedBy] = useState<string[]>([]);
   const [allValidated, setAllValidated] = useState(false);
+  const [notifications, setNotifications] = useState<{ id: number; message: string }[]>([]);
+  const notificationIdRef = useRef(0);
+  const prevValidatedByRef = useRef<string[]>([]);
+  const prevCategoriesRef = useRef<TruthOrDareCategoryId[] | null>(null);
+
+  const pushNotification = (message: string) => {
+    const id = ++notificationIdRef.current;
+    setNotifications(prev => [...prev, { id, message }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 6000);
+  };
 
   useEffect(() => {
     if (!socket || !roomCode) {
@@ -39,7 +51,31 @@ export function RoomWaitingPage() {
       navigate(`/jeu/${gameId}/salon/${roomCode}/partie`);
     };
 
-    const handleCategoriesUpdate = (data: { categories: TruthOrDareCategoryId[]; validatedBy: string[]; allValidated: boolean }) => {
+    const handleCategoriesUpdate = (data: {
+      categories: TruthOrDareCategoryId[];
+      validatedBy: string[];
+      allValidated: boolean;
+      changedBy?: string;
+    }) => {
+      const previousValidatedBy = prevValidatedByRef.current;
+      const previousCategories = prevCategoriesRef.current;
+      const currentPlayers = useGameStore.getState().players;
+
+      const newlyValidated = data.validatedBy.filter(id => !previousValidatedBy.includes(id) && id !== socketId);
+      for (const id of newlyValidated) {
+        const name = currentPlayers.find(p => p.id === id)?.name ?? 'L’autre joueur';
+        pushNotification(`✅ ${name} a validé la sélection de catégories.`);
+      }
+
+      const categoriesChanged = previousCategories !== null && JSON.stringify(previousCategories) !== JSON.stringify(data.categories);
+      const iHadValidated = socketId !== null && previousValidatedBy.includes(socketId);
+      if (categoriesChanged && data.changedBy && data.changedBy !== socketId && iHadValidated) {
+        const name = currentPlayers.find(p => p.id === data.changedBy)?.name ?? 'L’autre joueur';
+        pushNotification(`⚠️ ${name} a modifié la sélection de catégories après votre validation — vérifiez avant de revalider.`);
+      }
+
+      prevValidatedByRef.current = data.validatedBy;
+      prevCategoriesRef.current = data.categories;
       setCategories(data.categories);
       setValidatedBy(data.validatedBy);
       setAllValidated(data.allValidated);
@@ -51,7 +87,7 @@ export function RoomWaitingPage() {
       socket.off(ServerEvents.GameStarted, handleGameStarted);
       socket.off(ServerEvents.TruthOrDareCategoriesUpdate, handleCategoriesUpdate);
     };
-  }, [socket, roomCode, gameId, navigate, setStatus]);
+  }, [socket, roomCode, gameId, navigate, setStatus, socketId]);
 
   if (!game || !gameId || !roomCode) {
     return (
@@ -113,7 +149,24 @@ export function RoomWaitingPage() {
   };
 
   return (
-    <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <>
+      <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex flex-col items-center gap-2 px-4 sm:items-end sm:px-6">
+        <AnimatePresence>
+          {notifications.map(notification => (
+            <motion.div
+              key={notification.id}
+              initial={{ opacity: 0, y: -12, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.95 }}
+              className="pointer-events-auto max-w-sm rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground shadow-lg shadow-slate-900/10"
+            >
+              {notification.message}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
       <section className="rounded-[2rem] bg-card p-6 shadow-lg shadow-slate-900/5 sm:p-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -236,6 +289,7 @@ export function RoomWaitingPage() {
           </div>
         </div>
       </section>
-    </motion.main>
+      </motion.main>
+    </>
   );
 }
