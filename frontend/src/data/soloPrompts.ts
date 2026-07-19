@@ -13,9 +13,7 @@ export type TruthOrDareCategoryId =
 
 export type TruthOrDareCategory = { id: TruthOrDareCategoryId; label: string; description: string };
 
-// Kept in sync with backend/src/gamePrompts.ts. The two taboo-adjacent categories (désir,
-// intimité) are excluded from DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS on purpose — solo play defaults
-// to the safe set, and the player must opt into these explicitly.
+// Kept in sync with backend/src/gamePrompts.ts.
 export const TRUTH_OR_DARE_CATEGORIES: TruthOrDareCategory[] = [
   { id: 'general', label: 'Général', description: 'Questions et gages fun, pour tout le monde.' },
   { id: 'amis', label: 'Entre amis', description: 'Souvenirs, anecdotes et complicité de groupe.' },
@@ -28,15 +26,9 @@ export const TRUTH_OR_DARE_CATEGORIES: TruthOrDareCategory[] = [
   { id: 'intimite', label: 'Confidences intimes', description: 'Vulnérabilité et intimité de couple.' }
 ];
 
-export const DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS: TruthOrDareCategoryId[] = [
-  'general',
-  'amis',
-  'couple',
-  'famille',
-  'audacieux',
-  'nostalgie',
-  'vie'
-];
+// All categories are checked by default — they're visible and toggleable right on screen before
+// the player spins, and in multiplayer the two-player validation step is the actual safety net.
+export const DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS: TruthOrDareCategoryId[] = TRUTH_OR_DARE_CATEGORIES.map(category => category.id);
 
 export type TruthOrDarePrompt = { truth: string; dare: string; category: TruthOrDareCategoryId };
 export type WouldYouRatherPrompt = { left: string; right: string };

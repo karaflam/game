@@ -11,10 +11,7 @@ export type TruthOrDareCategoryId =
 
 export type TruthOrDareCategory = { id: TruthOrDareCategoryId; label: string; description: string };
 
-// Categories a room/player can opt into. The two taboo-adjacent ones (désir, intimité) are kept
-// out of DEFAULT_TRUTH_OR_DARE_CATEGORIES on purpose — see TruthOrDareEffectiveCategories in
-// roomManager.ts, which only activates a category once BOTH players in the room have opted in,
-// so neither player can impose that content on the other.
+// Categories a room/player can opt into.
 export const TRUTH_OR_DARE_CATEGORIES: TruthOrDareCategory[] = [
   { id: 'general', label: 'Général', description: 'Questions et gages fun, pour tout le monde.' },
   { id: 'amis', label: 'Entre amis', description: 'Souvenirs, anecdotes et complicité de groupe.' },
@@ -27,15 +24,11 @@ export const TRUTH_OR_DARE_CATEGORIES: TruthOrDareCategory[] = [
   { id: 'intimite', label: 'Confidences intimes', description: 'Vulnérabilité et intimité de couple — à activer par les deux joueurs.' }
 ];
 
-export const DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS: TruthOrDareCategoryId[] = [
-  'general',
-  'amis',
-  'couple',
-  'famille',
-  'audacieux',
-  'nostalgie',
-  'vie'
-];
+// All categories are checked by default — the two-player validation step in the waiting room
+// (see roomManager.setTruthOrDareCategories / validateTruthOrDareCategories) is the actual
+// safety net: nothing starts until both players explicitly confirm the active set, so either
+// player can freely uncheck désir/intimité before validating if they'd rather not include them.
+export const DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS: TruthOrDareCategoryId[] = TRUTH_OR_DARE_CATEGORIES.map(category => category.id);
 
 export type TruthOrDarePrompt = { truth: string; dare: string; category: TruthOrDareCategoryId };
 export type WouldYouRatherPrompt = { left: string; right: string };
