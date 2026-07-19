@@ -22,6 +22,7 @@ export function RoomLobbyPage() {
   const setRoomCode = useGameStore(state => state.setRoomCode);
   const setPlayers = useGameStore(state => state.setPlayers);
   const setStatus = useGameStore(state => state.setStatus);
+  const setScores = useGameStore(state => state.setScores);
 
   if (!game || !gameId) {
     return (
@@ -82,13 +83,16 @@ export function RoomLobbyPage() {
     }
 
     socket.emit(ClientEvents.JoinRoom, { roomId: code, name: trimmedPseudo, gameId, token: getPlayerToken() });
-    socket.once(ServerEvents.RoomUpdate, ({ players }) => {
+    socket.once(ServerEvents.RoomUpdate, ({ players, started, scores }) => {
       setGameId(gameId);
       setRoomCode(code);
       setPlayers(players);
-      setStatus('waiting');
+      if (scores) {
+        setScores(scores);
+      }
+      setStatus(started ? 'in-game' : 'waiting');
       saveActiveRoom({ gameId, roomCode: code });
-      navigate(`/jeu/${gameId}/salon/${code}`);
+      navigate(started ? `/jeu/${gameId}/salon/${code}/partie` : `/jeu/${gameId}/salon/${code}`);
     });
     socket.once(ServerEvents.RoomError, ({ message }) => {
       setError(message);

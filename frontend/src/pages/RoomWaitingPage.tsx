@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Copy } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useGameStore } from '../store/useGameStore';
 import { useSocket } from '../hooks/useSocket';
@@ -11,12 +11,14 @@ import { gameThemes } from '../data/gameThemes';
 export function RoomWaitingPage() {
   const { gameId, roomCode } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const status = useGameStore(state => state.status);
   const setStatus = useGameStore(state => state.setStatus);
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
   const [copied, setCopied] = useState(false);
+  const opponentLeftName = (location.state as { opponentLeftName?: string | null } | null)?.opponentLeftName ?? null;
 
   useEffect(() => {
     if (!socket || !roomCode) {
@@ -92,6 +94,12 @@ export function RoomWaitingPage() {
             {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
           </button>
         </div>
+
+        {opponentLeftName ? (
+          <div className="mt-6 rounded-3xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+            🚪 {opponentLeftName} a quitté la partie précédente. Vous pouvez relancer une nouvelle partie dès que tout le monde est prêt.
+          </div>
+        ) : null}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">

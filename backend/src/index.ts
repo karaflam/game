@@ -61,7 +61,12 @@ io.on(ClientEvents.Connect, socket => {
 
       if (previousRoom) {
         socket.leave(previousRoom.roomId);
-        io.to(previousRoom.roomId).emit(ServerEvents.RoomUpdate, { roomId: previousRoom.roomId, players: previousRoom.players });
+        io.to(previousRoom.roomId).emit(ServerEvents.RoomUpdate, {
+          roomId: previousRoom.roomId,
+          players: previousRoom.players,
+          started: previousRoom.started,
+          scores: previousRoom.scores
+        });
       }
 
       socket.join(roomId);
@@ -81,7 +86,9 @@ io.on(ClientEvents.Connect, socket => {
           socket.leave(result.previousRoom.roomId);
           io.to(result.previousRoom.roomId).emit(ServerEvents.RoomUpdate, {
             roomId: result.previousRoom.roomId,
-            players: result.previousRoom.players
+            players: result.previousRoom.players,
+            started: result.previousRoom.started,
+            scores: result.previousRoom.scores
           });
         }
 
@@ -103,7 +110,12 @@ io.on(ClientEvents.Connect, socket => {
     const room = roomManager.leaveRoom(socket.id);
     if (room) {
       socket.leave(room.roomId);
-      io.to(room.roomId).emit(ServerEvents.RoomUpdate, { roomId: room.roomId, players: room.players });
+      io.to(room.roomId).emit(ServerEvents.RoomUpdate, {
+        roomId: room.roomId,
+        players: room.players,
+        started: room.started,
+        scores: room.scores
+      });
     }
   });
 

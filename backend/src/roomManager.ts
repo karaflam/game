@@ -131,7 +131,7 @@ export class RoomManager {
         previousSocketId: null as string | null,
         started: room.started,
         scores: { ...room.scores },
-        previousRoom: null as { roomId: string; players: Player[] } | null
+        previousRoom: null as { roomId: string; players: Player[]; started: boolean; scores: Record<string, number> } | null
       };
     }
 
@@ -183,6 +183,8 @@ export class RoomManager {
       return null;
     }
 
+    const wasStarted = room.started;
+
     room.players = room.players.filter(player => player.id !== socketId);
     room.choices.delete(socketId);
     delete room.gameData[socketId];
@@ -195,6 +197,20 @@ export class RoomManager {
       return null;
     }
 
+    if (wasStarted) {
+      // A deliberate mid-match departure invalidates every in-progress round reference (whose
+      // turn it is, roles, etc. all point at a player who no longer exists in this room) — ending
+      // the match cleanly here means whoever remains, or rejoins later, starts a genuinely fresh
+      // one instead of hitting orphaned state that soft-locks the game for everyone.
+      room.started = false;
+      room.gameData = {};
+      room.choices.clear();
+      room.scores = {};
+      for (const player of room.players) {
+        room.scores[player.id] = 0;
+      }
+    }
+
     // The player who just left might have been the only one still actually connected, leaving
     // only disconnected ghosts behind — recheck so this room becomes eligible for reaping too.
     const stillHasLivePlayer = room.players.some(player => this.socketRoom.get(player.id) === roomId);
@@ -202,7 +218,7 @@ export class RoomManager {
       room.abandonedSince = Date.now();
     }
 
-    return { roomId, players: room.players };
+    return { roomId, players: room.players, started: room.started, scores: { ...room.scores } };
   }
 
   markStarted(roomId: string) {

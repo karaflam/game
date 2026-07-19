@@ -19,6 +19,7 @@ export function GamePlayPage() {
   const navigate = useNavigate();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
+  const status = useGameStore(state => state.status);
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
 
   const opponent = players.find(player => player.id !== socketId) ?? null;
@@ -30,10 +31,15 @@ export function GamePlayPage() {
     }
   }, [opponent]);
 
-  // GamePlayPage is only reachable once the match has started, which requires 2 players — so
-  // dropping below 2 here can only mean the opponent deliberately left via "Quitter la partie"
-  // (a raw disconnect never removes anyone from room.players).
-  const opponentLeft = players.length < 2 && lastOpponentName !== null;
+  // The match can only ever end while this page is mounted because someone explicitly left
+  // (a raw disconnect never touches room.players/started) — the server immediately un-starts
+  // the room when that happens, so bounce back to the waiting room instead of leaving this
+  // screen stuck showing a match that no longer has anyone left to play against.
+  useEffect(() => {
+    if (status === 'waiting' && gameId && roomCode) {
+      navigate(`/jeu/${gameId}/salon/${roomCode}`, { replace: true, state: { opponentLeftName: lastOpponentName } });
+    }
+  }, [status, gameId, roomCode, navigate, lastOpponentName]);
 
   const handleLeaveGame = () => {
     if (socket) {
@@ -70,12 +76,6 @@ export function GamePlayPage() {
             </Button>
           </div>
         </div>
-
-        {opponentLeft ? (
-          <div className="mt-6 rounded-3xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-            🚪 {lastOpponentName} a quitté la partie.
-          </div>
-        ) : null}
 
         <div className="mt-8">
           {gameId === 'rps' ? (
