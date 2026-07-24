@@ -71,7 +71,7 @@ export function PlayerWheel({ players, landedOn, spinning, onSpinComplete }: Pla
 
   return (
     <div className="flex items-center justify-center rounded-2xl bg-muted py-8">
-      <div className="relative" style={{ width: SIZE, height: SIZE }}>
+      <div className="relative" style={{ width: SIZE, maxWidth: '100%', aspectRatio: '1 / 1' }}>
         {/* Pointer, fixed — the wheel spins underneath it */}
         <div className="absolute left-1/2 top-[-6px] z-20 -translate-x-1/2">
           <div
@@ -82,7 +82,7 @@ export function PlayerWheel({ players, landedOn, spinning, onSpinComplete }: Pla
         </div>
 
         {/* Light-bulb ring, fixed */}
-        <svg width={SIZE} height={SIZE} className="absolute inset-0" viewBox={`0 0 ${SIZE} ${SIZE}`}>
+        <svg width="100%" height="100%" className="absolute inset-0" viewBox={`0 0 ${SIZE} ${SIZE}`}>
           {Array.from({ length: LIGHT_COUNT }).map((_, index) => {
             const angle = (360 / LIGHT_COUNT) * index;
             const { x, y } = polarToCartesian(angle, RADIUS + 12);
@@ -101,7 +101,7 @@ export function PlayerWheel({ players, landedOn, spinning, onSpinComplete }: Pla
         </svg>
 
         {/* Rim */}
-        <svg width={SIZE} height={SIZE} className="absolute inset-0" viewBox={`0 0 ${SIZE} ${SIZE}`}>
+        <svg width="100%" height="100%" className="absolute inset-0" viewBox={`0 0 ${SIZE} ${SIZE}`}>
           <defs>
             <radialGradient id={rimGradientId} cx="50%" cy="50%" r="50%">
               <stop offset="85%" stopColor="var(--color-card)" />
@@ -118,8 +118,8 @@ export function PlayerWheel({ players, landedOn, spinning, onSpinComplete }: Pla
 
         {/* Spinning wedges */}
         <motion.svg
-          width={SIZE}
-          height={SIZE}
+          width="100%"
+          height="100%"
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           className="absolute inset-0"
           animate={{ rotate: rotation }}
