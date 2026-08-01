@@ -2,14 +2,10 @@ export type GameMode = 'solo' | 'multi';
 
 export type GameTheme = {
   id: GameId;
-  title: string;
-  description: string;
 };
 
 export type UiTheme = {
   id: 'clair' | 'sombre' | 'luxueux' | 'romantique';
-  title: string;
-  description: string;
   accent: string;
 };
 

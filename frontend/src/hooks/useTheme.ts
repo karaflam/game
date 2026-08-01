@@ -2,13 +2,6 @@ import { useEffect, useState } from 'react';
 
 export type ThemeId = 'clair' | 'sombre' | 'luxueux' | 'romantique';
 
-export const themes: { id: ThemeId; name: string }[] = [
-  { id: 'clair', name: 'Clair' },
-  { id: 'sombre', name: 'Sombre' },
-  { id: 'luxueux', name: 'Luxueux' },
-  { id: 'romantique', name: 'Romantique' }
-];
-
 const STORAGE_KEY = 'game:theme';
 
 export default function useTheme(initial?: ThemeId) {
@@ -32,5 +25,5 @@ export default function useTheme(initial?: ThemeId) {
 
   const setTheme = (t: ThemeId) => setThemeState(t);
 
-  return { theme, setTheme, themes } as const;
+  return { theme, setTheme } as const;
 }

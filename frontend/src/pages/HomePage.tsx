@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { gameThemes } from '../data/gameThemes';
 import { GameCard } from '../components/GameCard';
 import type { GameTheme } from '../types/game';
@@ -10,6 +11,7 @@ import { getActiveRoom } from '../lib/playerSession';
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   // The actual (re)join handshake lives in useSocket — calling it here just ensures the shared
   // socket exists and its "resume my active room" logic runs even if HomePage is the very first
   // page the app renders (fresh load / bookmark landing on "/"). The global ReconnectingOverlay
@@ -44,10 +46,10 @@ export function HomePage() {
       <section className="mb-10 rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
         <div className="space-y-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary">Bienvenue</p>
-            <h1 className="mt-4 text-4xl font-bold text-foreground sm:text-5xl">Choisissez un jeu et lancez une partie.</h1>
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary">{t('home.eyebrow')}</p>
+            <h1 className="mt-4 text-4xl font-bold text-foreground sm:text-5xl">{t('home.title')}</h1>
           </div>
-          <p className="max-w-2xl text-lg leading-8 text-muted-foreground">Sélectionnez votre jeu favori, choisissez Solo ou Multijoueur, puis rejoignez un salon en ligne avec un code unique.</p>
+          <p className="max-w-2xl text-lg leading-8 text-muted-foreground">{t('home.subtitle')}</p>
         </div>
       </section>
 

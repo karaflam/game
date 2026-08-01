@@ -6,5 +6,37 @@
   },
   "footer": {
     "contact": "Contacter {{name}}"
+  },
+  "games": {
+    "rps": { "title": "Pierre, Feuille, Ciseau", "description": "Affrontez un adversaire en devinant la main gagnante." },
+    "truth-or-dare": { "title": "Action ou Vérité", "description": "Une roue choisit un joueur. L’autre valide l’action ou la vérité." },
+    "odd-or-even": { "title": "Pair ou Impair", "description": "Chacun choisit un chiffre et prédit si la somme sera paire ou impaire." },
+    "would-you-rather": { "title": "Tu Préfères ?", "description": "Choisissez entre deux dilemmes amusants ou surprenants." },
+    "20-questions": { "title": "20 Questions", "description": "Un joueur pense à quelque chose, l’autre a 20 essais pour deviner." },
+    "two-truths-one-lie": { "title": "2 Vérités, 1 Mensonge", "description": "Un joueur propose 3 faits, les autres votent pour le mensonge." }
+  },
+  "themes": {
+    "clair": { "title": "Clair", "description": "Une palette lumineuse et moderne pour des sessions vives et fluides." },
+    "sombre": { "title": "Sombre", "description": "Un style contrasté et immersif, idéal pour les soirées de jeu." },
+    "luxueux": { "title": "Luxueux", "description": "Une esthétique soignée et premium pour un jeu haut de gamme." },
+    "romantique": { "title": "Romantique", "description": "Un univers tendre et inspirant pour des parties conviviales." }
+  },
+  "gameCard": {
+    "playerCount": "2 joueurs"
+  },
+  "home": {
+    "eyebrow": "Bienvenue",
+    "title": "Choisissez un jeu et lancez une partie.",
+    "subtitle": "Sélectionnez votre jeu favori, choisissez Solo ou Multijoueur, puis rejoignez un salon en ligne avec un code unique."
+  },
+  "gameModePage": {
+    "notFoundTitle": "Jeu introuvable",
+    "notFoundMessage": "Le jeu demandé n’existe pas. Revenez à l’accueil pour en choisir un autre.",
+    "soloEyebrow": "Solo",
+    "soloTitle": "Mode Solo",
+    "soloDescription": "Entraînez-vous contre l’IA ou devinez un mot aléatoire dans un environnement convivial.",
+    "multiplayerEyebrow": "Multijoueur",
+    "multiplayerTitle": "Mode Multijoueur",
+    "multiplayerDescription": "Créez ou rejoignez un salon, invitez vos amis, et jouez en temps réel avec scores partagés."
   }
 }

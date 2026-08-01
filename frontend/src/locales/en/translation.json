@@ -6,5 +6,37 @@
   },
   "footer": {
     "contact": "Contact {{name}}"
+  },
+  "games": {
+    "rps": { "title": "Rock, Paper, Scissors", "description": "Face off against an opponent by guessing the winning hand." },
+    "truth-or-dare": { "title": "Truth or Dare", "description": "A wheel picks a player. The other one validates the action or the truth." },
+    "odd-or-even": { "title": "Odd or Even", "description": "Each player picks a digit and predicts whether the sum will be odd or even." },
+    "would-you-rather": { "title": "Would You Rather?", "description": "Choose between two fun or surprising dilemmas." },
+    "20-questions": { "title": "20 Questions", "description": "One player thinks of something, the other has 20 tries to guess it." },
+    "two-truths-one-lie": { "title": "2 Truths, 1 Lie", "description": "One player states 3 facts, the others vote for the lie." }
+  },
+  "themes": {
+    "clair": { "title": "Light", "description": "A bright, modern palette for lively, fluid sessions." },
+    "sombre": { "title": "Dark", "description": "A high-contrast, immersive style, perfect for game nights." },
+    "luxueux": { "title": "Luxurious", "description": "A polished, premium look for an upscale game experience." },
+    "romantique": { "title": "Romantic", "description": "A warm, inspiring vibe for cozy game sessions." }
+  },
+  "gameCard": {
+    "playerCount": "2 players"
+  },
+  "home": {
+    "eyebrow": "Welcome",
+    "title": "Choose a game and start a match.",
+    "subtitle": "Pick your favorite game, choose Solo or Multiplayer, then join an online room with a unique code."
+  },
+  "gameModePage": {
+    "notFoundTitle": "Game not found",
+    "notFoundMessage": "The requested game doesn’t exist. Head back home to pick another one.",
+    "soloEyebrow": "Solo",
+    "soloTitle": "Solo Mode",
+    "soloDescription": "Practice against the AI or guess a random word in a friendly setting.",
+    "multiplayerEyebrow": "Multiplayer",
+    "multiplayerTitle": "Multiplayer Mode",
+    "multiplayerDescription": "Create or join a room, invite your friends, and play in real time with shared scores."
   }
 }

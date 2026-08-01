@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Gamepad2, Heart, Moon, Sparkles, Sun } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { UiTheme } from '../types/game';
 
 type Props = {
@@ -18,6 +19,7 @@ const themeIcon = {
 
 export default function ThemeToggle({ themes, selectedTheme, onSelectTheme }: Props) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const activeTheme = selectedTheme ?? themes[0];
   const Icon = useMemo(() => themeIcon[activeTheme.id], [activeTheme]);
 
@@ -32,7 +34,7 @@ export default function ThemeToggle({ themes, selectedTheme, onSelectTheme }: Pr
         aria-haspopup="menu"
       >
         <Icon className="h-4 w-4" />
-        <span className="hidden sm:inline">{activeTheme.title}</span>
+        <span className="hidden sm:inline">{t(`themes.${activeTheme.id}.title`)}</span>
         <ChevronDown className="h-4 w-4" />
       </Button>
 
@@ -57,8 +59,8 @@ export default function ThemeToggle({ themes, selectedTheme, onSelectTheme }: Pr
                     <ThemeIcon className="h-5 w-5" />
                   </span>
                   <div>
-                    <div className="text-sm font-semibold text-foreground">{theme.title}</div>
-                    <p className="text-xs text-muted-foreground">{theme.description}</p>
+                    <div className="text-sm font-semibold text-foreground">{t(`themes.${theme.id}.title`)}</div>
+                    <p className="text-xs text-muted-foreground">{t(`themes.${theme.id}.description`)}</p>
                   </div>
                 </button>
               );

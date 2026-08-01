@@ -1,4 +1,5 @@
 import { Heart, HelpCircle, Scissors, Shuffle, Sparkles, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { GameTheme } from '../types/game';
 
 type GameCardProps = {
@@ -17,6 +18,7 @@ const icons = {
 };
 
 export function GameCard({ game, selected, onSelect }: GameCardProps) {
+  const { t } = useTranslation();
   const Icon = icons[game.id] ?? Sparkles;
 
   return (
@@ -32,12 +34,12 @@ export function GameCard({ game, selected, onSelect }: GameCardProps) {
           <Icon className="h-6 w-6" />
         </span>
         <span className="rounded-full bg-secondary px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-secondary-foreground">
-          2 joueurs
+          {t('gameCard.playerCount')}
         </span>
       </div>
       <div className="mt-6 space-y-3 text-left">
-        <h3 className="text-xl font-semibold text-foreground">{game.title}</h3>
-        <p className="text-sm leading-6 text-muted-foreground">{game.description}</p>
+        <h3 className="text-xl font-semibold text-foreground">{t(`games.${game.id}.title`)}</h3>
+        <p className="text-sm leading-6 text-muted-foreground">{t(`games.${game.id}.description`)}</p>
       </div>
     </button>
   );
