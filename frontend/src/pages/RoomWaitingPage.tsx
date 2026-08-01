@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Copy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useGameStore } from '../store/useGameStore';
@@ -11,6 +12,7 @@ import { gameThemes } from '../data/gameThemes';
 import { TRUTH_OR_DARE_CATEGORIES, DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS, type TruthOrDareCategoryId } from '../data/soloPrompts';
 
 export function RoomWaitingPage() {
+  const { t } = useTranslation();
   const { gameId, roomCode } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,15 +65,15 @@ export function RoomWaitingPage() {
 
       const newlyValidated = data.validatedBy.filter(id => !previousValidatedBy.includes(id) && id !== socketId);
       for (const id of newlyValidated) {
-        const name = currentPlayers.find(p => p.id === id)?.name ?? 'L’autre joueur';
-        pushNotification(`✅ ${name} a validé la sélection de catégories.`);
+        const name = currentPlayers.find(p => p.id === id)?.name ?? t('roomWaitingPage.unknownPlayerFallback');
+        pushNotification(t('roomWaitingPage.categoriesValidatedToast', { name }));
       }
 
       const categoriesChanged = previousCategories !== null && JSON.stringify(previousCategories) !== JSON.stringify(data.categories);
       const iHadValidated = socketId !== null && previousValidatedBy.includes(socketId);
       if (categoriesChanged && data.changedBy && data.changedBy !== socketId && iHadValidated) {
-        const name = currentPlayers.find(p => p.id === data.changedBy)?.name ?? 'L’autre joueur';
-        pushNotification(`⚠️ ${name} a modifié la sélection de catégories après votre validation — vérifiez avant de revalider.`);
+        const name = currentPlayers.find(p => p.id === data.changedBy)?.name ?? t('roomWaitingPage.unknownPlayerFallback');
+        pushNotification(t('roomWaitingPage.categoriesEditedToast', { name }));
       }
 
       prevValidatedByRef.current = data.validatedBy;
@@ -92,15 +94,15 @@ export function RoomWaitingPage() {
   if (!game || !gameId || !roomCode) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-3xl px-4 sm:px-6 py-12 text-center">
-        <h2 className="text-3xl font-semibold text-foreground">Salle introuvable</h2>
-        <p className="mt-4 text-sm text-muted-foreground">Le salon demandé est introuvable. Revenez à l’accueil pour en créer un autre.</p>
+        <h2 className="text-3xl font-semibold text-foreground">{t('roomWaitingPage.notFoundTitle')}</h2>
+        <p className="mt-4 text-sm text-muted-foreground">{t('roomWaitingPage.notFoundMessage')}</p>
       </motion.div>
     );
   }
 
   const isHost = socketId !== null && socketId === players[0]?.id;
   const canStart = players.length > 1 && isHost && (!isTruthOrDare || allValidated);
-  const host = players[0]?.name ?? 'Hôte';
+  const host = players[0]?.name ?? t('roomWaitingPage.hostFallback');
   const hasValidated = socketId !== null && validatedBy.includes(socketId);
 
   const handleStartClick = () => {
@@ -170,9 +172,9 @@ export function RoomWaitingPage() {
       <section className="rounded-[2rem] bg-card p-6 shadow-lg shadow-slate-900/5 sm:p-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">Salle d’attente</p>
-            <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">Salon {roomCode}</h1>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">Partagez ce code avec vos amis et préparez-vous à lancer la partie.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('roomWaitingPage.eyebrow')}</p>
+            <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">{t('roomWaitingPage.title', { roomCode })}</h1>
+            <p className="mt-3 text-base leading-7 text-muted-foreground">{t('roomWaitingPage.subtitle')}</p>
           </div>
           <button
             type="button"
@@ -180,7 +182,7 @@ export function RoomWaitingPage() {
             className="flex shrink-0 items-center gap-2 rounded-3xl bg-secondary px-4 py-3 text-sm text-secondary-foreground transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]"
           >
             <span>
-              Code du salon : <strong>{roomCode}</strong>
+              {t('roomWaitingPage.copyCodeLabel')}<strong>{roomCode}</strong>
             </span>
             {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
           </button>
@@ -188,16 +190,15 @@ export function RoomWaitingPage() {
 
         {opponentLeftName ? (
           <div className="mt-6 rounded-3xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-            🚪 {opponentLeftName} a quitté la partie précédente. Vous pouvez relancer une nouvelle partie dès que tout le monde est prêt.
+            {t('roomWaitingPage.opponentLeftBanner', { name: opponentLeftName })}
           </div>
         ) : null}
 
         {isTruthOrDare ? (
           <div className="mt-6 rounded-3xl border border-border bg-background p-4 sm:p-6">
-            <h2 className="text-xl font-semibold text-foreground">Catégories de la partie</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('roomWaitingPage.categoriesHeading')}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Cochez les catégories à inclure. Dès que l’un de vous change une case, les deux validations sont annulées —
-              il faut que chacun reclique sur « Valider » pour se remettre d’accord.
+              {t('roomWaitingPage.categoriesHelp')}
             </p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               {TRUTH_OR_DARE_CATEGORIES.map(category => (
@@ -212,8 +213,8 @@ export function RoomWaitingPage() {
                     className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
                   />
                   <span>
-                    <span className="block font-semibold text-foreground">{category.label}</span>
-                    <span className="block text-xs text-muted-foreground">{category.description}</span>
+                    <span className="block font-semibold text-foreground">{t(`truthOrDareCategories.${category.id}.label`)}</span>
+                    <span className="block text-xs text-muted-foreground">{t(`truthOrDareCategories.${category.id}.description`)}</span>
                   </span>
                 </label>
               ))}
@@ -228,9 +229,9 @@ export function RoomWaitingPage() {
                     <span className={validated ? 'text-primary' : 'text-muted-foreground'}>{validated ? '✓' : '⏳'}</span>
                     <span className="font-medium text-foreground">
                       {player.name}
-                      {isMe ? ' (vous)' : ''}
+                      {isMe ? t('roomWaitingPage.youTag') : ''}
                     </span>
-                    <span className="text-muted-foreground">{validated ? 'a validé cette sélection' : "n’a pas encore validé"}</span>
+                    <span className="text-muted-foreground">{validated ? t('roomWaitingPage.validatedStatus') : t('roomWaitingPage.notValidatedStatus')}</span>
                   </div>
                 );
               })}
@@ -239,11 +240,11 @@ export function RoomWaitingPage() {
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted-foreground">
                 {allValidated
-                  ? '✅ Les deux joueurs ont validé — l’hôte peut maintenant démarrer la partie ci-dessous.'
-                  : '➜ Une fois validé par les deux, le bouton « Démarrer la partie » se débloquera.'}
+                  ? t('roomWaitingPage.bothValidatedStatus')
+                  : t('roomWaitingPage.waitingValidationStatus')}
               </p>
               <Button type="button" variant={hasValidated ? 'secondary' : 'default'} onClick={handleValidateCategories} disabled={hasValidated}>
-                {hasValidated ? 'Validé ✓' : 'Valider ces catégories'}
+                {hasValidated ? t('roomWaitingPage.validatedButton') : t('roomWaitingPage.validateButton')}
               </Button>
             </div>
           </div>
@@ -251,40 +252,40 @@ export function RoomWaitingPage() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">
-            <h2 className="text-xl font-semibold text-foreground">Joueurs connectés</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('roomWaitingPage.connectedPlayersHeading')}</h2>
             <div className="mt-4 space-y-3 rounded-3xl border border-border bg-surface p-4">
               {players.length > 0 ? (
                 players.map(player => (
                   <div key={player.id} className="rounded-2xl bg-card p-3 text-sm text-foreground shadow-sm">
-                    {player.name === host ? `${player.name} (hôte)` : player.name}
+                    {player.name === host ? t('roomWaitingPage.hostTag', { name: player.name }) : player.name}
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">Aucun joueur connecté pour le moment.</p>
+                <p className="text-sm text-muted-foreground">{t('roomWaitingPage.noPlayersConnected')}</p>
               )}
             </div>
           </div>
 
           <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">
-            <h2 className="text-xl font-semibold text-foreground">Statut de la salle</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('roomWaitingPage.roomStatusHeading')}</h2>
             <p className="mt-3 text-base leading-7 text-muted-foreground">
               {status !== 'waiting'
-                ? 'Prêt à démarrer.'
+                ? t('roomWaitingPage.statusReady')
                 : players.length < 2
-                  ? 'En attente de joueurs...'
+                  ? t('roomWaitingPage.statusWaitingPlayers')
                   : isTruthOrDare && !allValidated
-                    ? 'En attente de la validation des catégories...'
-                    : 'Prêt à démarrer.'}
+                    ? t('roomWaitingPage.statusWaitingValidation')
+                    : t('roomWaitingPage.statusReady')}
             </p>
             <div className="mt-6 flex flex-col gap-3">
               <Button disabled={!canStart} onClick={handleStartClick}>
                 {!isHost
-                  ? 'En attente de l’hôte'
+                  ? t('roomWaitingPage.startButtonWaitingHost')
                   : isTruthOrDare && !allValidated
-                    ? 'Validez les catégories pour démarrer'
-                    : 'Démarrer la partie'}
+                    ? t('roomWaitingPage.startButtonWaitingValidation')
+                    : t('roomWaitingPage.startButtonReady')}
               </Button>
-              <Button variant="secondary" onClick={handleLeaveRoom}>Quitter le salon</Button>
+              <Button variant="secondary" onClick={handleLeaveRoom}>{t('roomWaitingPage.leaveRoomButton')}</Button>
             </div>
           </div>
         </div>

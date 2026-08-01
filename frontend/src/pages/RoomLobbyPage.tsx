@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { gameThemes } from '../data/gameThemes';
@@ -11,6 +12,7 @@ import { getPlayerToken, getStoredPseudo, setStoredPseudo, saveActiveRoom } from
 const PSEUDO_MAX_LENGTH = 20;
 
 export function RoomLobbyPage() {
+  const { t } = useTranslation();
   const { gameId } = useParams();
   const navigate = useNavigate();
   const { socket } = useSocket();
@@ -27,8 +29,8 @@ export function RoomLobbyPage() {
   if (!game || !gameId) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-3xl px-4 py-10 text-center">
-        <h2 className="text-2xl font-semibold text-foreground">Jeu introuvable</h2>
-        <p className="mt-3 text-sm text-muted-foreground">Retournez à l’accueil et choisissez un jeu pour commencer.</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('common.gameNotFoundTitle')}</h2>
+        <p className="mt-3 text-sm text-muted-foreground">{t('roomLobbyPage.notFoundMessage')}</p>
       </motion.div>
     );
   }
@@ -42,12 +44,12 @@ export function RoomLobbyPage() {
 
   const handleCreateRoom = () => {
     if (!trimmedPseudo) {
-      setError('Veuillez saisir un pseudo.');
+      setError(t('roomLobbyPage.errorPseudoRequired'));
       return;
     }
 
     if (!socket) {
-      setError('Connexion serveur non disponible.');
+      setError(t('roomLobbyPage.errorNoServerConnection'));
       return;
     }
 
@@ -67,18 +69,18 @@ export function RoomLobbyPage() {
 
   const handleJoinRoom = () => {
     if (!trimmedPseudo) {
-      setError('Veuillez saisir un pseudo.');
+      setError(t('roomLobbyPage.errorPseudoRequired'));
       return;
     }
 
     const code = joinCode.trim().toUpperCase();
     if (!code) {
-      setError('Veuillez saisir un code de salon.');
+      setError(t('roomLobbyPage.errorRoomCodeRequired'));
       return;
     }
 
     if (!socket) {
-      setError('Connexion serveur non disponible.');
+      setError(t('roomLobbyPage.errorNoServerConnection'));
       return;
     }
 
@@ -104,16 +106,16 @@ export function RoomLobbyPage() {
       <section className="mb-10 rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
         <div className="space-y-6">
           <div>
-            <h1 className="text-4xl font-bold text-foreground">{game.title}</h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">{game.description}</p>
+            <h1 className="text-4xl font-bold text-foreground">{t(`games.${game.id}.title`)}</h1>
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">{t(`games.${game.id}.description`)}</p>
           </div>
         </div>
 
         <div className="mt-6 rounded-3xl border border-border bg-background p-6">
           <label className="block text-sm font-semibold text-foreground" htmlFor="pseudo">
-            Votre pseudo
+            {t('roomLobbyPage.pseudoLabel')}
           </label>
-          <p className="mt-1 text-sm text-muted-foreground">C’est ce nom qui sera affiché aux autres joueurs pendant la partie.</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('roomLobbyPage.pseudoHelp')}</p>
           <input
             id="pseudo"
             value={pseudo}
@@ -124,7 +126,7 @@ export function RoomLobbyPage() {
               }
             }}
             maxLength={PSEUDO_MAX_LENGTH}
-            placeholder="Ex : Alex"
+            placeholder={t('roomLobbyPage.pseudoPlaceholder')}
             className="mt-3 w-full max-w-sm rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
@@ -137,15 +139,15 @@ export function RoomLobbyPage() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-border bg-background p-6">
-            <h2 className="text-xl font-semibold text-foreground">Créer un salon</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">Générez un code unique et invitez vos amis pour rejoindre votre partie.</p>
+            <h2 className="text-xl font-semibold text-foreground">{t('roomLobbyPage.createRoomTitle')}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('roomLobbyPage.createRoomDescription')}</p>
             <Button className="mt-4" onClick={handleCreateRoom} disabled={!trimmedPseudo}>
-              Créer un salon
+              {t('roomLobbyPage.createRoomButton')}
             </Button>
           </div>
           <div className="rounded-3xl border border-border bg-background p-6">
-            <h2 className="text-xl font-semibold text-foreground">Rejoindre un salon</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">Entrez le code du salon que vous avez reçu pour intégrer la partie.</p>
+            <h2 className="text-xl font-semibold text-foreground">{t('roomLobbyPage.joinRoomTitle')}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('roomLobbyPage.joinRoomDescription')}</p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <input
                 value={joinCode}
@@ -155,11 +157,11 @@ export function RoomLobbyPage() {
                     handleJoinRoom();
                   }
                 }}
-                placeholder="Code du salon"
+                placeholder={t('roomLobbyPage.roomCodePlaceholder')}
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               <Button variant="secondary" onClick={handleJoinRoom} disabled={!trimmedPseudo}>
-                Rejoindre
+                {t('roomLobbyPage.joinRoomButton')}
               </Button>
             </div>
           </div>
