@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { ScorePill } from '@/components/solo/ScorePill';
@@ -27,6 +27,13 @@ export function RpsSolo() {
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(RPS_TARGET_SCORE);
   const [message, setMessage] = useState(t('solo.rps.instructions'));
   const [round, setRound] = useState<RoundData | null>(null);
+  const [hasPlayed, setHasPlayed] = useState(false);
+
+  useEffect(() => {
+    if (!hasPlayed) {
+      setMessage(t('solo.rps.instructions'));
+    }
+  }, [t, hasPlayed]);
 
   const playRound = (move: RpsMove) => {
     if (isMatchOver || round) {
@@ -53,6 +60,7 @@ export function RpsSolo() {
 
     recordRound(round.outcome);
     setRound(null);
+    setHasPlayed(true);
   };
 
   return (

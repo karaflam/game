@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScorePill } from '@/components/solo/ScorePill';
@@ -24,6 +24,13 @@ export function TwentyQuestionsSolo() {
   const [message, setMessage] = useState(t('solo.twentyQuestions.instructions'));
   const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
   const [roundOver, setRoundOver] = useState(false);
+  const [hasPlayed, setHasPlayed] = useState(false);
+
+  useEffect(() => {
+    if (!hasPlayed) {
+      setMessage(t('solo.twentyQuestions.instructions'));
+    }
+  }, [t, hasPlayed]);
 
   const word = soloTwentyQuestionsWords[wordIndex];
   const hint = getHintForAttempt(word.hints, attempts);
@@ -51,6 +58,8 @@ export function TwentyQuestionsSolo() {
     if (isMatchOver || roundOver || roundResult || !guess.trim()) {
       return;
     }
+
+    setHasPlayed(true);
 
     if (isCorrectGuess(guess, word.answer)) {
       setRoundResult({ outcome: 'player', answer: word.answer, triesUsed: attempts + 1 });

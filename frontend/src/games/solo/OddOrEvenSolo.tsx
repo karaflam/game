@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScorePill } from '@/components/solo/ScorePill';
@@ -20,6 +20,13 @@ export function OddOrEvenSolo() {
   const [prediction, setPrediction] = useState<Parity>('pair');
   const [message, setMessage] = useState(t('solo.oddOrEven.instructions'));
   const [round, setRound] = useState<RoundData | null>(null);
+  const [hasPlayed, setHasPlayed] = useState(false);
+
+  useEffect(() => {
+    if (!hasPlayed) {
+      setMessage(t('solo.oddOrEven.instructions'));
+    }
+  }, [t, hasPlayed]);
 
   const playRound = () => {
     if (isMatchOver || round) {
@@ -50,6 +57,7 @@ export function OddOrEvenSolo() {
 
     recordRound(round.outcome);
     setRound(null);
+    setHasPlayed(true);
   };
 
   return (
