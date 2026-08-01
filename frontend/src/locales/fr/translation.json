@@ -8,18 +8,48 @@
     "contact": "Contacter {{name}}"
   },
   "games": {
-    "rps": { "title": "Pierre, Feuille, Ciseau", "description": "Affrontez un adversaire en devinant la main gagnante." },
-    "truth-or-dare": { "title": "Action ou Vérité", "description": "Une roue choisit un joueur. L’autre valide l’action ou la vérité." },
-    "odd-or-even": { "title": "Pair ou Impair", "description": "Chacun choisit un chiffre et prédit si la somme sera paire ou impaire." },
-    "would-you-rather": { "title": "Tu Préfères ?", "description": "Choisissez entre deux dilemmes amusants ou surprenants." },
-    "20-questions": { "title": "20 Questions", "description": "Un joueur pense à quelque chose, l’autre a 20 essais pour deviner." },
-    "two-truths-one-lie": { "title": "2 Vérités, 1 Mensonge", "description": "Un joueur propose 3 faits, les autres votent pour le mensonge." }
+    "rps": {
+      "title": "Pierre, Feuille, Ciseau",
+      "description": "Affrontez un adversaire en devinant la main gagnante."
+    },
+    "truth-or-dare": {
+      "title": "Action ou Vérité",
+      "description": "Une roue choisit un joueur. L’autre valide l’action ou la vérité."
+    },
+    "odd-or-even": {
+      "title": "Pair ou Impair",
+      "description": "Chacun choisit un chiffre et prédit si la somme sera paire ou impaire."
+    },
+    "would-you-rather": {
+      "title": "Tu Préfères ?",
+      "description": "Choisissez entre deux dilemmes amusants ou surprenants."
+    },
+    "20-questions": {
+      "title": "20 Questions",
+      "description": "Un joueur pense à quelque chose, l’autre a 20 essais pour deviner."
+    },
+    "two-truths-one-lie": {
+      "title": "2 Vérités, 1 Mensonge",
+      "description": "Un joueur propose 3 faits, les autres votent pour le mensonge."
+    }
   },
   "themes": {
-    "clair": { "title": "Clair", "description": "Une palette lumineuse et moderne pour des sessions vives et fluides." },
-    "sombre": { "title": "Sombre", "description": "Un style contrasté et immersif, idéal pour les soirées de jeu." },
-    "luxueux": { "title": "Luxueux", "description": "Une esthétique soignée et premium pour un jeu haut de gamme." },
-    "romantique": { "title": "Romantique", "description": "Un univers tendre et inspirant pour des parties conviviales." }
+    "clair": {
+      "title": "Clair",
+      "description": "Une palette lumineuse et moderne pour des sessions vives et fluides."
+    },
+    "sombre": {
+      "title": "Sombre",
+      "description": "Un style contrasté et immersif, idéal pour les soirées de jeu."
+    },
+    "luxueux": {
+      "title": "Luxueux",
+      "description": "Une esthétique soignée et premium pour un jeu haut de gamme."
+    },
+    "romantique": {
+      "title": "Romantique",
+      "description": "Un univers tendre et inspirant pour des parties conviviales."
+    }
   },
   "gameCard": {
     "playerCount": "2 joueurs"
@@ -43,15 +73,42 @@
     "gameNotFoundTitle": "Jeu introuvable"
   },
   "truthOrDareCategories": {
-    "general": { "label": "Général", "description": "Questions et gages fun, pour tout le monde." },
-    "amis": { "label": "Entre amis", "description": "Souvenirs, anecdotes et complicité de groupe." },
-    "couple": { "label": "Couple / Flirt", "description": "Romantique et tendre, sans être explicite." },
-    "famille": { "label": "Famille", "description": "Souvenirs et traditions familiales, tout public." },
-    "audacieux": { "label": "Audacieux", "description": "Plus embarrassant, mais toujours bon enfant." },
-    "nostalgie": { "label": "Nostalgie", "description": "Enfance et souvenirs d’avant." },
-    "vie": { "label": "Vie & Ambitions", "description": "Objectifs, regrets et rêves pour l’avenir." },
-    "desir": { "label": "Désir & Fantasmes", "description": "Attirance et fantasmes, en toute pudeur." },
-    "intimite": { "label": "Confidences intimes", "description": "Vulnérabilité et intimité de couple." }
+    "general": {
+      "label": "Général",
+      "description": "Questions et gages fun, pour tout le monde."
+    },
+    "amis": {
+      "label": "Entre amis",
+      "description": "Souvenirs, anecdotes et complicité de groupe."
+    },
+    "couple": {
+      "label": "Couple / Flirt",
+      "description": "Romantique et tendre, sans être explicite."
+    },
+    "famille": {
+      "label": "Famille",
+      "description": "Souvenirs et traditions familiales, tout public."
+    },
+    "audacieux": {
+      "label": "Audacieux",
+      "description": "Plus embarrassant, mais toujours bon enfant."
+    },
+    "nostalgie": {
+      "label": "Nostalgie",
+      "description": "Enfance et souvenirs d’avant."
+    },
+    "vie": {
+      "label": "Vie & Ambitions",
+      "description": "Objectifs, regrets et rêves pour l’avenir."
+    },
+    "desir": {
+      "label": "Désir & Fantasmes",
+      "description": "Attirance et fantasmes, en toute pudeur."
+    },
+    "intimite": {
+      "label": "Confidences intimes",
+      "description": "Vulnérabilité et intimité de couple."
+    }
   },
   "roomLobbyPage": {
     "notFoundMessage": "Retournez à l’accueil et choisissez un jeu pour commencer.",
@@ -142,5 +199,91 @@
     "title": "Un instant...",
     "message": "On restaure votre partie. Ça ne prend que quelques secondes — inutile de recharger la page.",
     "slowHint": "Ça prend plus de temps que prévu. Vérifiez votre connexion — vous pouvez recharger la page si ça persiste."
+  },
+  "solo": {
+    "reveals": {
+      "continueHint": "Cliquez pour continuer",
+      "vsLabel": "VS"
+    },
+    "scorePill": {
+      "you": "Vous",
+      "ai": "IA",
+      "reset": "Réinitialiser"
+    },
+    "matchEnd": {
+      "won": "Vous avez gagné la partie !",
+      "draw": "Égalité !",
+      "lost": "{{opponent}} a gagné cette fois...",
+      "opponentFallback": "L'IA",
+      "detailWon": "Belle performance face à {{opponent}}.",
+      "detailWonFallback": "la machine",
+      "detailDraw": "Personne ne prend l'avantage, belle partie serrée.",
+      "detailLost": "Retentez votre chance pour prendre votre revanche.",
+      "newMatchButton": "Nouvelle partie"
+    },
+    "rps": {
+      "moves": {
+        "pierre": "Pierre",
+        "feuille": "Feuille",
+        "ciseau": "Ciseau"
+      },
+      "instructions": "Choisissez pierre, feuille ou ciseau.",
+      "outcomeDraw": "Égalité : vous avez joué {{playerMove}}, l'IA aussi.",
+      "outcomeWin": "Vous gagnez la manche ! {{playerMove}} bat {{machineMove}}.",
+      "outcomeLose": "Vous perdez la manche... {{machineMove}} bat {{playerMove}}.",
+      "duelOutcomeWin": "Vous gagnez la manche !",
+      "duelOutcomeLose": "Vous perdez la manche...",
+      "duelOutcomeDraw": "Égalité !"
+    },
+    "oddOrEven": {
+      "instructions": "Choisissez un chiffre de 1 à 9 et prédisez la parité de la somme.",
+      "outcome": "Vous avez joué {{playerNumber}}, l'IA a joué {{machineNumber}}. Somme {{sum}} ({{parity}}). {{result}}",
+      "outcomeWin": "Vous gagnez la manche !",
+      "outcomeLose": "Vous perdez la manche...",
+      "sumLabel": "Somme {{sum}} ({{parity}})",
+      "odd": "Impair",
+      "even": "Pair",
+      "playButton": "Jouer la manche"
+    },
+    "truthOrDare": {
+      "categoriesHeading": "Catégories",
+      "spinInstruction": "Faites tourner la roue pour désigner qui doit relever le défi.",
+      "spinButton": "Tourner la roue",
+      "playerName": "Vous",
+      "promptSuffix": " doit choisir : Action ou Vérité ?",
+      "truthButton": "Vérité",
+      "dareButton": "Action",
+      "revealTruth": "Vérité",
+      "revealDare": "Action"
+    },
+    "wouldYouRather": {
+      "yourChoice": "Vous : « {{choice}} »",
+      "aiSame": "IA : « {{choice}} » — même longueur d'onde !",
+      "aiDifferent": "IA : « {{choice}} » — pas d'accord cette fois.",
+      "instructions": "Tu préfères...",
+      "nextDilemmaButton": "Prochain dilemme",
+      "newDilemmaButton": "Nouveau dilemme"
+    },
+    "twentyQuestions": {
+      "instructions": "Devinez le mot en 20 essais maximum.",
+      "newRound": "Nouveau mot ! Devinez-le en 20 essais maximum.",
+      "wrongGuess": "Non, ce n'est pas ça. Essai {{attempt}}/{{max}}.",
+      "won": "Bravo, c'était bien \"{{answer}}\" !",
+      "lost": "Essais épuisés. Le mot était \"{{answer}}\".",
+      "revealWon": "Trouvé : {{answer}} !",
+      "revealLost": "Le mot était : {{answer}}",
+      "revealDetail": "En {{tries}} essai(s).",
+      "hintLabel": "Indice :",
+      "guessPlaceholder": "Votre proposition",
+      "submitButton": "Valider",
+      "nextRoundButton": "Manche suivante"
+    },
+    "twoTruthsOneLie": {
+      "won": "Bien joué, vous avez trouvé le mensonge !",
+      "lost": "Perdu, ce n'était pas le mensonge.",
+      "detail": "Le mensonge était : \"{{lie}}\"",
+      "instructions": "L'IA affirme 3 choses sur elle. Trouvez le mensonge.",
+      "nextSetButton": "Série suivante"
+    }
   }
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export type FlipCard = { id: string; content: ReactNode; highlight?: boolean };
 
@@ -16,6 +17,7 @@ const SIZE_CLASSES: Record<'sm' | 'lg', { wrapper: string; text: string }> = {
 };
 
 export function FlipReveal({ cards, outcomeLabel, cardSize = 'sm', onComplete }: FlipRevealProps) {
+  const { t } = useTranslation();
   const sizeClasses = SIZE_CLASSES[cardSize];
 
   return (
@@ -76,7 +78,7 @@ export function FlipReveal({ cards, outcomeLabel, cardSize = 'sm', onComplete }:
         transition={{ delay: 0.3 + cards.length * 0.15 + 0.9, duration: 0.4 }}
         className="text-xs text-muted-foreground"
       >
-        Cliquez pour continuer
+        {t('solo.reveals.continueHint')}
       </motion.p>
     </div>
   );

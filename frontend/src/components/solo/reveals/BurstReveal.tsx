@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { CheckCircle2, Minus, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type BurstRevealVariant = 'success' | 'fail' | 'neutral';
 
@@ -28,6 +29,7 @@ const PARTICLE_OFFSETS = [
 ];
 
 export function BurstReveal({ icon, headline, detail, onComplete }: BurstRevealProps) {
+  const { t } = useTranslation();
   const Icon = ICONS[icon];
 
   return (
@@ -87,7 +89,7 @@ export function BurstReveal({ icon, headline, detail, onComplete }: BurstRevealP
         transition={{ delay: 0.9, duration: 0.4 }}
         className="text-xs text-muted-foreground"
       >
-        Cliquez pour continuer
+        {t('solo.reveals.continueHint')}
       </motion.p>
     </div>
   );

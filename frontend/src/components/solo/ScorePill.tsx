@@ -1,4 +1,5 @@
 import { RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 
 type ScorePillProps = {
@@ -46,22 +47,26 @@ export function ScorePill({
   machine,
   targetScore,
   onReset,
-  playerLabel = 'Vous',
-  machineLabel = 'IA',
+  playerLabel,
+  machineLabel,
   hasOpponent = true
 }: ScorePillProps) {
+  const { t } = useTranslation();
+  const label = playerLabel ?? t('solo.scorePill.you');
+  const aiLabel = machineLabel ?? t('solo.scorePill.ai');
+
   return (
     <div className="rounded-2xl bg-secondary px-4 py-3 text-secondary-foreground">
       <div className="mb-3 flex items-center justify-end">
         <Button type="button" variant="ghost" size="sm" onClick={onReset} className="gap-1.5">
           <RotateCcw className="h-4 w-4" />
-          Réinitialiser
+          {t('solo.scorePill.reset')}
         </Button>
       </div>
       <div className="space-y-3">
-        <RaceBar label={playerLabel} value={player} targetScore={targetScore} colorClassName="bg-primary" />
+        <RaceBar label={label} value={player} targetScore={targetScore} colorClassName="bg-primary" />
         {hasOpponent ? (
-          <RaceBar label={machineLabel} value={machine} targetScore={targetScore} colorClassName="bg-muted-foreground" />
+          <RaceBar label={aiLabel} value={machine} targetScore={targetScore} colorClassName="bg-muted-foreground" />
         ) : null}
       </div>
     </div>

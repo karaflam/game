@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { PlayerWheel } from '@/components/solo/PlayerWheel';
 import { FlipReveal } from '@/components/solo/reveals/FlipReveal';
@@ -6,8 +7,6 @@ import { soloTruthOrDarePrompts, TRUTH_OR_DARE_CATEGORIES, DEFAULT_TRUTH_OR_DARE
 import { pickRandomIndexFromCandidates } from '@/lib/randomPick';
 
 type Phase = 'idle' | 'spinning' | 'landed' | 'revealing';
-
-const PLAYER_NAME = 'Vous';
 
 function eligibleIndices(categories: TruthOrDareCategoryId[]) {
   const active = new Set(categories);
@@ -21,6 +20,8 @@ function eligibleIndices(categories: TruthOrDareCategoryId[]) {
 }
 
 export function TruthOrDareSolo() {
+  const { t } = useTranslation();
+  const PLAYER_NAME = t('solo.truthOrDare.playerName');
   const [phase, setPhase] = useState<Phase>('idle');
   const [categories, setCategories] = useState<TruthOrDareCategoryId[]>(DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
@@ -75,7 +76,7 @@ export function TruthOrDareSolo() {
       {phase === 'idle' ? (
         <>
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-foreground">Catégories</p>
+            <p className="text-sm font-semibold text-foreground">{t('solo.truthOrDare.categoriesHeading')}</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {TRUTH_OR_DARE_CATEGORIES.map(category => (
                 <label
@@ -89,16 +90,16 @@ export function TruthOrDareSolo() {
                     className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
                   />
                   <span>
-                    <span className="block font-semibold text-foreground">{category.label}</span>
-                    <span className="block text-xs text-muted-foreground">{category.description}</span>
+                    <span className="block font-semibold text-foreground">{t(`truthOrDareCategories.${category.id}.label`)}</span>
+                    <span className="block text-xs text-muted-foreground">{t(`truthOrDareCategories.${category.id}.description`)}</span>
                   </span>
                 </label>
               ))}
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">Faites tourner la roue pour désigner qui doit relever le défi.</p>
+          <p className="text-sm text-muted-foreground">{t('solo.truthOrDare.spinInstruction')}</p>
           <Button type="button" onClick={spin}>
-            Tourner la roue
+            {t('solo.truthOrDare.spinButton')}
           </Button>
         </>
       ) : null}
@@ -114,13 +115,13 @@ export function TruthOrDareSolo() {
 
       {phase === 'landed' ? (
         <div className="space-y-4">
-          <p className="text-sm font-semibold text-foreground">{PLAYER_NAME} doit choisir : Action ou Vérité ?</p>
+          <p className="text-sm font-semibold text-foreground">{PLAYER_NAME}{t('solo.truthOrDare.promptSuffix')}</p>
           <div className="flex flex-wrap gap-3">
             <Button type="button" variant="outline" onClick={() => chooseType('truth')}>
-              Vérité
+              {t('solo.truthOrDare.truthButton')}
             </Button>
             <Button type="button" variant="outline" onClick={() => chooseType('dare')}>
-              Action
+              {t('solo.truthOrDare.dareButton')}
             </Button>
           </div>
         </div>
@@ -130,7 +131,7 @@ export function TruthOrDareSolo() {
         <FlipReveal
           cardSize="lg"
           cards={[{ id: 'prompt', content: reveal === 'truth' ? prompt.truth : prompt.dare }]}
-          outcomeLabel={reveal === 'truth' ? 'Vérité' : 'Action'}
+          outcomeLabel={reveal === 'truth' ? t('solo.truthOrDare.revealTruth') : t('solo.truthOrDare.revealDare')}
           onComplete={handleRevealComplete}
         />
       ) : null}

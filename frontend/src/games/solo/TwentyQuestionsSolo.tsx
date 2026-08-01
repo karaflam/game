@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
@@ -14,12 +15,13 @@ const MAX_ATTEMPTS = 20;
 type RoundResult = { outcome: 'player' | 'machine'; answer: string; triesUsed: number };
 
 export function TwentyQuestionsSolo() {
+  const { t } = useTranslation();
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(TWENTY_QUESTIONS_TARGET_SCORE);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
   const [wordIndex, setWordIndex] = useState<number>(() => Math.floor(Math.random() * soloTwentyQuestionsWords.length));
   const [attempts, setAttempts] = useState(0);
   const [guess, setGuess] = useState('');
-  const [message, setMessage] = useState('Devinez le mot en 20 essais maximum.');
+  const [message, setMessage] = useState(t('solo.twentyQuestions.instructions'));
   const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
   const [roundOver, setRoundOver] = useState(false);
 
@@ -41,7 +43,7 @@ export function TwentyQuestionsSolo() {
     setWordIndex(nextIdx);
     setAttempts(0);
     setGuess('');
-    setMessage('Nouveau mot ! Devinez-le en 20 essais maximum.');
+    setMessage(t('solo.twentyQuestions.newRound'));
     setRoundOver(false);
   };
 
@@ -64,7 +66,7 @@ export function TwentyQuestionsSolo() {
       return;
     }
 
-    setMessage(`Non, ce n’est pas ça. Essai ${nextAttempts}/${MAX_ATTEMPTS}.`);
+    setMessage(t('solo.twentyQuestions.wrongGuess', { attempt: nextAttempts, max: MAX_ATTEMPTS }));
   };
 
   const handleRevealComplete = () => {
@@ -74,8 +76,8 @@ export function TwentyQuestionsSolo() {
 
     setMessage(
       roundResult.outcome === 'player'
-        ? `Bravo, c’était bien "${roundResult.answer}" !`
-        : `Essais épuisés. Le mot était "${roundResult.answer}".`
+        ? t('solo.twentyQuestions.won', { answer: roundResult.answer })
+        : t('solo.twentyQuestions.lost', { answer: roundResult.answer })
     );
     recordRound(roundResult.outcome);
     setRoundOver(true);
@@ -89,8 +91,12 @@ export function TwentyQuestionsSolo() {
       {roundResult ? (
         <BurstReveal
           icon={roundResult.outcome === 'player' ? 'success' : 'fail'}
-          headline={roundResult.outcome === 'player' ? `Trouvé : ${roundResult.answer} !` : `Le mot était : ${roundResult.answer}`}
-          detail={roundResult.outcome === 'player' ? `En ${roundResult.triesUsed} essai(s).` : undefined}
+          headline={
+            roundResult.outcome === 'player'
+              ? t('solo.twentyQuestions.revealWon', { answer: roundResult.answer })
+              : t('solo.twentyQuestions.revealLost', { answer: roundResult.answer })
+          }
+          detail={roundResult.outcome === 'player' ? t('solo.twentyQuestions.revealDetail', { tries: roundResult.triesUsed }) : undefined}
           onComplete={handleRevealComplete}
         />
       ) : (
@@ -98,7 +104,7 @@ export function TwentyQuestionsSolo() {
           <p className="text-sm text-muted-foreground">{message}</p>
 
           <div className="rounded-2xl border border-border bg-muted p-4 text-sm text-foreground">
-            <strong>Indice :</strong> {hint}
+            <strong>{t('solo.twentyQuestions.hintLabel')}</strong> {hint}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
@@ -112,11 +118,11 @@ export function TwentyQuestionsSolo() {
                 }
               }}
               disabled={isMatchOver || roundOver}
-              placeholder="Votre proposition"
+              placeholder={t('solo.twentyQuestions.guessPlaceholder')}
               className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             <Button type="button" onClick={submitGuess} disabled={isMatchOver || roundOver} className="h-auto px-6 py-3">
-              Valider
+              {t('solo.twentyQuestions.submitButton')}
             </Button>
           </div>
         </>
@@ -124,7 +130,7 @@ export function TwentyQuestionsSolo() {
 
       {roundOver && !isMatchOver ? (
         <Button type="button" variant="secondary" onClick={startNewRound}>
-          Manche suivante
+          {t('solo.twentyQuestions.nextRoundButton')}
         </Button>
       ) : null}
 

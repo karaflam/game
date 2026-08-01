@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import { soloWouldYouRatherPrompts } from '@/data/soloPrompts';
@@ -10,6 +11,7 @@ type Side = (typeof SIDES)[number];
 type RoundResult = { playerChoice: Side; machineChoice: Side };
 
 export function WouldYouRatherSolo() {
+  const { t } = useTranslation();
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
   const [dilemmaIndex, setDilemmaIndex] = useState<number>(() => Math.floor(Math.random() * soloWouldYouRatherPrompts.length));
   const [revealing, setRevealing] = useState(false);
@@ -47,15 +49,17 @@ export function WouldYouRatherSolo() {
       {revealing && result ? (
         <BurstReveal
           icon="neutral"
-          headline={`Vous : « ${dilemma[result.playerChoice]} »`}
-          detail={`IA : « ${dilemma[result.machineChoice]} » ${
-            result.playerChoice === result.machineChoice ? '— même longueur d’onde !' : '— pas d’accord cette fois.'
-          }`}
+          headline={t('solo.wouldYouRather.yourChoice', { choice: dilemma[result.playerChoice] })}
+          detail={
+            result.playerChoice === result.machineChoice
+              ? t('solo.wouldYouRather.aiSame', { choice: dilemma[result.machineChoice] })
+              : t('solo.wouldYouRather.aiDifferent', { choice: dilemma[result.machineChoice] })
+          }
           onComplete={() => setRevealing(false)}
         />
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">Tu préfères...</p>
+          <p className="text-sm text-muted-foreground">{t('solo.wouldYouRather.instructions')}</p>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Button
@@ -82,7 +86,7 @@ export function WouldYouRatherSolo() {
 
       {!revealing ? (
         <Button type="button" variant="secondary" onClick={nextDilemma}>
-          {result ? 'Prochain dilemme' : 'Nouveau dilemme'}
+          {result ? t('solo.wouldYouRather.nextDilemmaButton') : t('solo.wouldYouRather.newDilemmaButton')}
         </Button>
       ) : null}
     </div>

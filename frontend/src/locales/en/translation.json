@@ -8,18 +8,48 @@
     "contact": "Contact {{name}}"
   },
   "games": {
-    "rps": { "title": "Rock, Paper, Scissors", "description": "Face off against an opponent by guessing the winning hand." },
-    "truth-or-dare": { "title": "Truth or Dare", "description": "A wheel picks a player. The other one validates the action or the truth." },
-    "odd-or-even": { "title": "Odd or Even", "description": "Each player picks a digit and predicts whether the sum will be odd or even." },
-    "would-you-rather": { "title": "Would You Rather?", "description": "Choose between two fun or surprising dilemmas." },
-    "20-questions": { "title": "20 Questions", "description": "One player thinks of something, the other has 20 tries to guess it." },
-    "two-truths-one-lie": { "title": "2 Truths, 1 Lie", "description": "One player states 3 facts, the others vote for the lie." }
+    "rps": {
+      "title": "Rock, Paper, Scissors",
+      "description": "Face off against an opponent by guessing the winning hand."
+    },
+    "truth-or-dare": {
+      "title": "Truth or Dare",
+      "description": "A wheel picks a player. The other one validates the action or the truth."
+    },
+    "odd-or-even": {
+      "title": "Odd or Even",
+      "description": "Each player picks a digit and predicts whether the sum will be odd or even."
+    },
+    "would-you-rather": {
+      "title": "Would You Rather?",
+      "description": "Choose between two fun or surprising dilemmas."
+    },
+    "20-questions": {
+      "title": "20 Questions",
+      "description": "One player thinks of something, the other has 20 tries to guess it."
+    },
+    "two-truths-one-lie": {
+      "title": "2 Truths, 1 Lie",
+      "description": "One player states 3 facts, the others vote for the lie."
+    }
   },
   "themes": {
-    "clair": { "title": "Light", "description": "A bright, modern palette for lively, fluid sessions." },
-    "sombre": { "title": "Dark", "description": "A high-contrast, immersive style, perfect for game nights." },
-    "luxueux": { "title": "Luxurious", "description": "A polished, premium look for an upscale game experience." },
-    "romantique": { "title": "Romantic", "description": "A warm, inspiring vibe for cozy game sessions." }
+    "clair": {
+      "title": "Light",
+      "description": "A bright, modern palette for lively, fluid sessions."
+    },
+    "sombre": {
+      "title": "Dark",
+      "description": "A high-contrast, immersive style, perfect for game nights."
+    },
+    "luxueux": {
+      "title": "Luxurious",
+      "description": "A polished, premium look for an upscale game experience."
+    },
+    "romantique": {
+      "title": "Romantic",
+      "description": "A warm, inspiring vibe for cozy game sessions."
+    }
   },
   "gameCard": {
     "playerCount": "2 players"
@@ -43,15 +73,42 @@
     "gameNotFoundTitle": "Game not found"
   },
   "truthOrDareCategories": {
-    "general": { "label": "General", "description": "Fun questions and dares, for everyone." },
-    "amis": { "label": "Among Friends", "description": "Memories, stories, and group camaraderie." },
-    "couple": { "label": "Couple / Flirty", "description": "Romantic and sweet, without being explicit." },
-    "famille": { "label": "Family", "description": "Family memories and traditions, all ages." },
-    "audacieux": { "label": "Bold", "description": "More embarrassing, but always good-natured." },
-    "nostalgie": { "label": "Nostalgia", "description": "Childhood and memories from way back." },
-    "vie": { "label": "Life & Ambitions", "description": "Goals, regrets, and dreams for the future." },
-    "desir": { "label": "Desire & Fantasies", "description": "Attraction and fantasies, kept tasteful." },
-    "intimite": { "label": "Intimate Confessions", "description": "Vulnerability and closeness as a couple." }
+    "general": {
+      "label": "General",
+      "description": "Fun questions and dares, for everyone."
+    },
+    "amis": {
+      "label": "Among Friends",
+      "description": "Memories, stories, and group camaraderie."
+    },
+    "couple": {
+      "label": "Couple / Flirty",
+      "description": "Romantic and sweet, without being explicit."
+    },
+    "famille": {
+      "label": "Family",
+      "description": "Family memories and traditions, all ages."
+    },
+    "audacieux": {
+      "label": "Bold",
+      "description": "More embarrassing, but always good-natured."
+    },
+    "nostalgie": {
+      "label": "Nostalgia",
+      "description": "Childhood and memories from way back."
+    },
+    "vie": {
+      "label": "Life & Ambitions",
+      "description": "Goals, regrets, and dreams for the future."
+    },
+    "desir": {
+      "label": "Desire & Fantasies",
+      "description": "Attraction and fantasies, kept tasteful."
+    },
+    "intimite": {
+      "label": "Intimate Confessions",
+      "description": "Vulnerability and closeness as a couple."
+    }
   },
   "roomLobbyPage": {
     "notFoundMessage": "Head back home and pick a game to get started.",
@@ -142,5 +199,91 @@
     "title": "One moment...",
     "message": "We're restoring your match. It only takes a few seconds — no need to reload the page.",
     "slowHint": "This is taking longer than expected. Check your connection — you can reload the page if it persists."
+  },
+  "solo": {
+    "reveals": {
+      "continueHint": "Click to continue",
+      "vsLabel": "VS"
+    },
+    "scorePill": {
+      "you": "You",
+      "ai": "AI",
+      "reset": "Reset"
+    },
+    "matchEnd": {
+      "won": "You won the match!",
+      "draw": "It's a draw!",
+      "lost": "{{opponent}} won this time...",
+      "opponentFallback": "The AI",
+      "detailWon": "Great performance against {{opponent}}.",
+      "detailWonFallback": "the machine",
+      "detailDraw": "Nobody takes the lead, a close and fun match.",
+      "detailLost": "Try again for your revenge.",
+      "newMatchButton": "New match"
+    },
+    "rps": {
+      "moves": {
+        "pierre": "Rock",
+        "feuille": "Paper",
+        "ciseau": "Scissors"
+      },
+      "instructions": "Choose rock, paper, or scissors.",
+      "outcomeDraw": "Draw: you played {{playerMove}}, so did the AI.",
+      "outcomeWin": "You win the round! {{playerMove}} beats {{machineMove}}.",
+      "outcomeLose": "You lose the round... {{machineMove}} beats {{playerMove}}.",
+      "duelOutcomeWin": "You win the round!",
+      "duelOutcomeLose": "You lose the round...",
+      "duelOutcomeDraw": "Draw!"
+    },
+    "oddOrEven": {
+      "instructions": "Pick a digit from 1 to 9 and predict whether the sum will be odd or even.",
+      "outcome": "You played {{playerNumber}}, the AI played {{machineNumber}}. Sum {{sum}} ({{parity}}). {{result}}",
+      "outcomeWin": "You win the round!",
+      "outcomeLose": "You lose the round...",
+      "sumLabel": "Sum {{sum}} ({{parity}})",
+      "odd": "Odd",
+      "even": "Even",
+      "playButton": "Play the round"
+    },
+    "truthOrDare": {
+      "categoriesHeading": "Categories",
+      "spinInstruction": "Spin the wheel to pick who takes the challenge.",
+      "spinButton": "Spin the wheel",
+      "playerName": "You",
+      "promptSuffix": " must choose: Truth or Dare?",
+      "truthButton": "Truth",
+      "dareButton": "Dare",
+      "revealTruth": "Truth",
+      "revealDare": "Dare"
+    },
+    "wouldYouRather": {
+      "yourChoice": "You: “{{choice}}”",
+      "aiSame": "AI: “{{choice}}” — same wavelength!",
+      "aiDifferent": "AI: “{{choice}}” — not on the same page this time.",
+      "instructions": "Would you rather...",
+      "nextDilemmaButton": "Next dilemma",
+      "newDilemmaButton": "New dilemma"
+    },
+    "twentyQuestions": {
+      "instructions": "Guess the word in 20 tries or fewer.",
+      "newRound": "New word! Guess it in 20 tries or fewer.",
+      "wrongGuess": "Nope, not that. Try {{attempt}}/{{max}}.",
+      "won": "Well done, it was \"{{answer}}\"!",
+      "lost": "Out of tries. The word was \"{{answer}}\".",
+      "revealWon": "Found it: {{answer}}!",
+      "revealLost": "The word was: {{answer}}",
+      "revealDetail": "In {{tries}} tr(ies).",
+      "hintLabel": "Hint:",
+      "guessPlaceholder": "Your guess",
+      "submitButton": "Submit",
+      "nextRoundButton": "Next round"
+    },
+    "twoTruthsOneLie": {
+      "won": "Nice, you found the lie!",
+      "lost": "Nope, that wasn't the lie.",
+      "detail": "The lie was: \"{{lie}}\"",
+      "instructions": "The AI states 3 things about itself. Find the lie.",
+      "nextSetButton": "Next set"
+    }
   }
 }

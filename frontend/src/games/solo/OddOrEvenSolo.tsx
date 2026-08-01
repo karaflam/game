@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
@@ -13,10 +14,11 @@ const PARITIES: Parity[] = ['pair', 'impair'];
 type RoundData = { playerNumber: number; machineNumber: number; outcome: 'player' | 'machine' };
 
 export function OddOrEvenSolo() {
+  const { t } = useTranslation();
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(ODD_OR_EVEN_TARGET_SCORE);
   const [playerNumber, setPlayerNumber] = useState(1);
   const [prediction, setPrediction] = useState<Parity>('pair');
-  const [message, setMessage] = useState('Choisissez un chiffre de 1 à 9 et prédisez la parité de la somme.');
+  const [message, setMessage] = useState(t('solo.oddOrEven.instructions'));
   const [round, setRound] = useState<RoundData | null>(null);
 
   const playRound = () => {
@@ -37,9 +39,13 @@ export function OddOrEvenSolo() {
     const sum = round.playerNumber + round.machineNumber;
     const actualParity = getParity(sum);
     setMessage(
-      `Vous avez joué ${round.playerNumber}, l’IA a joué ${round.machineNumber}. Somme ${sum} (${actualParity}). ${
-        round.outcome === 'player' ? 'Vous gagnez la manche !' : 'Vous perdez la manche...'
-      }`
+      t('solo.oddOrEven.outcome', {
+        playerNumber: round.playerNumber,
+        machineNumber: round.machineNumber,
+        sum,
+        parity: actualParity,
+        result: round.outcome === 'player' ? t('solo.oddOrEven.outcomeWin') : t('solo.oddOrEven.outcomeLose')
+      })
     );
 
     recordRound(round.outcome);
@@ -56,7 +62,10 @@ export function OddOrEvenSolo() {
             { id: 'player', content: round.playerNumber, highlight: round.outcome === 'player' },
             { id: 'machine', content: round.machineNumber, highlight: round.outcome === 'machine' }
           ]}
-          outcomeLabel={`Somme ${round.playerNumber + round.machineNumber} (${getParity(round.playerNumber + round.machineNumber)})`}
+          outcomeLabel={t('solo.oddOrEven.sumLabel', {
+            sum: round.playerNumber + round.machineNumber,
+            parity: getParity(round.playerNumber + round.machineNumber)
+          })}
           onComplete={handleRevealComplete}
         />
       ) : (
@@ -74,13 +83,13 @@ export function OddOrEvenSolo() {
                 onClick={() => setPrediction(parity)}
                 disabled={isMatchOver}
               >
-                {parity === 'pair' ? 'Pair' : 'Impair'}
+                {parity === 'pair' ? t('solo.oddOrEven.even') : t('solo.oddOrEven.odd')}
               </Button>
             ))}
           </div>
 
           <Button type="button" onClick={playRound} disabled={isMatchOver}>
-            Jouer la manche
+            {t('solo.oddOrEven.playButton')}
           </Button>
         </div>
       )}

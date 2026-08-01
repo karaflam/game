@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { DuelReveal } from '@/components/solo/reveals/DuelReveal';
@@ -7,12 +8,6 @@ import { useSoloScore } from '@/hooks/useSoloScore';
 import { RPS_MOVES, getRpsOutcome, pickRandomRpsMove, type RpsMove } from '@/lib/rpsLogic';
 
 const RPS_TARGET_SCORE = 5;
-
-const moveLabels: Record<RpsMove, string> = {
-  pierre: 'Pierre',
-  feuille: 'Feuille',
-  ciseau: 'Ciseau'
-};
 
 const moveEmojis: Record<RpsMove, string> = {
   pierre: '✊',
@@ -23,8 +18,14 @@ const moveEmojis: Record<RpsMove, string> = {
 type RoundData = { player: RpsMove; machine: RpsMove; outcome: 'player' | 'machine' | 'draw' };
 
 export function RpsSolo() {
+  const { t } = useTranslation();
+  const moveLabels: Record<RpsMove, string> = {
+    pierre: t('solo.rps.moves.pierre'),
+    feuille: t('solo.rps.moves.feuille'),
+    ciseau: t('solo.rps.moves.ciseau')
+  };
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(RPS_TARGET_SCORE);
-  const [message, setMessage] = useState('Choisissez pierre, feuille ou ciseau.');
+  const [message, setMessage] = useState(t('solo.rps.instructions'));
   const [round, setRound] = useState<RoundData | null>(null);
 
   const playRound = (move: RpsMove) => {
@@ -43,11 +44,11 @@ export function RpsSolo() {
     }
 
     if (round.outcome === 'draw') {
-      setMessage(`Égalité : vous avez joué ${moveLabels[round.player]}, l’IA aussi.`);
+      setMessage(t('solo.rps.outcomeDraw', { playerMove: moveLabels[round.player] }));
     } else if (round.outcome === 'player') {
-      setMessage(`Vous gagnez la manche ! ${moveLabels[round.player]} bat ${moveLabels[round.machine]}.`);
+      setMessage(t('solo.rps.outcomeWin', { playerMove: moveLabels[round.player], machineMove: moveLabels[round.machine] }));
     } else {
-      setMessage(`Vous perdez la manche... ${moveLabels[round.machine]} bat ${moveLabels[round.player]}.`);
+      setMessage(t('solo.rps.outcomeLose', { playerMove: moveLabels[round.player], machineMove: moveLabels[round.machine] }));
     }
 
     recordRound(round.outcome);

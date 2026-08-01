@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 type DuelRevealProps = {
   playerEmoji: string;
@@ -12,13 +13,14 @@ type DuelRevealProps = {
 
 const DURATION_MS = 2200;
 
-const outcomeText: Record<DuelRevealProps['outcome'], string> = {
-  player: 'Vous gagnez la manche !',
-  machine: 'Vous perdez la manche...',
-  draw: 'Égalité !'
-};
-
 export function DuelReveal({ playerEmoji, playerLabel, machineEmoji, machineLabel, outcome, onComplete }: DuelRevealProps) {
+  const { t } = useTranslation();
+  const outcomeText: Record<DuelRevealProps['outcome'], string> = {
+    player: t('solo.rps.duelOutcomeWin'),
+    machine: t('solo.rps.duelOutcomeLose'),
+    draw: t('solo.rps.duelOutcomeDraw')
+  };
+
   useEffect(() => {
     const timer = setTimeout(onComplete, DURATION_MS);
     return () => clearTimeout(timer);
@@ -43,7 +45,7 @@ export function DuelReveal({ playerEmoji, playerLabel, machineEmoji, machineLabe
           transition={{ duration: 0.6, delay: 0.5, times: [0, 0.35, 0.7, 1] }}
           className="text-xl font-black text-primary"
         >
-          VS
+          {t('solo.reveals.vsLabel')}
         </motion.span>
 
         <motion.div

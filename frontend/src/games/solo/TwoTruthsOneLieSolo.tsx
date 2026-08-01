@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
@@ -13,6 +14,7 @@ const TWO_TRUTHS_TARGET_SCORE = 5;
 type RoundResult = { outcome: 'player' | 'machine'; lieText: string };
 
 export function TwoTruthsOneLieSolo() {
+  const { t } = useTranslation();
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(TWO_TRUTHS_TARGET_SCORE);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
   const [tripletIndex, setTripletIndex] = useState<number>(() => Math.floor(Math.random() * soloTwoTruthsOneLieTriplets.length));
@@ -62,13 +64,13 @@ export function TwoTruthsOneLieSolo() {
       {roundResult ? (
         <BurstReveal
           icon={roundResult.outcome === 'player' ? 'success' : 'fail'}
-          headline={roundResult.outcome === 'player' ? 'Bien joué, vous avez trouvé le mensonge !' : 'Perdu, ce n’était pas le mensonge.'}
-          detail={`Le mensonge était : "${roundResult.lieText}"`}
+          headline={roundResult.outcome === 'player' ? t('solo.twoTruthsOneLie.won') : t('solo.twoTruthsOneLie.lost')}
+          detail={t('solo.twoTruthsOneLie.detail', { lie: roundResult.lieText })}
           onComplete={handleRevealComplete}
         />
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">L’IA affirme 3 choses sur elle. Trouvez le mensonge.</p>
+          <p className="text-sm text-muted-foreground">{t('solo.twoTruthsOneLie.instructions')}</p>
 
           <div className="grid gap-3">
             {triplet.statements.map((statement, index) => (
@@ -89,7 +91,7 @@ export function TwoTruthsOneLieSolo() {
 
       {roundOver && !isMatchOver ? (
         <Button type="button" variant="secondary" onClick={nextRound}>
-          Série suivante
+          {t('solo.twoTruthsOneLie.nextSetButton')}
         </Button>
       ) : null}
 
