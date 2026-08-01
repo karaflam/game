@@ -1,11 +1,14 @@
 import { Link, NavLink } from 'react-router-dom';
-import { Gamepad2, Sparkles, User } from 'lucide-react';
+import { Gamepad2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ThemeToggle from '../ThemeToggle';
+import LanguageToggle from '../LanguageToggle';
 import { uiThemes } from '../../data/uiThemes';
 import useTheme from '../../hooks/useTheme';
 
 export function Header() {
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const activeTheme = uiThemes.find(item => item.id === theme);
 
   return (
@@ -20,21 +23,22 @@ export function Header() {
           <NavLink to="/" className={({ isActive }) =>
             `rounded-2xl px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
           }>
-            Accueil
+            {t('header.home')}
           </NavLink>
           <NavLink to="/classement" className={({ isActive }) =>
             `rounded-2xl px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
           }>
-            Classement
+            {t('header.leaderboard')}
           </NavLink>
           <NavLink to="/profil" className={({ isActive }) =>
             `rounded-2xl px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
           }>
-            Profil
+            {t('header.profile')}
           </NavLink>
         </nav>
 
         <div className="flex items-center gap-3">
+          <LanguageToggle />
           <ThemeToggle themes={uiThemes} selectedTheme={activeTheme ?? uiThemes[0]} onSelectTheme={theme => setTheme(theme.id)} />
         </div>
       </div>

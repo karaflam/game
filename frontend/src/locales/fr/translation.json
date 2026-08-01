@@ -1,0 +1,10 @@
+{
+  "header": {
+    "home": "Accueil",
+    "leaderboard": "Classement",
+    "profile": "Profil"
+  },
+  "footer": {
+    "contact": "Contacter {{name}}"
+  }
+}
