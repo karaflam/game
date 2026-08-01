@@ -101,5 +101,46 @@
     "startButtonWaitingValidation": "Approve the categories to start",
     "startButtonReady": "Start match",
     "leaveRoomButton": "Leave room"
+  },
+  "gamePlayPage": {
+    "notFoundMessage": "Head back home to pick a game.",
+    "eyebrow": "Match in progress",
+    "title": "{{gameTitle}} — Room {{roomCode}}",
+    "playerCount": "{{count}} player(s) in the room.",
+    "viewResultsButton": "View results",
+    "leaveMatchButton": "Leave match",
+    "notImplemented": "This game is still under development. Check back soon for more options."
+  },
+  "resultsPage": {
+    "backAriaLabel": "Back to the previous screen",
+    "eyebrow": "Results",
+    "title": "Final standings",
+    "summary": "Summary for room {{roomCode}} — {{gameName}}.",
+    "summaryFallbackGame": "the game",
+    "empty": "No scores recorded yet.",
+    "youTag": " (you)",
+    "scoreLabel": "{{score}} point(s)",
+    "backHomeButton": "Back to home",
+    "playAgainButton": "Play again"
+  },
+  "leaderboardPage": {
+    "title": "Global leaderboard",
+    "subtitle": "Scores are shown here once a match is over.",
+    "emptyTitle": "No data yet. The leaderboard will update after multiplayer matches.",
+    "emptySubtitle": "A top-players table will show up here as soon as scores are available."
+  },
+  "profilePage": {
+    "title": "Player profile",
+    "subtitle": "This page will soon show player stats, match history, and theme preferences."
+  },
+  "soloPlayPage": {
+    "title": "Solo mode — {{gameName}}",
+    "subtitle": "Practice against the AI.",
+    "notImplemented": "This game isn't available in solo mode yet."
+  },
+  "reconnectingOverlay": {
+    "title": "One moment...",
+    "message": "We're restoring your match. It only takes a few seconds — no need to reload the page.",
+    "slowHint": "This is taking longer than expected. Check your connection — you can reload the page if it persists."
   }
 }

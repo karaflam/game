@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { gameThemes } from '../data/gameThemes';
 import { RpsSolo } from '../games/solo/RpsSolo';
@@ -10,13 +11,14 @@ import { TwoTruthsOneLieSolo } from '../games/solo/TwoTruthsOneLieSolo';
 
 export function SoloPlayPage() {
   const { gameId } = useParams();
+  const { t } = useTranslation();
   const game = gameThemes.find(item => item.id === gameId);
 
   return (
     <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
       <section className="rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
-        <h1 className="text-4xl font-bold text-foreground">Mode solo — {game?.title ?? gameId?.replace(/-/g, ' ')}</h1>
-        <p className="mt-4 text-lg leading-8 text-muted-foreground">Entraînez-vous contre l’IA.</p>
+        <h1 className="text-4xl font-bold text-foreground">{t('soloPlayPage.title', { gameName: game ? t(`games.${game.id}.title`) : gameId?.replace(/-/g, ' ') })}</h1>
+        <p className="mt-4 text-lg leading-8 text-muted-foreground">{t('soloPlayPage.subtitle')}</p>
 
         <div className="mt-8">
           {gameId === 'rps' ? (
@@ -33,7 +35,7 @@ export function SoloPlayPage() {
             <TwoTruthsOneLieSolo />
           ) : (
             <div className="rounded-3xl border border-border bg-background p-8">
-              <p className="text-sm leading-6 text-muted-foreground">Ce jeu n’est pas encore disponible en solo.</p>
+              <p className="text-sm leading-6 text-muted-foreground">{t('soloPlayPage.notImplemented')}</p>
             </div>
           )}
         </div>

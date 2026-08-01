@@ -101,5 +101,46 @@
     "startButtonWaitingValidation": "Validez les catégories pour démarrer",
     "startButtonReady": "Démarrer la partie",
     "leaveRoomButton": "Quitter le salon"
+  },
+  "gamePlayPage": {
+    "notFoundMessage": "Retournez à l'accueil pour sélectionner un jeu.",
+    "eyebrow": "Partie en cours",
+    "title": "{{gameTitle}} — Salon {{roomCode}}",
+    "playerCount": "{{count}} joueur(s) dans la salle.",
+    "viewResultsButton": "Voir résultats",
+    "leaveMatchButton": "Quitter la partie",
+    "notImplemented": "Ce jeu est en cours de développement. Revenez bientôt pour plus d'options."
+  },
+  "resultsPage": {
+    "backAriaLabel": "Retour à l'écran précédent",
+    "eyebrow": "Résultats",
+    "title": "Classement final",
+    "summary": "Récapitulatif du salon {{roomCode}} pour {{gameName}}.",
+    "summaryFallbackGame": "le jeu",
+    "empty": "Aucun score enregistré pour l'instant.",
+    "youTag": " (vous)",
+    "scoreLabel": "{{score}} point(s)",
+    "backHomeButton": "Retour à l'accueil",
+    "playAgainButton": "Rejouer"
+  },
+  "leaderboardPage": {
+    "title": "Classement global",
+    "subtitle": "Les scores sont affichés ici une fois la partie terminée.",
+    "emptyTitle": "Aucune donnée pour le moment. Le classement sera mis à jour après les parties multijoueur.",
+    "emptySubtitle": "Un tableau de top joueurs arrivera ici dès que les scores sont disponibles."
+  },
+  "profilePage": {
+    "title": "Profil joueur",
+    "subtitle": "Cette page affichera bientôt les statistiques du joueur, l'historique de parties et les préférences de thème."
+  },
+  "soloPlayPage": {
+    "title": "Mode solo — {{gameName}}",
+    "subtitle": "Entraînez-vous contre l'IA.",
+    "notImplemented": "Ce jeu n'est pas encore disponible en solo."
+  },
+  "reconnectingOverlay": {
+    "title": "Un instant...",
+    "message": "On restaure votre partie. Ça ne prend que quelques secondes — inutile de recharger la page.",
+    "slowHint": "Ça prend plus de temps que prévu. Vérifiez votre connexion — vous pouvez recharger la page si ça persiste."
   }
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { gameThemes } from '../data/gameThemes';
@@ -17,6 +18,7 @@ import { TwentyQuestionsMultiplayer } from '../games/multiplayer/TwentyQuestions
 export function GamePlayPage() {
   const { gameId, roomCode } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const status = useGameStore(state => state.status);
@@ -52,8 +54,8 @@ export function GamePlayPage() {
   if (!game || !gameId || !roomCode) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-3xl px-4 py-10 text-center">
-        <h2 className="text-2xl font-semibold text-foreground">Jeu introuvable</h2>
-        <p className="mt-3 text-sm text-muted-foreground">Retournez à l’accueil pour sélectionner un jeu.</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('common.gameNotFoundTitle')}</h2>
+        <p className="mt-3 text-sm text-muted-foreground">{t('gamePlayPage.notFoundMessage')}</p>
       </motion.div>
     );
   }
@@ -63,16 +65,16 @@ export function GamePlayPage() {
       <section className="rounded-[2rem] bg-card p-6 shadow-lg shadow-slate-900/5 sm:p-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">Partie en cours</p>
-            <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">{game.title} — Salon {roomCode}</h1>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">{players.length} joueur(s) dans la salle.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('gamePlayPage.eyebrow')}</p>
+            <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">{t('gamePlayPage.title', { gameTitle: t(`games.${game.id}.title`), roomCode })}</h1>
+            <p className="mt-3 text-base leading-7 text-muted-foreground">{t('gamePlayPage.playerCount', { count: players.length })}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={() => navigate(`/jeu/${gameId}/salon/${roomCode}/resultats`)}>
-              Voir résultats
+              {t('gamePlayPage.viewResultsButton')}
             </Button>
             <Button variant="outline" onClick={handleLeaveGame}>
-              Quitter la partie
+              {t('gamePlayPage.leaveMatchButton')}
             </Button>
           </div>
         </div>
@@ -92,7 +94,7 @@ export function GamePlayPage() {
             <TwentyQuestionsMultiplayer />
           ) : (
             <div className="rounded-3xl border border-border bg-surface p-6 text-sm text-muted-foreground">
-              Ce jeu est en cours de développement. Revenez bientôt pour plus d’options.
+              {t('gamePlayPage.notImplemented')}
             </div>
           )}
         </div>
