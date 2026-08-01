@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
 import { ClientEvents, ServerEvents } from '@/lib/socketEvents';
@@ -20,6 +21,7 @@ type WouldYouRatherResultPayload = RoundResult & {
 };
 
 export function WouldYouRatherMultiplayer() {
+  const { t } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
@@ -134,23 +136,33 @@ export function WouldYouRatherMultiplayer() {
         machine={opponentScore}
         targetScore={TARGET_SCORE}
         onReset={handleReplay}
-        playerLabel={`${me?.name ?? 'Vous'} (vous)`}
-        machineLabel={opponent?.name ?? 'Adversaire'}
+        playerLabel={`${me?.name ?? t('multiplayer.common.youFallback')}${t('multiplayer.common.youSuffix')}`}
+        machineLabel={opponent?.name ?? t('multiplayer.common.opponentFallback')}
         hasOpponent={!!opponent}
       />
 
       {round && prompt ? (
         <BurstReveal
           icon={round.sameChoice ? 'success' : 'neutral'}
-          headline={`Vous : « ${prompt[round.yourChoice]} »`}
-          detail={`${opponent?.name ?? 'Adversaire'} : « ${prompt[round.opponentChoice]} » ${
-            round.sameChoice ? '— même choix, +1 chacun !' : '— choix différents cette fois.'
-          }`}
+          headline={t('multiplayer.wouldYouRather.yourChoice', { choice: prompt[round.yourChoice] })}
+          detail={
+            round.sameChoice
+              ? t('multiplayer.wouldYouRather.opponentSame', {
+                  name: opponent?.name ?? t('multiplayer.common.opponentFallback'),
+                  choice: prompt[round.opponentChoice]
+                })
+              : t('multiplayer.wouldYouRather.opponentDifferent', {
+                  name: opponent?.name ?? t('multiplayer.common.opponentFallback'),
+                  choice: prompt[round.opponentChoice]
+                })
+          }
           onComplete={handleRevealComplete}
         />
       ) : prompt && !awaitingNextRound ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">{waiting ? 'Choix envoyé, en attente de l’adversaire...' : 'Tu préfères...'}</p>
+          <p className="text-sm text-muted-foreground">
+            {waiting ? t('multiplayer.wouldYouRather.waitingOpponent') : t('multiplayer.wouldYouRather.instructions')}
+          </p>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <button
@@ -172,18 +184,24 @@ export function WouldYouRatherMultiplayer() {
           </div>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Chargement du dilemme...</p>
+        <p className="text-sm text-muted-foreground">{t('multiplayer.wouldYouRather.loading')}</p>
       )}
 
       <MatchEndOverlay
         winner={winner}
         onReplay={handleReplay}
-        headlineOverride={winner === 'player' ? 'Vous avez gagné ensemble !' : winner === 'machine' ? 'Vous avez perdu ensemble...' : undefined}
+        headlineOverride={
+          winner === 'player'
+            ? t('multiplayer.wouldYouRather.wonTogether')
+            : winner === 'machine'
+              ? t('multiplayer.wouldYouRather.lostTogether')
+              : undefined
+        }
         detailOverride={
           winner === 'player'
-            ? `${opponent?.name ?? 'Adversaire'} et vous avez trouvé 5 choix identiques !`
+            ? t('multiplayer.wouldYouRather.detailIdentical', { name: opponent?.name ?? t('multiplayer.common.opponentFallback') })
             : winner === 'machine'
-              ? `${opponent?.name ?? 'Adversaire'} et vous avez fait 5 choix différents avant de vous accorder. Retentez votre chance !`
+              ? t('multiplayer.wouldYouRather.detailDifferent', { name: opponent?.name ?? t('multiplayer.common.opponentFallback') })
               : undefined
         }
       />

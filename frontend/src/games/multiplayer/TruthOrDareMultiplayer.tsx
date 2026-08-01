@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
@@ -15,6 +16,7 @@ type Phase = 'idle' | 'spinning' | 'choosing' | 'content' | 'result';
 type ContentType = 'action' | 'truth';
 
 export function TruthOrDareMultiplayer() {
+  const { t } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
@@ -183,16 +185,16 @@ export function TruthOrDareMultiplayer() {
         machine={opponentScore}
         targetScore={TARGET_SCORE}
         onReset={handleReplay}
-        playerLabel={`${me?.name ?? 'Vous'} (vous)`}
-        machineLabel={opponent?.name ?? 'Adversaire'}
+        playerLabel={`${me?.name ?? t('multiplayer.common.youFallback')}${t('multiplayer.common.youSuffix')}`}
+        machineLabel={opponent?.name ?? t('multiplayer.common.opponentFallback')}
         hasOpponent={!!opponent}
       />
 
       {phase === 'idle' ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Faites tourner la roue pour désigner qui doit relever le défi.</p>
+          <p className="text-sm text-muted-foreground">{t('multiplayer.truthOrDare.spinInstruction')}</p>
           <Button type="button" onClick={startSpin} disabled={matchOver}>
-            Tourner la roue
+            {t('multiplayer.truthOrDare.spinButton')}
           </Button>
         </div>
       ) : null}
@@ -209,18 +211,18 @@ export function TruthOrDareMultiplayer() {
       {phase === 'choosing' ? (
         isActive ? (
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-foreground">À vous de choisir : Action ou Vérité ?</p>
+            <p className="text-sm font-semibold text-foreground">{t('multiplayer.truthOrDare.promptSelf')}</p>
             <div className="flex flex-wrap gap-3">
               <Button type="button" variant="outline" onClick={() => chooseType('truth')}>
-                Vérité
+                {t('multiplayer.truthOrDare.truthButton')}
               </Button>
               <Button type="button" variant="outline" onClick={() => chooseType('action')}>
-                Action
+                {t('multiplayer.truthOrDare.dareButton')}
               </Button>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">En attente du choix de {activePlayerName}...</p>
+          <p className="text-sm text-muted-foreground">{t('multiplayer.truthOrDare.waitingChoice', { name: activePlayerName })}</p>
         )
       ) : null}
 
@@ -228,7 +230,7 @@ export function TruthOrDareMultiplayer() {
         <div className="space-y-4">
           <div className="rounded-2xl border-2 border-primary bg-card p-4 text-sm font-medium text-foreground">
             <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-              {content.type === 'truth' ? 'Vérité' : 'Action'}
+              {content.type === 'truth' ? t('multiplayer.truthOrDare.contentTruth') : t('multiplayer.truthOrDare.contentDare')}
             </span>
             {content.text}
           </div>
@@ -239,35 +241,37 @@ export function TruthOrDareMultiplayer() {
                 <textarea
                   value={answerDraft}
                   onChange={event => setAnswerDraft(event.target.value)}
-                  placeholder="Écrivez votre réponse..."
+                  placeholder={t('multiplayer.truthOrDare.answerPlaceholder')}
                   className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   rows={3}
                 />
                 <Button type="button" onClick={submitAnswer} disabled={!answerDraft.trim()}>
-                  Envoyer la réponse
+                  {t('multiplayer.truthOrDare.sendAnswerButton')}
                 </Button>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">En attente de la réponse écrite de {activePlayerName}...</p>
+              <p className="text-sm text-muted-foreground">{t('multiplayer.truthOrDare.waitingWrittenAnswer', { name: activePlayerName })}</p>
             )
           ) : null}
 
           {answer ? (
             <div className="rounded-2xl border border-border bg-muted p-4 text-sm text-foreground">
-              <strong>Réponse :</strong> {answer}
+              <strong>{t('multiplayer.truthOrDare.answerLabel')}</strong> {answer}
             </div>
           ) : null}
 
           {readyToValidate ? (
             isActive ? (
-              <p className="text-sm text-muted-foreground">En attente de la validation de {opponent?.name ?? 'l’adversaire'}...</p>
+              <p className="text-sm text-muted-foreground">
+                {t('multiplayer.truthOrDare.waitingValidation', { name: opponent?.name ?? t('multiplayer.common.opponentFallbackAlt') })}
+              </p>
             ) : (
               <div className="flex flex-wrap gap-3">
                 <Button type="button" onClick={() => validate(true)}>
-                  Valider
+                  {t('multiplayer.truthOrDare.validateButton')}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => validate(false)}>
-                  Refuser
+                  {t('multiplayer.truthOrDare.refuseButton')}
                 </Button>
               </div>
             )
@@ -281,17 +285,17 @@ export function TruthOrDareMultiplayer() {
           headline={
             isActive
               ? resultApproved
-                ? 'Validé ! +1 point.'
-                : 'Refusé, 0 point.'
+                ? t('multiplayer.truthOrDare.resultValidated')
+                : t('multiplayer.truthOrDare.resultRefused')
               : resultApproved
-                ? `${activePlayerName} gagne 1 point.`
-                : `${activePlayerName} ne gagne pas de point.`
+                ? t('multiplayer.truthOrDare.resultOpponentGains', { name: activePlayerName })
+                : t('multiplayer.truthOrDare.resultOpponentNoGain', { name: activePlayerName })
           }
           onComplete={handleResultRevealComplete}
         />
       ) : null}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
+      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? t('multiplayer.common.opponentFallback')} />
     </div>
   );
 }

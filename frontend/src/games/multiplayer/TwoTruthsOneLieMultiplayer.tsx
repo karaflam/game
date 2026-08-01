@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
@@ -22,6 +23,7 @@ type ResultPayload = {
 };
 
 export function TwoTruthsOneLieMultiplayer() {
+  const { t } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
@@ -112,7 +114,7 @@ export function TwoTruthsOneLieMultiplayer() {
 
   const me = players.find(player => player.id === socketId) ?? null;
   const opponent = players.find(player => player.id !== socketId) ?? null;
-  const opponentName = opponent?.name ?? 'Adversaire';
+  const opponentName = opponent?.name ?? t('multiplayer.common.opponentFallback');
   const myScore = socketId ? scores[socketId] ?? 0 : 0;
   const opponentScore = opponent ? scores[opponent.id] ?? 0 : 0;
   const isSubmitter = socketId !== null && socketId === submitterId;
@@ -176,7 +178,7 @@ export function TwoTruthsOneLieMultiplayer() {
         machine={opponentScore}
         targetScore={TARGET_SCORE}
         onReset={handleReplay}
-        playerLabel={`${me?.name ?? 'Vous'} (vous)`}
+        playerLabel={`${me?.name ?? t('multiplayer.common.youFallback')}${t('multiplayer.common.youSuffix')}`}
         machineLabel={opponentName}
         hasOpponent={!!opponent}
       />
@@ -187,18 +189,18 @@ export function TwoTruthsOneLieMultiplayer() {
           headline={
             result.voterSocketId === socketId
               ? result.correct
-                ? 'Bien joué, vous avez trouvé le mensonge !'
-                : 'Perdu, ce n’était pas le mensonge.'
+                ? t('multiplayer.twoTruthsOneLie.won')
+                : t('multiplayer.twoTruthsOneLie.lost')
               : result.correct
-                ? `${opponentName} a trouvé votre mensonge.`
-                : `${opponentName} s’est trompé, vous gagnez le point !`
+                ? t('multiplayer.twoTruthsOneLie.opponentFound', { name: opponentName })
+                : t('multiplayer.twoTruthsOneLie.opponentMissed', { name: opponentName })
           }
-          detail={`La phrase ${result.lieIndex + 1} était le mensonge.`}
+          detail={t('multiplayer.twoTruthsOneLie.lieWas', { index: result.lieIndex + 1 })}
           onComplete={handleRevealComplete}
         />
       ) : votingStatements && isVoter ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">{opponentName} a soumis 3 affirmations. Votez pour le mensonge.</p>
+          <p className="text-sm text-muted-foreground">{t('multiplayer.twoTruthsOneLie.instructions', { name: opponentName })}</p>
           <div className="grid gap-3">
             {votingStatements.map((statement, index) => (
               <Button
@@ -215,11 +217,11 @@ export function TwoTruthsOneLieMultiplayer() {
           </div>
         </div>
       ) : votingStatements && isSubmitter ? (
-        <p className="text-sm text-muted-foreground">Affirmations envoyées. En attente du vote de {opponentName}...</p>
+        <p className="text-sm text-muted-foreground">{t('multiplayer.twoTruthsOneLie.waitingVote', { name: opponentName })}</p>
       ) : isSubmitter ? (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            C'est à vous ! Écrivez 2 vérités et 1 mensonge sur vous, puis indiquez laquelle est fausse.
+            {t('multiplayer.twoTruthsOneLie.writeInstructions')}
           </p>
           <div className="grid gap-3">
             {statements.map((text, index) => (
@@ -232,7 +234,7 @@ export function TwoTruthsOneLieMultiplayer() {
                       submitStatements();
                     }
                   }}
-                  placeholder={`Affirmation ${index + 1}`}
+                  placeholder={t('multiplayer.twoTruthsOneLie.statementPlaceholder', { index: index + 1 })}
                   disabled={matchOver}
                   className="min-w-0 flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
@@ -243,21 +245,21 @@ export function TwoTruthsOneLieMultiplayer() {
                   disabled={matchOver}
                   className="shrink-0 whitespace-nowrap"
                 >
-                  {lieChoice === index ? 'Mensonge ' : 'verité ✓'}
+                  {lieChoice === index ? t('multiplayer.twoTruthsOneLie.markLie') : t('multiplayer.twoTruthsOneLie.markTruth')}
                 </Button>
               </div>
             ))}
           </div>
           <Button type="button" onClick={submitStatements} disabled={matchOver || lieChoice === null}>
-            Soumettre
+            {t('multiplayer.twoTruthsOneLie.submitButton')}
           </Button>
         </div>
       ) : isVoter ? (
         <p className="text-sm text-muted-foreground">
-          C'est au tour de {opponentName} de rédiger ses 3 affirmations. Patientez...
+          {t('multiplayer.twoTruthsOneLie.waitingOpponentWriting', { name: opponentName })}
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">En attente du début de la manche...</p>
+        <p className="text-sm text-muted-foreground">{t('multiplayer.twoTruthsOneLie.waitingRoundStart')}</p>
       )}
 
       <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponentName} />

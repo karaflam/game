@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
@@ -26,6 +27,7 @@ type RoundResultPayload = {
 };
 
 export function TwentyQuestionsMultiplayer() {
+  const { t } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
@@ -155,7 +157,7 @@ export function TwentyQuestionsMultiplayer() {
   const opponentScore = opponent ? scores[opponent.id] ?? 0 : 0;
   const isSetter = socketId !== null && socketId === setterId;
   const isGuesser = socketId !== null && socketId === guesserId;
-  const opponentName = opponent?.name ?? 'l’autre joueur';
+  const opponentName = opponent?.name ?? t('multiplayer.twentyQuestions.opponentFallback');
 
   const submitWord = () => {
     if (!socket || !isSetter || !wordDraft.trim()) {
@@ -218,15 +220,19 @@ export function TwentyQuestionsMultiplayer() {
         <div className="mb-3 flex items-center justify-end">
           <Button type="button" variant="ghost" size="sm" onClick={handleReplay} className="gap-1.5">
             <RotateCcw className="h-4 w-4" />
-            Réinitialiser
+            {t('multiplayer.twentyQuestions.resetButton')}
           </Button>
         </div>
         <div className="flex flex-col gap-1 text-sm font-semibold text-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span className="min-w-0 truncate">{me?.name ?? 'Vous'} (vous) : {myScore} pt(s)</span>
-          {opponent ? <span className="min-w-0 truncate">{opponentName} : {opponentScore} pt(s)</span> : null}
+          <span className="min-w-0 truncate">
+            {t('multiplayer.twentyQuestions.myScore', { name: me?.name ?? t('multiplayer.common.youFallback'), score: myScore })}
+          </span>
+          {opponent ? (
+            <span className="min-w-0 truncate">{t('multiplayer.twentyQuestions.opponentScore', { name: opponentName, score: opponentScore })}</span>
+          ) : null}
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          La partie se joue en {TOTAL_TURNS} tours. Celui qui a le plus de points à la fin gagne.
+          {t('multiplayer.twentyQuestions.rules', { total: TOTAL_TURNS })}
         </p>
       </div>
 
@@ -236,30 +242,29 @@ export function TwentyQuestionsMultiplayer() {
           headline={
             roundResult.correct
               ? isGuesser
-                ? `Bravo, vous avez trouvé le mot ! +${roundResult.attemptsRemaining} point(s).`
-                : `${opponentName} a trouvé le mot secret.`
-              : 'Essais épuisés pour ce tour, personne ne marque de point.'
+                ? t('multiplayer.twentyQuestions.wonRound', { points: roundResult.attemptsRemaining })
+                : t('multiplayer.twentyQuestions.opponentWonRound', { name: opponentName })
+              : t('multiplayer.twentyQuestions.roundExhausted')
           }
-          detail={`Tour ${roundResult.turnIndex} / ${TOTAL_TURNS} terminé.`}
+          detail={t('multiplayer.twentyQuestions.roundSummary', { turn: roundResult.turnIndex, total: TOTAL_TURNS })}
           onComplete={handleRoundRevealComplete}
         />
       ) : (
         <div className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Tour {turnIndex} / {TOTAL_TURNS} — {attemptsRemaining} essai(s) restant(s)
+            {t('multiplayer.twentyQuestions.turnStatus', { turn: turnIndex, total: TOTAL_TURNS, attempts: attemptsRemaining })}
           </p>
 
           {isSetter && wordSet && wordDraft ? (
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              Votre mot secret : {wordDraft}
+              {t('multiplayer.twentyQuestions.secretWordBadge', { word: wordDraft })}
             </div>
           ) : null}
 
           {isSetter && !wordSet ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                C'est vous le meneur ! Pensez à un mot secret que {opponentName} devra deviner, puis écrivez-le ci-dessous.
-                {opponentName} ne le verra pas.
+                {t('multiplayer.twentyQuestions.leaderInstructions', { name: opponentName })}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
                 <input
@@ -270,25 +275,24 @@ export function TwentyQuestionsMultiplayer() {
                       submitWord();
                     }
                   }}
-                  placeholder="Écrivez ici le mot secret (ex : éléphant)"
+                  placeholder={t('multiplayer.twentyQuestions.secretWordPlaceholder')}
                   className="min-w-0 flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <Button type="button" onClick={submitWord} disabled={!wordDraft.trim()} className="h-auto shrink-0 px-6 py-3">
-                  Valider le mot secret
+                  {t('multiplayer.twentyQuestions.validateSecretWordButton')}
                 </Button>
               </div>
             </div>
           ) : isSetter && pendingGuess ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {opponentName} vous a envoyé ceci — une question ou une proposition de mot :
+                {t('multiplayer.twentyQuestions.guesserPrompt', { name: opponentName })}
               </p>
               <div className="rounded-2xl border border-border bg-muted p-4 text-sm text-foreground">
-                « {pendingGuess} »
+                {t('multiplayer.twentyQuestions.guessQuote', { guess: pendingGuess })}
               </div>
               <p className="text-sm text-muted-foreground">
-                Est-ce exactement votre mot secret ? Si oui, cliquez sur « Mot trouvé ». Sinon, répondez à sa
-                question et/ou donnez-lui un indice ci-dessous, puis cliquez sur « Répondre ».
+                {t('multiplayer.twentyQuestions.guesserInstructions')}
               </p>
               <input
                 value={hintDraft}
@@ -298,37 +302,35 @@ export function TwentyQuestionsMultiplayer() {
                     judge(false);
                   }
                 }}
-                placeholder="Ex : Oui, et il vit dans la savane"
+                placeholder={t('multiplayer.twentyQuestions.hintPlaceholder')}
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               <div className="flex flex-wrap gap-3">
                 <Button type="button" onClick={() => judge(true)}>
-                  Mot trouvé
+                  {t('multiplayer.twentyQuestions.wordFoundButton')}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => judge(false)} disabled={!hintDraft.trim()}>
-                  Répondre
+                  {t('multiplayer.twentyQuestions.replyButton')}
                 </Button>
               </div>
             </div>
           ) : isSetter ? (
             <p className="text-sm text-muted-foreground">
-              Mot secret enregistré ! Attendez que {opponentName} propose une réponse.
+              {t('multiplayer.twentyQuestions.waitingWordRegistered', { name: opponentName })}
             </p>
           ) : isGuesser && pendingGuess ? (
             <p className="text-sm text-muted-foreground">
-              Votre proposition a été envoyée. Attendez que {opponentName} vous dise si c'est le bon mot.
+              {t('multiplayer.twentyQuestions.waitingGuessSent', { name: opponentName })}
             </p>
           ) : isGuesser && wordSet ? (
             <div className="space-y-3">
               {hint ? (
                 <div className="rounded-2xl border border-border bg-muted p-4 text-sm text-foreground">
-                  <strong>Réponse de {opponentName} :</strong> {hint}
+                  <strong>{t('multiplayer.twentyQuestions.opponentReplyLabel', { name: opponentName })}</strong> {hint}
                 </div>
               ) : null}
               <p className="text-sm text-muted-foreground">
-                {opponentName} a choisi un mot secret. À chaque essai, vous pouvez soit poser une question (par
-                exemple « Est-ce que ça se mange ? »), soit proposer directement un mot. {opponentName} vous
-                répondra et pourra vous donner un indice si ce n'est pas encore ça.
+                {t('multiplayer.twentyQuestions.askerInstructions', { name: opponentName })}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input
@@ -339,20 +341,20 @@ export function TwentyQuestionsMultiplayer() {
                       submitGuess();
                     }
                   }}
-                  placeholder="Votre question ou votre proposition de mot"
+                  placeholder={t('multiplayer.twentyQuestions.askPlaceholder')}
                   className="min-w-0 flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <Button type="button" onClick={submitGuess} disabled={!guessDraft.trim()} className="shrink-0">
-                  Envoyer
+                  {t('multiplayer.twentyQuestions.sendButton')}
                 </Button>
               </div>
             </div>
           ) : isGuesser ? (
             <p className="text-sm text-muted-foreground">
-              C'est {opponentName} qui a choisi le mot secret. Patientez pendant qu'il/elle l'écrit...
+              {t('multiplayer.twentyQuestions.waitingOpponentSecret', { name: opponentName })}
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">En attente du début du tour...</p>
+            <p className="text-sm text-muted-foreground">{t('multiplayer.twentyQuestions.waitingTurnStart')}</p>
           )}
         </div>
       )}

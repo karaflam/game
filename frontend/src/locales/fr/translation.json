@@ -285,5 +285,102 @@
       "instructions": "L'IA affirme 3 choses sur elle. Trouvez le mensonge.",
       "nextSetButton": "Série suivante"
     }
+  },
+  "multiplayer": {
+    "common": {
+      "youSuffix": " (vous)",
+      "youFallback": "Vous",
+      "opponentFallback": "Adversaire",
+      "opponentFallbackAlt": "l'adversaire"
+    },
+    "rps": {
+      "waitingOpponent": "Choix envoyé, en attente de l'adversaire...",
+      "instructions": "Choisissez pierre, feuille ou ciseau."
+    },
+    "truthOrDare": {
+      "spinInstruction": "Faites tourner la roue pour désigner qui doit relever le défi.",
+      "spinButton": "Tourner la roue",
+      "promptSelf": "À vous de choisir : Action ou Vérité ?",
+      "truthButton": "Vérité",
+      "dareButton": "Action",
+      "waitingChoice": "En attente du choix de {{name}}...",
+      "contentTruth": "Vérité",
+      "contentDare": "Action",
+      "answerPlaceholder": "Écrivez votre réponse...",
+      "sendAnswerButton": "Envoyer la réponse",
+      "waitingWrittenAnswer": "En attente de la réponse écrite de {{name}}...",
+      "answerLabel": "Réponse :",
+      "waitingValidation": "En attente de la validation de {{name}}...",
+      "validateButton": "Valider",
+      "refuseButton": "Refuser",
+      "resultValidated": "Validé ! +1 point.",
+      "resultRefused": "Refusé, 0 point.",
+      "resultOpponentGains": "{{name}} gagne 1 point.",
+      "resultOpponentNoGain": "{{name}} ne gagne pas de point."
+    },
+    "twoTruthsOneLie": {
+      "won": "Bien joué, vous avez trouvé le mensonge !",
+      "lost": "Perdu, ce n'était pas le mensonge.",
+      "opponentFound": "{{name}} a trouvé votre mensonge.",
+      "opponentMissed": "{{name}} s'est trompé, vous gagnez le point !",
+      "lieWas": "La phrase {{index}} était le mensonge.",
+      "instructions": "{{name}} a soumis 3 affirmations. Votez pour le mensonge.",
+      "waitingVote": "Affirmations envoyées. En attente du vote de {{name}}...",
+      "writeInstructions": "C'est à vous ! Écrivez 2 vérités et 1 mensonge sur vous, puis indiquez laquelle est fausse.",
+      "statementPlaceholder": "Affirmation {{index}}",
+      "markLie": "Mensonge",
+      "markTruth": "Vérité ✓",
+      "submitButton": "Soumettre",
+      "waitingOpponentWriting": "C'est au tour de {{name}} de rédiger ses 3 affirmations. Patientez...",
+      "waitingRoundStart": "En attente du début de la manche..."
+    },
+    "twentyQuestions": {
+      "opponentFallback": "l'autre joueur",
+      "resetButton": "Réinitialiser",
+      "myScore": "{{name}} (vous) : {{score}} pt(s)",
+      "opponentScore": "{{name}} : {{score}} pt(s)",
+      "rules": "La partie se joue en {{total}} tours. Celui qui a le plus de points à la fin gagne.",
+      "wonRound": "Bravo, vous avez trouvé le mot ! +{{points}} point(s).",
+      "opponentWonRound": "{{name}} a trouvé le mot secret.",
+      "roundExhausted": "Essais épuisés pour ce tour, personne ne marque de point.",
+      "roundSummary": "Tour {{turn}} / {{total}} terminé.",
+      "turnStatus": "Tour {{turn}} / {{total}} — {{attempts}} essai(s) restant(s)",
+      "secretWordBadge": "Votre mot secret : {{word}}",
+      "leaderInstructions": "C'est vous le meneur ! Pensez à un mot secret que {{name}} devra deviner, puis écrivez-le ci-dessous. {{name}} ne le verra pas.",
+      "secretWordPlaceholder": "Écrivez ici le mot secret (ex : éléphant)",
+      "validateSecretWordButton": "Valider le mot secret",
+      "guesserPrompt": "{{name}} vous a envoyé ceci — une question ou une proposition de mot :",
+      "guessQuote": "« {{guess}} »",
+      "guesserInstructions": "Est-ce exactement votre mot secret ? Si oui, cliquez sur « Mot trouvé ». Sinon, répondez à sa question et/ou donnez-lui un indice ci-dessous, puis cliquez sur « Répondre ».",
+      "hintPlaceholder": "Ex : Oui, et il vit dans la savane",
+      "wordFoundButton": "Mot trouvé",
+      "replyButton": "Répondre",
+      "waitingWordRegistered": "Mot secret enregistré ! Attendez que {{name}} propose une réponse.",
+      "waitingGuessSent": "Votre proposition a été envoyée. Attendez que {{name}} vous dise si c'est le bon mot.",
+      "opponentReplyLabel": "Réponse de {{name}} :",
+      "askerInstructions": "{{name}} a choisi un mot secret. À chaque essai, vous pouvez soit poser une question (par exemple « Est-ce que ça se mange ? »), soit proposer directement un mot. {{name}} vous répondra et pourra vous donner un indice si ce n'est pas encore ça.",
+      "askPlaceholder": "Votre question ou votre proposition de mot",
+      "sendButton": "Envoyer",
+      "waitingOpponentSecret": "C'est {{name}} qui a choisi le mot secret. Patientez pendant qu'il/elle l'écrit...",
+      "waitingTurnStart": "En attente du début du tour..."
+    },
+    "oddOrEven": {
+      "outcomeBothRight": "Somme {{sum}} ({{parity}}) — vous avez tous les deux raison, +1 chacun !",
+      "outcome": "Somme {{sum}} ({{parity}})",
+      "waitingOpponent": "Choix envoyé, en attente de l'adversaire...",
+      "instructions": "Choisissez un chiffre de 1 à 9 et prédisez la parité de la somme."
+    },
+    "wouldYouRather": {
+      "yourChoice": "Vous : « {{choice}} »",
+      "opponentSame": "{{name}} : « {{choice}} » — même choix, +1 chacun !",
+      "opponentDifferent": "{{name}} : « {{choice}} » — choix différents cette fois.",
+      "waitingOpponent": "Choix envoyé, en attente de l'adversaire...",
+      "instructions": "Tu préfères...",
+      "loading": "Chargement du dilemme...",
+      "wonTogether": "Vous avez gagné ensemble !",
+      "lostTogether": "Vous avez perdu ensemble...",
+      "detailIdentical": "{{name}} et vous avez trouvé 5 choix identiques !",
+      "detailDifferent": "{{name}} et vous avez fait 5 choix différents avant de vous accorder. Retentez votre chance !"
+    }
   }
 }

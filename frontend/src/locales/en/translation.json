@@ -285,5 +285,102 @@
       "instructions": "The AI states 3 things about itself. Find the lie.",
       "nextSetButton": "Next set"
     }
+  },
+  "multiplayer": {
+    "common": {
+      "youSuffix": " (you)",
+      "youFallback": "You",
+      "opponentFallback": "Opponent",
+      "opponentFallbackAlt": "the opponent"
+    },
+    "rps": {
+      "waitingOpponent": "Choice sent, waiting for the opponent...",
+      "instructions": "Choose rock, paper, or scissors."
+    },
+    "truthOrDare": {
+      "spinInstruction": "Spin the wheel to pick who takes the challenge.",
+      "spinButton": "Spin the wheel",
+      "promptSelf": "Your turn to choose: Truth or Dare?",
+      "truthButton": "Truth",
+      "dareButton": "Dare",
+      "waitingChoice": "Waiting for {{name}}'s choice...",
+      "contentTruth": "Truth",
+      "contentDare": "Dare",
+      "answerPlaceholder": "Write your answer...",
+      "sendAnswerButton": "Send answer",
+      "waitingWrittenAnswer": "Waiting for {{name}}'s written answer...",
+      "answerLabel": "Answer:",
+      "waitingValidation": "Waiting for {{name}} to approve...",
+      "validateButton": "Approve",
+      "refuseButton": "Reject",
+      "resultValidated": "Approved! +1 point.",
+      "resultRefused": "Rejected, 0 points.",
+      "resultOpponentGains": "{{name}} gains 1 point.",
+      "resultOpponentNoGain": "{{name}} doesn't gain a point."
+    },
+    "twoTruthsOneLie": {
+      "won": "Nice, you found the lie!",
+      "lost": "Nope, that wasn't the lie.",
+      "opponentFound": "{{name}} found your lie.",
+      "opponentMissed": "{{name}} got it wrong, you win the point!",
+      "lieWas": "Statement {{index}} was the lie.",
+      "instructions": "{{name}} submitted 3 statements. Vote for the lie.",
+      "waitingVote": "Statements sent. Waiting for {{name}}'s vote...",
+      "writeInstructions": "Your turn! Write 2 truths and 1 lie about yourself, then mark which one is false.",
+      "statementPlaceholder": "Statement {{index}}",
+      "markLie": "Lie",
+      "markTruth": "Truth ✓",
+      "submitButton": "Submit",
+      "waitingOpponentWriting": "It's {{name}}'s turn to write their 3 statements. Please wait...",
+      "waitingRoundStart": "Waiting for the round to start..."
+    },
+    "twentyQuestions": {
+      "opponentFallback": "the other player",
+      "resetButton": "Reset",
+      "myScore": "{{name}} (you): {{score}} pt(s)",
+      "opponentScore": "{{name}}: {{score}} pt(s)",
+      "rules": "The match is played over {{total}} turns. Whoever has the most points at the end wins.",
+      "wonRound": "Well done, you found the word! +{{points}} point(s).",
+      "opponentWonRound": "{{name}} found the secret word.",
+      "roundExhausted": "Out of tries for this turn, nobody scores.",
+      "roundSummary": "Turn {{turn}} / {{total}} done.",
+      "turnStatus": "Turn {{turn}} / {{total}} — {{attempts}} tr(ies) left",
+      "secretWordBadge": "Your secret word: {{word}}",
+      "leaderInstructions": "You're the leader! Think of a secret word for {{name}} to guess, then write it below. {{name}} won't see it.",
+      "secretWordPlaceholder": "Type the secret word here (e.g.: elephant)",
+      "validateSecretWordButton": "Confirm secret word",
+      "guesserPrompt": "{{name}} sent you this — a question or a word guess:",
+      "guessQuote": "“{{guess}}”",
+      "guesserInstructions": "Is this exactly your secret word? If so, click “Word found”. Otherwise, answer their question and/or give them a hint below, then click “Reply”.",
+      "hintPlaceholder": "E.g.: Yes, and it lives in the savanna",
+      "wordFoundButton": "Word found",
+      "replyButton": "Reply",
+      "waitingWordRegistered": "Secret word saved! Wait for {{name}} to send a guess.",
+      "waitingGuessSent": "Your guess has been sent. Wait for {{name}} to tell you if it's right.",
+      "opponentReplyLabel": "{{name}}'s reply:",
+      "askerInstructions": "{{name}} picked a secret word. On each try, you can either ask a question (e.g. “Is it edible?”) or guess a word directly. {{name}} will reply and may give you a hint if it's not quite right yet.",
+      "askPlaceholder": "Your question or word guess",
+      "sendButton": "Send",
+      "waitingOpponentSecret": "{{name}} picked the secret word. Please wait while they write it...",
+      "waitingTurnStart": "Waiting for the turn to start..."
+    },
+    "oddOrEven": {
+      "outcomeBothRight": "Sum {{sum}} ({{parity}}) — you were both right, +1 each!",
+      "outcome": "Sum {{sum}} ({{parity}})",
+      "waitingOpponent": "Choice sent, waiting for the opponent...",
+      "instructions": "Pick a digit from 1 to 9 and predict whether the sum will be odd or even."
+    },
+    "wouldYouRather": {
+      "yourChoice": "You: “{{choice}}”",
+      "opponentSame": "{{name}}: “{{choice}}” — same choice, +1 each!",
+      "opponentDifferent": "{{name}}: “{{choice}}” — different choices this time.",
+      "waitingOpponent": "Choice sent, waiting for the opponent...",
+      "instructions": "Would you rather...",
+      "loading": "Loading dilemma...",
+      "wonTogether": "You won together!",
+      "lostTogether": "You lost together...",
+      "detailIdentical": "You and {{name}} matched 5 identical choices!",
+      "detailDifferent": "You and {{name}} made 5 different choices before agreeing. Try again!"
+    }
   }
 }

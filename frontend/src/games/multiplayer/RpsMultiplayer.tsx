@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
 import { ClientEvents, ServerEvents } from '@/lib/socketEvents';
@@ -10,12 +11,6 @@ import type { Winner } from '@/lib/soloScore';
 const RPS_TARGET_SCORE = 5;
 const RPS_MOVES = ['pierre', 'feuille', 'ciseau'] as const;
 type RpsMove = (typeof RPS_MOVES)[number];
-
-const moveLabels: Record<RpsMove, string> = {
-  pierre: 'Pierre',
-  feuille: 'Feuille',
-  ciseau: 'Ciseau'
-};
 
 const moveEmojis: Record<RpsMove, string> = {
   pierre: '✊',
@@ -39,6 +34,7 @@ type RpsResultPayload = {
 };
 
 export function RpsMultiplayer() {
+  const { t } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
@@ -96,6 +92,12 @@ export function RpsMultiplayer() {
   const myScore = socketId ? scores[socketId] ?? 0 : 0;
   const opponentScore = opponent ? scores[opponent.id] ?? 0 : 0;
 
+  const moveLabels: Record<RpsMove, string> = {
+    pierre: t('solo.rps.moves.pierre'),
+    feuille: t('solo.rps.moves.feuille'),
+    ciseau: t('solo.rps.moves.ciseau')
+  };
+
   const playRound = (move: RpsMove) => {
     if (!socket || waiting || round || matchOver) {
       return;
@@ -122,8 +124,8 @@ export function RpsMultiplayer() {
         machine={opponentScore}
         targetScore={RPS_TARGET_SCORE}
         onReset={handleReplay}
-        playerLabel={`${me?.name ?? 'Vous'} (vous)`}
-        machineLabel={opponent?.name ?? 'Adversaire'}
+        playerLabel={`${me?.name ?? t('multiplayer.common.youFallback')}${t('multiplayer.common.youSuffix')}`}
+        machineLabel={opponent?.name ?? t('multiplayer.common.opponentFallback')}
         hasOpponent={!!opponent}
       />
 
@@ -139,7 +141,7 @@ export function RpsMultiplayer() {
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {waiting ? 'Choix envoyé, en attente de l’adversaire...' : 'Choisissez pierre, feuille ou ciseau.'}
+            {waiting ? t('multiplayer.rps.waitingOpponent') : t('multiplayer.rps.instructions')}
           </p>
 
           <div className="grid gap-3 sm:grid-cols-3">
@@ -159,7 +161,7 @@ export function RpsMultiplayer() {
         </div>
       )}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
+      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? t('multiplayer.common.opponentFallback')} />
     </div>
   );
 }

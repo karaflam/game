@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
@@ -32,6 +33,7 @@ type OddOrEvenResultPayload = RoundResult & {
 };
 
 export function OddOrEvenMultiplayer() {
+  const { t } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
@@ -126,8 +128,8 @@ export function OddOrEvenMultiplayer() {
         machine={opponentScore}
         targetScore={ODD_OR_EVEN_TARGET_SCORE}
         onReset={handleReplay}
-        playerLabel={`${me?.name ?? 'Vous'} (vous)`}
-        machineLabel={opponent?.name ?? 'Adversaire'}
+        playerLabel={`${me?.name ?? t('multiplayer.common.youFallback')}${t('multiplayer.common.youSuffix')}`}
+        machineLabel={opponent?.name ?? t('multiplayer.common.opponentFallback')}
         hasOpponent={!!opponent}
       />
 
@@ -139,15 +141,15 @@ export function OddOrEvenMultiplayer() {
           ]}
           outcomeLabel={
             round.bothCorrect
-              ? `Somme ${round.sum} (${round.parity}) — vous avez tous les deux raison, +1 chacun !`
-              : `Somme ${round.sum} (${round.parity})`
+              ? t('multiplayer.oddOrEven.outcomeBothRight', { sum: round.sum, parity: round.parity })
+              : t('multiplayer.oddOrEven.outcome', { sum: round.sum, parity: round.parity })
           }
           onComplete={handleRevealComplete}
         />
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {waiting ? 'Choix envoyé, en attente de l’adversaire...' : 'Choisissez un chiffre de 1 à 9 et prédisez la parité de la somme.'}
+            {waiting ? t('multiplayer.oddOrEven.waitingOpponent') : t('multiplayer.oddOrEven.instructions')}
           </p>
 
           <NumberTokenPicker value={playerNumber} onChange={setPlayerNumber} disabled={waiting || matchOver} />
@@ -161,18 +163,18 @@ export function OddOrEvenMultiplayer() {
                 onClick={() => setPrediction(parity)}
                 disabled={waiting || matchOver}
               >
-                {parity === 'pair' ? 'Pair' : 'Impair'}
+                {parity === 'pair' ? t('solo.oddOrEven.even') : t('solo.oddOrEven.odd')}
               </Button>
             ))}
           </div>
 
           <Button type="button" onClick={playRound} disabled={waiting || matchOver}>
-            Jouer la manche
+            {t('solo.oddOrEven.playButton')}
           </Button>
         </div>
       )}
 
-      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? 'Adversaire'} />
+      <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? t('multiplayer.common.opponentFallback')} />
     </div>
   );
 }
