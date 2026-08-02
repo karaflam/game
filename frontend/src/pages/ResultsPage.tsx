@@ -33,8 +33,8 @@ export function ResultsPage() {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('resultsPage.eyebrow')}</p>
-              <h1 className="mt-3 text-4xl font-bold text-foreground">{t('resultsPage.title')}</h1>
+              <p className="font-mono-label text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('resultsPage.eyebrow')}</p>
+              <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-foreground">{t('resultsPage.title')}</h1>
               <p className="mt-4 text-base leading-7 text-muted-foreground">{t('resultsPage.summary', { roomCode, gameName: gameId ? gameId.replace(/-/g, ' ') : t('resultsPage.summaryFallbackGame') })}</p>
             </div>
           </div>

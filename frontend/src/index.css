@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource/jetbrains-mono/600.css";
+@import "@fontsource/jetbrains-mono/700.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -97,12 +100,17 @@ input {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.8rem;
+  font-family: var(--font-mono-label);
+  font-weight: 600;
   color: var(--accent);
   margin: 0 0 12px;
 }
 
 .hero-title {
   margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   font-size: clamp(2.1rem, 2.6vw, 3.8rem);
   line-height: 1.04;
 }
@@ -121,7 +129,7 @@ input {
 .status-card {
   align-self: center;
   padding: 20px;
-  border-radius: 20px;
+  border-radius: 24px;
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
@@ -224,7 +232,7 @@ html[data-theme="romantique"] {
   display: grid;
   gap: 12px;
   padding: 22px;
-  border-radius: 20px;
+  border-radius: 24px;
   border: 1px solid var(--border);
   background: var(--surface-soft);
   text-align: left;
@@ -256,8 +264,11 @@ html[data-theme="romantique"] {
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent);
+  font-family: var(--font-mono-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   margin-bottom: 10px;
 }
 
@@ -279,7 +290,7 @@ html[data-theme="romantique"] {
   display: grid;
   gap: 14px;
   padding: 22px;
-  border-radius: 20px;
+  border-radius: 24px;
   border: 1px solid var(--border);
   background: var(--surface-soft);
   text-align: left;
@@ -308,8 +319,11 @@ html[data-theme="romantique"] {
   display: inline-flex;
   padding: 10px 12px;
   border-radius: 999px;
+  font-family: var(--font-mono-label);
+  text-transform: uppercase;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  font-size: 0.8rem;
   background: var(--accent-soft);
   color: var(--accent);
 }
@@ -333,7 +347,7 @@ html[data-theme="romantique"] {
   display: grid;
   gap: 10px;
   padding: 18px;
-  border-radius: 20px;
+  border-radius: 24px;
   background: var(--surface-soft);
   border: 1px dashed var(--border);
 }
@@ -343,7 +357,7 @@ html[data-theme="romantique"] {
 .game-panel {
   margin-top: 24px;
   padding: 22px;
-  border-radius: 20px;
+  border-radius: 24px;
   background: var(--surface-soft);
   border: 1px solid var(--border);
 }
@@ -367,13 +381,22 @@ html[data-theme="romantique"] {
   margin-top: 24px;
 }
 
+button.primary,
+button.secondary {
+  font-family: var(--font-mono-label);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 button.primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 18px;
-  border-radius: 16px;
+  padding: 14px 20px;
+  border-radius: 999px;
   color: #ffffff;
   background: var(--accent);
   box-shadow: 0 24px 40px rgba(37, 99, 235, 0.16);
@@ -385,8 +408,8 @@ button.secondary {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 18px;
-  border-radius: 16px;
+  padding: 14px 20px;
+  border-radius: 999px;
   color: var(--text);
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--border);
@@ -409,7 +432,7 @@ button.secondary {
   }
 
   .hero-panel {
-    border-radius: 20px;
+    border-radius: 24px;
   }
 
   .panel-card {
@@ -424,6 +447,8 @@ button.secondary {
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: 'Geist Variable', sans-serif;
+  --font-display: 'Space Grotesk Variable', var(--font-sans);
+  --font-mono-label: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

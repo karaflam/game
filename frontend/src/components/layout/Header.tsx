@@ -14,24 +14,24 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/95 backdrop-blur-xl shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <Link to="/" className="inline-flex items-center gap-3 text-xl font-semibold text-foreground">
+        <Link to="/" className="inline-flex items-center gap-3 font-display text-xl font-semibold tracking-tight text-foreground">
           <Gamepad2 className="h-6 w-6 text-primary" />
           <span>GameHub</span>
         </Link>
 
         <nav className="hidden items-center gap-4 sm:flex">
           <NavLink to="/" className={({ isActive }) =>
-            `rounded-2xl px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
+            `font-mono-label rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
           }>
             {t('header.home')}
           </NavLink>
           <NavLink to="/classement" className={({ isActive }) =>
-            `rounded-2xl px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
+            `font-mono-label rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
           }>
             {t('header.leaderboard')}
           </NavLink>
           <NavLink to="/profil" className={({ isActive }) =>
-            `rounded-2xl px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
+            `font-mono-label rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition ${isActive ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:text-foreground'}`
           }>
             {t('header.profile')}
           </NavLink>

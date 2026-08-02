@@ -30,7 +30,7 @@ export function RoomLobbyPage() {
   if (!game || !gameId) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-3xl px-4 py-10 text-center">
-        <h2 className="text-2xl font-semibold text-foreground">{t('common.gameNotFoundTitle')}</h2>
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">{t('common.gameNotFoundTitle')}</h2>
         <p className="mt-3 text-sm text-muted-foreground">{t('roomLobbyPage.notFoundMessage')}</p>
       </motion.div>
     );
@@ -107,7 +107,7 @@ export function RoomLobbyPage() {
       <section className="mb-10 rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
         <div className="space-y-6">
           <div>
-            <h1 className="text-4xl font-bold text-foreground">{t(`games.${game.id}.title`)}</h1>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground">{t(`games.${game.id}.title`)}</h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">{t(`games.${game.id}.description`)}</p>
           </div>
         </div>
@@ -140,14 +140,14 @@ export function RoomLobbyPage() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-border bg-background p-6">
-            <h2 className="text-xl font-semibold text-foreground">{t('roomLobbyPage.createRoomTitle')}</h2>
+            <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">{t('roomLobbyPage.createRoomTitle')}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('roomLobbyPage.createRoomDescription')}</p>
             <Button className="mt-4" onClick={handleCreateRoom} disabled={!trimmedPseudo}>
               {t('roomLobbyPage.createRoomButton')}
             </Button>
           </div>
           <div className="rounded-3xl border border-border bg-background p-6">
-            <h2 className="text-xl font-semibold text-foreground">{t('roomLobbyPage.joinRoomTitle')}</h2>
+            <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">{t('roomLobbyPage.joinRoomTitle')}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('roomLobbyPage.joinRoomDescription')}</p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <input

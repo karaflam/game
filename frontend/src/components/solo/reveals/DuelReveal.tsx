@@ -36,7 +36,7 @@ export function DuelReveal({ playerEmoji, playerLabel, machineEmoji, machineLabe
           className="flex flex-col items-center gap-2"
         >
           <span className="text-6xl">{playerEmoji}</span>
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{playerLabel}</span>
+          <span className="font-mono-label text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{playerLabel}</span>
         </motion.div>
 
         <motion.span
@@ -55,7 +55,7 @@ export function DuelReveal({ playerEmoji, playerLabel, machineEmoji, machineLabe
           className="flex flex-col items-center gap-2"
         >
           <span className="text-6xl">{machineEmoji}</span>
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{machineLabel}</span>
+          <span className="font-mono-label text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{machineLabel}</span>
         </motion.div>
       </div>
 

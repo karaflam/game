@@ -54,7 +54,7 @@ export function GamePlayPage() {
   if (!game || !gameId || !roomCode) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-3xl px-4 py-10 text-center">
-        <h2 className="text-2xl font-semibold text-foreground">{t('common.gameNotFoundTitle')}</h2>
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">{t('common.gameNotFoundTitle')}</h2>
         <p className="mt-3 text-sm text-muted-foreground">{t('gamePlayPage.notFoundMessage')}</p>
       </motion.div>
     );
@@ -65,7 +65,7 @@ export function GamePlayPage() {
       <section className="rounded-[2rem] bg-card p-6 shadow-lg shadow-slate-900/5 sm:p-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('gamePlayPage.eyebrow')}</p>
+            <p className="font-mono-label text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('gamePlayPage.eyebrow')}</p>
             <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">{t('gamePlayPage.title', { gameTitle: t(`games.${game.id}.title`), roomCode })}</h1>
             <p className="mt-3 text-base leading-7 text-muted-foreground">{t('gamePlayPage.playerCount', { count: players.length })}</p>
           </div>

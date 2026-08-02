@@ -33,12 +33,12 @@ export function GameCard({ game, selected, onSelect }: GameCardProps) {
         <span className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-primary/10 text-primary">
           <Icon className="h-6 w-6" />
         </span>
-        <span className="rounded-full bg-secondary px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-secondary-foreground">
+        <span className="font-mono-label rounded-full bg-secondary px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-secondary-foreground">
           {t('gameCard.playerCount')}
         </span>
       </div>
       <div className="mt-6 space-y-3 text-left">
-        <h3 className="text-xl font-semibold text-foreground">{t(`games.${game.id}.title`)}</h3>
+        <h3 className="font-display text-xl font-semibold tracking-tight text-foreground">{t(`games.${game.id}.title`)}</h3>
         <p className="text-sm leading-6 text-muted-foreground">{t(`games.${game.id}.description`)}</p>
       </div>
     </button>

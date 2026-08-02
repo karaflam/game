@@ -46,8 +46,8 @@ export function HomePage() {
       <section className="mb-10 rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
         <div className="space-y-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary">{t('home.eyebrow')}</p>
-            <h1 className="mt-4 text-4xl font-bold text-foreground sm:text-5xl">{t('home.title')}</h1>
+            <p className="font-mono-label text-sm font-semibold uppercase tracking-[0.28em] text-primary">{t('home.eyebrow')}</p>
+            <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl">{t('home.title')}</h1>
           </div>
           <p className="max-w-2xl text-lg leading-8 text-muted-foreground">{t('home.subtitle')}</p>
         </div>

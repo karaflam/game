@@ -172,7 +172,7 @@ export function RoomWaitingPage() {
       <section className="rounded-[2rem] bg-card p-6 shadow-lg shadow-slate-900/5 sm:p-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('roomWaitingPage.eyebrow')}</p>
+            <p className="font-mono-label text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('roomWaitingPage.eyebrow')}</p>
             <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">{t('roomWaitingPage.title', { roomCode })}</h1>
             <p className="mt-3 text-base leading-7 text-muted-foreground">{t('roomWaitingPage.subtitle')}</p>
           </div>
@@ -196,7 +196,7 @@ export function RoomWaitingPage() {
 
         {isTruthOrDare ? (
           <div className="mt-6 rounded-3xl border border-border bg-background p-4 sm:p-6">
-            <h2 className="text-xl font-semibold text-foreground">{t('roomWaitingPage.categoriesHeading')}</h2>
+            <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">{t('roomWaitingPage.categoriesHeading')}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {t('roomWaitingPage.categoriesHelp')}
             </p>
@@ -252,7 +252,7 @@ export function RoomWaitingPage() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">
-            <h2 className="text-xl font-semibold text-foreground">{t('roomWaitingPage.connectedPlayersHeading')}</h2>
+            <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">{t('roomWaitingPage.connectedPlayersHeading')}</h2>
             <div className="mt-4 space-y-3 rounded-3xl border border-border bg-surface p-4">
               {players.length > 0 ? (
                 players.map(player => (
@@ -267,7 +267,7 @@ export function RoomWaitingPage() {
           </div>
 
           <div className="rounded-3xl border border-border bg-background p-4 sm:p-6">
-            <h2 className="text-xl font-semibold text-foreground">{t('roomWaitingPage.roomStatusHeading')}</h2>
+            <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">{t('roomWaitingPage.roomStatusHeading')}</h2>
             <p className="mt-3 text-base leading-7 text-muted-foreground">
               {status !== 'waiting'
                 ? t('roomWaitingPage.statusReady')
