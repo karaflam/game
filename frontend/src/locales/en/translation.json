@@ -57,7 +57,17 @@
   "home": {
     "eyebrow": "Welcome",
     "title": "Choose a game and start a match.",
-    "subtitle": "Pick your favorite game, choose Solo or Multiplayer, then join an online room with a unique code."
+    "subtitle": "Pick your favorite game, choose Solo or Multiplayer, then join an online room with a unique code.",
+    "joinButton": "Join a game"
+  },
+  "joinPage": {
+    "title": "Join a game",
+    "description": "Enter the room code you received — no need to know which game it is, we'll figure that out.",
+    "pseudoLabel": "Your nickname",
+    "pseudoPlaceholder": "E.g.: Alex",
+    "codeLabel": "Room code",
+    "codePlaceholder": "Room code",
+    "joinButton": "Join"
   },
   "gameModePage": {
     "notFoundTitle": "Game not found",

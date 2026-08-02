@@ -57,7 +57,17 @@
   "home": {
     "eyebrow": "Bienvenue",
     "title": "Choisissez un jeu et lancez une partie.",
-    "subtitle": "Sélectionnez votre jeu favori, choisissez Solo ou Multijoueur, puis rejoignez un salon en ligne avec un code unique."
+    "subtitle": "Sélectionnez votre jeu favori, choisissez Solo ou Multijoueur, puis rejoignez un salon en ligne avec un code unique.",
+    "joinButton": "Rejoindre une partie"
+  },
+  "joinPage": {
+    "title": "Rejoindre une partie",
+    "description": "Entrez le code du salon reçu, sans avoir besoin de savoir à quel jeu vous jouez — on s'en occupe.",
+    "pseudoLabel": "Votre pseudo",
+    "pseudoPlaceholder": "Ex : Alex",
+    "codeLabel": "Code du salon",
+    "codePlaceholder": "Code du salon",
+    "joinButton": "Rejoindre"
   },
   "gameModePage": {
     "notFoundTitle": "Jeu introuvable",

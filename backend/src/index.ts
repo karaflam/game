@@ -78,7 +78,7 @@ io.on(ClientEvents.Connect, socket => {
 
   socket.on(
     ClientEvents.JoinRoom,
-    ({ roomId, name, gameId, token }: { roomId: string; name: string; gameId: string; token: string }) => {
+    ({ roomId, name, gameId, token }: { roomId: string; name: string; gameId?: string; token: string }) => {
       try {
         const result = roomManager.joinRoom(roomId, socket.id, name, gameId, token);
 
@@ -96,12 +96,13 @@ io.on(ClientEvents.Connect, socket => {
 
         io.to(roomId).emit(ServerEvents.RoomUpdate, {
           roomId,
+          gameId: result.gameId,
           players: result.players,
           started: result.started,
           scores: result.scores
         });
 
-        if (gameId === 'truth-or-dare') {
+        if (result.gameId === 'truth-or-dare') {
           // Covers both a genuinely new join (the other player needs to see the current
           // selection) and a reconnect/page-refresh rejoin (this player needs it restored) —
           // rejoinActiveRoomIfAny() on the client always re-emits JoinRoom for exactly this case.

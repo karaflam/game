@@ -6,6 +6,7 @@ import { ReconnectingOverlay } from './components/ReconnectingOverlay';
 import { HomePage } from './pages/HomePage';
 import { GameModePage } from './pages/GameModePage';
 import { RoomLobbyPage } from './pages/RoomLobbyPage';
+import { JoinPage } from './pages/JoinPage';
 import { RoomWaitingPage } from './pages/RoomWaitingPage';
 import { GamePlayPage } from './pages/GamePlayPage';
 import { ResultsPage } from './pages/ResultsPage';
@@ -39,6 +40,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/jeu/:gameId/mode" element={<GameModePage />} />
             <Route path="/jeu/:gameId/salon/creer" element={<RoomLobbyPage />} />
+            <Route path="/rejoindre" element={<JoinPage />} />
             <Route path="/jeu/:gameId/salon/:roomCode" element={<RoomWaitingPage />} />
             <Route path="/jeu/:gameId/salon/:roomCode/partie" element={<GamePlayPage />} />
             <Route path="/jeu/:gameId/salon/:roomCode/resultats" element={<ResultsPage />} />

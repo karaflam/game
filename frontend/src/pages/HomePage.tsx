@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { gameThemes } from '../data/gameThemes';
 import { GameCard } from '../components/GameCard';
+import { Button } from '../components/ui/button';
 import type { GameTheme } from '../types/game';
 import { useSocket } from '../hooks/useSocket';
 import { useGameStore } from '../store/useGameStore';
@@ -50,6 +51,9 @@ export function HomePage() {
             <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground sm:text-6xl">{t('home.title')}</h1>
           </div>
           <p className="max-w-2xl text-lg leading-8 text-muted-foreground">{t('home.subtitle')}</p>
+          <Button variant="secondary" onClick={() => navigate('/rejoindre')}>
+            {t('home.joinButton')}
+          </Button>
         </div>
       </section>
 

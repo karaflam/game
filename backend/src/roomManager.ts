@@ -120,13 +120,16 @@ export class RoomManager {
     return this.rooms.get(roomId)?.players ?? [];
   }
 
-  joinRoom(roomId: string, socketId: string, name: string, gameId: string, token: string) {
+  // gameId is optional: pass it when the caller already knows/expects a specific game (validated
+  // against the room, so a stale/wrong URL can't silently join the wrong game's room), or omit it
+  // for a game-agnostic join by code alone — the room's actual gameId is returned either way.
+  joinRoom(roomId: string, socketId: string, name: string, gameId: string | undefined, token: string) {
     if (!this.rooms.has(roomId)) {
       throw new Error('room-not-found');
     }
 
     const room = this.rooms.get(roomId)!;
-    if (room.gameId !== gameId) {
+    if (gameId !== undefined && room.gameId !== gameId) {
       throw new Error('room-game-mismatch');
     }
 
@@ -140,6 +143,7 @@ export class RoomManager {
       this.socketRoom.set(socketId, roomId);
       room.abandonedSince = null;
       return {
+        gameId: room.gameId,
         players: room.players,
         previousSocketId: null as string | null,
         started: room.started,
@@ -173,7 +177,7 @@ export class RoomManager {
       }
       this.socketRoom.set(socketId, roomId);
       room.abandonedSince = null;
-      return { players: room.players, previousSocketId: oldSocketId, started: room.started, scores: { ...room.scores }, previousRoom };
+      return { gameId: room.gameId, players: room.players, previousSocketId: oldSocketId, started: room.started, scores: { ...room.scores }, previousRoom };
     }
 
     room.players.push({ id: socketId, name });
@@ -181,7 +185,7 @@ export class RoomManager {
     room.tokens.set(socketId, token);
     this.socketRoom.set(socketId, roomId);
     room.abandonedSince = null;
-    return { players: room.players, previousSocketId: null, started: room.started, scores: { ...room.scores }, previousRoom };
+    return { gameId: room.gameId, players: room.players, previousSocketId: null, started: room.started, scores: { ...room.scores }, previousRoom };
   }
 
   leaveRoom(socketId: string) {
