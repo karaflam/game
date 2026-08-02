@@ -10,6 +10,7 @@ import { ClientEvents, ServerEvents } from '../lib/socketEvents';
 import { clearActiveRoom } from '../lib/playerSession';
 import { gameThemes } from '../data/gameThemes';
 import { TRUTH_OR_DARE_CATEGORIES, DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS, type TruthOrDareCategoryId } from '../data/soloPrompts';
+import { translateRoomError } from '../lib/roomErrors';
 
 export function RoomWaitingPage() {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ export function RoomWaitingPage() {
   const setStatus = useGameStore(state => state.setStatus);
   const game = useMemo(() => (gameId ? gameThemes.find(item => item.id === gameId) : null), [gameId]);
   const [copied, setCopied] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const opponentLeftName = (location.state as { opponentLeftName?: string | null } | null)?.opponentLeftName ?? null;
   const isTruthOrDare = gameId === 'truth-or-dare';
   const [categories, setCategories] = useState<TruthOrDareCategoryId[]>(DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS);
@@ -83,13 +85,19 @@ export function RoomWaitingPage() {
       setAllValidated(data.allValidated);
     };
 
+    const handleRoomError = (data: { message: string }) => {
+      setStartError(translateRoomError(t, data.message));
+    };
+
     socket.on(ServerEvents.GameStarted, handleGameStarted);
     socket.on(ServerEvents.TruthOrDareCategoriesUpdate, handleCategoriesUpdate);
+    socket.on(ServerEvents.RoomError, handleRoomError);
     return () => {
       socket.off(ServerEvents.GameStarted, handleGameStarted);
       socket.off(ServerEvents.TruthOrDareCategoriesUpdate, handleCategoriesUpdate);
+      socket.off(ServerEvents.RoomError, handleRoomError);
     };
-  }, [socket, roomCode, gameId, navigate, setStatus, socketId]);
+  }, [socket, roomCode, gameId, navigate, setStatus, socketId, t]);
 
   if (!game || !gameId || !roomCode) {
     return (
@@ -110,6 +118,7 @@ export function RoomWaitingPage() {
       return;
     }
 
+    setStartError(null);
     socket.emit(ClientEvents.StartGame, { roomId: roomCode });
   };
 
@@ -277,6 +286,11 @@ export function RoomWaitingPage() {
                     ? t('roomWaitingPage.statusWaitingValidation')
                     : t('roomWaitingPage.statusReady')}
             </p>
+            {startError ? (
+              <div className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+                {startError}
+              </div>
+            ) : null}
             <div className="mt-6 flex flex-col gap-3">
               <Button disabled={!canStart} onClick={handleStartClick}>
                 {!isHost

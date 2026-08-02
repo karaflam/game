@@ -62,7 +62,7 @@
   },
   "joinPage": {
     "title": "Rejoindre une partie",
-    "description": "Entrez le code du salon reçu, sans avoir besoin de savoir à quel jeu vous jouez — on s'en occupe.",
+    "description": "Entrez le code du salon reçu, sans avoir besoin de savoir à quel jeu vous jouez — on s’en occupe.",
     "pseudoLabel": "Votre pseudo",
     "pseudoPlaceholder": "Ex : Alex",
     "codeLabel": "Code du salon",
@@ -195,24 +195,24 @@
     "leaveRoomButton": "Quitter le salon"
   },
   "gamePlayPage": {
-    "notFoundMessage": "Retournez à l'accueil pour sélectionner un jeu.",
+    "notFoundMessage": "Retournez à l’accueil pour sélectionner un jeu.",
     "eyebrow": "Partie en cours",
     "title": "{{gameTitle}} — Salon {{roomCode}}",
     "playerCount": "{{count}} joueur(s) dans la salle.",
     "viewResultsButton": "Voir résultats",
     "leaveMatchButton": "Quitter la partie",
-    "notImplemented": "Ce jeu est en cours de développement. Revenez bientôt pour plus d'options."
+    "notImplemented": "Ce jeu est en cours de développement. Revenez bientôt pour plus d’options."
   },
   "resultsPage": {
-    "backAriaLabel": "Retour à l'écran précédent",
+    "backAriaLabel": "Retour à l’écran précédent",
     "eyebrow": "Résultats",
     "title": "Classement final",
     "summary": "Récapitulatif du salon {{roomCode}} pour {{gameName}}.",
     "summaryFallbackGame": "le jeu",
-    "empty": "Aucun score enregistré pour l'instant.",
+    "empty": "Aucun score enregistré pour l’instant.",
     "youTag": " (vous)",
     "scoreLabel": "{{score}} point(s)",
-    "backHomeButton": "Retour à l'accueil",
+    "backHomeButton": "Retour à l’accueil",
     "playAgainButton": "Rejouer"
   },
   "leaderboardPage": {
@@ -223,12 +223,12 @@
   },
   "profilePage": {
     "title": "Profil joueur",
-    "subtitle": "Cette page affichera bientôt les statistiques du joueur, l'historique de parties et les préférences de thème."
+    "subtitle": "Cette page affichera bientôt les statistiques du joueur, l’historique de parties et les préférences de thème."
   },
   "soloPlayPage": {
     "title": "Mode solo — {{gameName}}",
-    "subtitle": "Entraînez-vous contre l'IA.",
-    "notImplemented": "Ce jeu n'est pas encore disponible en solo."
+    "subtitle": "Entraînez-vous contre l’IA.",
+    "notImplemented": "Ce jeu n’est pas encore disponible en solo."
   },
   "reconnectingOverlay": {
     "title": "Un instant...",
@@ -249,10 +249,10 @@
       "won": "Vous avez gagné la partie !",
       "draw": "Égalité !",
       "lost": "{{opponent}} a gagné cette fois...",
-      "opponentFallback": "L'IA",
+      "opponentFallback": "L’IA",
       "detailWon": "Belle performance face à {{opponent}}.",
       "detailWonFallback": "la machine",
-      "detailDraw": "Personne ne prend l'avantage, belle partie serrée.",
+      "detailDraw": "Personne ne prend l’avantage, belle partie serrée.",
       "detailLost": "Retentez votre chance pour prendre votre revanche.",
       "newMatchButton": "Nouvelle partie"
     },
@@ -263,7 +263,7 @@
         "ciseau": "Ciseau"
       },
       "instructions": "Choisissez pierre, feuille ou ciseau.",
-      "outcomeDraw": "Égalité : vous avez joué {{playerMove}}, l'IA aussi.",
+      "outcomeDraw": "Égalité : vous avez joué {{playerMove}}, l’IA aussi.",
       "outcomeWin": "Vous gagnez la manche ! {{playerMove}} bat {{machineMove}}.",
       "outcomeLose": "Vous perdez la manche... {{machineMove}} bat {{playerMove}}.",
       "duelOutcomeWin": "Vous gagnez la manche !",
@@ -272,7 +272,7 @@
     },
     "oddOrEven": {
       "instructions": "Choisissez un chiffre de 1 à 9 et prédisez la parité de la somme.",
-      "outcome": "Vous avez joué {{playerNumber}}, l'IA a joué {{machineNumber}}. Somme {{sum}} ({{parity}}). {{result}}",
+      "outcome": "Vous avez joué {{playerNumber}}, l’IA a joué {{machineNumber}}. Somme {{sum}} ({{parity}}). {{result}}",
       "outcomeWin": "Vous gagnez la manche !",
       "outcomeLose": "Vous perdez la manche...",
       "sumLabel": "Somme {{sum}} ({{parity}})",
@@ -293,8 +293,8 @@
     },
     "wouldYouRather": {
       "yourChoice": "Vous : « {{choice}} »",
-      "aiSame": "IA : « {{choice}} » — même longueur d'onde !",
-      "aiDifferent": "IA : « {{choice}} » — pas d'accord cette fois.",
+      "aiSame": "IA : « {{choice}} » — même longueur d’onde !",
+      "aiDifferent": "IA : « {{choice}} » — pas d’accord cette fois.",
       "instructions": "Tu préfères...",
       "nextDilemmaButton": "Prochain dilemme",
       "newDilemmaButton": "Nouveau dilemme"
@@ -302,8 +302,8 @@
     "twentyQuestions": {
       "instructions": "Devinez le mot en 20 essais maximum.",
       "newRound": "Nouveau mot ! Devinez-le en 20 essais maximum.",
-      "wrongGuess": "Non, ce n'est pas ça. Essai {{attempt}}/{{max}}.",
-      "won": "Bravo, c'était bien \"{{answer}}\" !",
+      "wrongGuess": "Non, ce n’est pas ça. Essai {{attempt}}/{{max}}.",
+      "won": "Bravo, c’était bien \"{{answer}}\" !",
       "lost": "Essais épuisés. Le mot était \"{{answer}}\".",
       "revealWon": "Trouvé : {{answer}} !",
       "revealLost": "Le mot était : {{answer}}",
@@ -315,9 +315,9 @@
     },
     "twoTruthsOneLie": {
       "won": "Bien joué, vous avez trouvé le mensonge !",
-      "lost": "Perdu, ce n'était pas le mensonge.",
+      "lost": "Perdu, ce n’était pas le mensonge.",
       "detail": "Le mensonge était : \"{{lie}}\"",
-      "instructions": "L'IA affirme 3 choses sur elle. Trouvez le mensonge.",
+      "instructions": "L’IA affirme 3 choses sur elle. Trouvez le mensonge.",
       "nextSetButton": "Série suivante"
     }
   },
@@ -326,10 +326,10 @@
       "youSuffix": " (vous)",
       "youFallback": "Vous",
       "opponentFallback": "Adversaire",
-      "opponentFallbackAlt": "l'adversaire"
+      "opponentFallbackAlt": "l’adversaire"
     },
     "rps": {
-      "waitingOpponent": "Choix envoyé, en attente de l'adversaire...",
+      "waitingOpponent": "Choix envoyé, en attente de l’adversaire...",
       "instructions": "Choisissez pierre, feuille ou ciseau."
     },
     "truthOrDare": {
@@ -355,22 +355,22 @@
     },
     "twoTruthsOneLie": {
       "won": "Bien joué, vous avez trouvé le mensonge !",
-      "lost": "Perdu, ce n'était pas le mensonge.",
+      "lost": "Perdu, ce n’était pas le mensonge.",
       "opponentFound": "{{name}} a trouvé votre mensonge.",
-      "opponentMissed": "{{name}} s'est trompé, vous gagnez le point !",
+      "opponentMissed": "{{name}} s’est trompé, vous gagnez le point !",
       "lieWas": "La phrase {{index}} était le mensonge.",
       "instructions": "{{name}} a soumis 3 affirmations. Votez pour le mensonge.",
       "waitingVote": "Affirmations envoyées. En attente du vote de {{name}}...",
-      "writeInstructions": "C'est à vous ! Écrivez 2 vérités et 1 mensonge sur vous, puis indiquez laquelle est fausse.",
+      "writeInstructions": "C’est à vous ! Écrivez 2 vérités et 1 mensonge sur vous, puis indiquez laquelle est fausse.",
       "statementPlaceholder": "Affirmation {{index}}",
       "markLie": "Mensonge",
       "markTruth": "Vérité ✓",
       "submitButton": "Soumettre",
-      "waitingOpponentWriting": "C'est au tour de {{name}} de rédiger ses 3 affirmations. Patientez...",
+      "waitingOpponentWriting": "C’est au tour de {{name}} de rédiger ses 3 affirmations. Patientez...",
       "waitingRoundStart": "En attente du début de la manche..."
     },
     "twentyQuestions": {
-      "opponentFallback": "l'autre joueur",
+      "opponentFallback": "l’autre joueur",
       "resetButton": "Réinitialiser",
       "myScore": "{{name}} (vous) : {{score}} pt(s)",
       "opponentScore": "{{name}} : {{score}} pt(s)",
@@ -381,7 +381,7 @@
       "roundSummary": "Tour {{turn}} / {{total}} terminé.",
       "turnStatus": "Tour {{turn}} / {{total}} — {{attempts}} essai(s) restant(s)",
       "secretWordBadge": "Votre mot secret : {{word}}",
-      "leaderInstructions": "C'est vous le meneur ! Pensez à un mot secret que {{name}} devra deviner, puis écrivez-le ci-dessous. {{name}} ne le verra pas.",
+      "leaderInstructions": "C’est vous le meneur ! Pensez à un mot secret que {{name}} devra deviner, puis écrivez-le ci-dessous. {{name}} ne le verra pas.",
       "secretWordPlaceholder": "Écrivez ici le mot secret (ex : éléphant)",
       "validateSecretWordButton": "Valider le mot secret",
       "guesserPrompt": "{{name}} vous a envoyé ceci — une question ou une proposition de mot :",
@@ -391,25 +391,25 @@
       "wordFoundButton": "Mot trouvé",
       "replyButton": "Répondre",
       "waitingWordRegistered": "Mot secret enregistré ! Attendez que {{name}} propose une réponse.",
-      "waitingGuessSent": "Votre proposition a été envoyée. Attendez que {{name}} vous dise si c'est le bon mot.",
+      "waitingGuessSent": "Votre proposition a été envoyée. Attendez que {{name}} vous dise si c’est le bon mot.",
       "opponentReplyLabel": "Réponse de {{name}} :",
-      "askerInstructions": "{{name}} a choisi un mot secret. À chaque essai, vous pouvez soit poser une question (par exemple « Est-ce que ça se mange ? »), soit proposer directement un mot. {{name}} vous répondra et pourra vous donner un indice si ce n'est pas encore ça.",
+      "askerInstructions": "{{name}} a choisi un mot secret. À chaque essai, vous pouvez soit poser une question (par exemple « Est-ce que ça se mange ? »), soit proposer directement un mot. {{name}} vous répondra et pourra vous donner un indice si ce n’est pas encore ça.",
       "askPlaceholder": "Votre question ou votre proposition de mot",
       "sendButton": "Envoyer",
-      "waitingOpponentSecret": "C'est {{name}} qui a choisi le mot secret. Patientez pendant qu'il/elle l'écrit...",
+      "waitingOpponentSecret": "C’est {{name}} qui a choisi le mot secret. Patientez pendant qu’il/elle l’écrit...",
       "waitingTurnStart": "En attente du début du tour..."
     },
     "oddOrEven": {
       "outcomeBothRight": "Somme {{sum}} ({{parity}}) — vous avez tous les deux raison, +1 chacun !",
       "outcome": "Somme {{sum}} ({{parity}})",
-      "waitingOpponent": "Choix envoyé, en attente de l'adversaire...",
+      "waitingOpponent": "Choix envoyé, en attente de l’adversaire...",
       "instructions": "Choisissez un chiffre de 1 à 9 et prédisez la parité de la somme."
     },
     "wouldYouRather": {
       "yourChoice": "Vous : « {{choice}} »",
       "opponentSame": "{{name}} : « {{choice}} » — même choix, +1 chacun !",
       "opponentDifferent": "{{name}} : « {{choice}} » — choix différents cette fois.",
-      "waitingOpponent": "Choix envoyé, en attente de l'adversaire...",
+      "waitingOpponent": "Choix envoyé, en attente de l’adversaire...",
       "instructions": "Tu préfères...",
       "loading": "Chargement du dilemme...",
       "wonTogether": "Vous avez gagné ensemble !",

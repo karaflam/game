@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useGameStore } from '../store/useGameStore';
 import { useSocket } from '../hooks/useSocket';
+import { gameThemes } from '../data/gameThemes';
 
 export function ResultsPage() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export function ResultsPage() {
   const { socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
+  const game = gameThemes.find(item => item.id === gameId);
 
   const ranking = [...players]
     .map(player => ({ ...player, score: scores[player.id] ?? 0 }))
@@ -35,7 +37,7 @@ export function ResultsPage() {
             <div>
               <p className="font-mono-label text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t('resultsPage.eyebrow')}</p>
               <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-foreground">{t('resultsPage.title')}</h1>
-              <p className="mt-4 text-base leading-7 text-muted-foreground">{t('resultsPage.summary', { roomCode, gameName: gameId ? gameId.replace(/-/g, ' ') : t('resultsPage.summaryFallbackGame') })}</p>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">{t('resultsPage.summary', { roomCode, gameName: game ? t(`games.${game.id}.title`) : t('resultsPage.summaryFallbackGame') })}</p>
             </div>
           </div>
         </div>
