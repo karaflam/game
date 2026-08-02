@@ -9,6 +9,7 @@ import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { PlayerWheel } from '@/components/solo/PlayerWheel';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import type { Winner } from '@/lib/soloScore';
+import { soloTruthOrDarePrompts } from '@/data/soloPrompts';
 
 const TARGET_SCORE = 5;
 
@@ -16,15 +17,16 @@ type Phase = 'idle' | 'spinning' | 'choosing' | 'content' | 'result';
 type ContentType = 'action' | 'truth';
 
 export function TruthOrDareMultiplayer() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
+  const prompts = soloTruthOrDarePrompts[i18n.language === 'en' ? 'en' : 'fr'];
   const [phase, setPhase] = useState<Phase>('idle');
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
   const [activePlayerName, setActivePlayerName] = useState<string | null>(null);
-  const [content, setContent] = useState<{ type: ContentType; text: string } | null>(null);
+  const [content, setContent] = useState<{ type: ContentType; promptIndex: number } | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
   const [answerDraft, setAnswerDraft] = useState('');
   const [resultApproved, setResultApproved] = useState(false);
@@ -45,7 +47,7 @@ export function TruthOrDareMultiplayer() {
       setPhase('spinning');
     };
 
-    const handleContent = (data: { type: ContentType; text: string }) => {
+    const handleContent = (data: { type: ContentType; promptIndex: number }) => {
       setContent(data);
       setPhase('content');
     };
@@ -80,7 +82,7 @@ export function TruthOrDareMultiplayer() {
         activePlayerId: string;
         activePlayerName: string;
         type: ContentType | null;
-        text: string | null;
+        promptIndex: number | null;
         answer: string | null;
       };
     }) => {
@@ -89,8 +91,8 @@ export function TruthOrDareMultiplayer() {
       }
       setActivePlayerId(data.state.activePlayerId);
       setActivePlayerName(data.state.activePlayerName);
-      if (data.state.type) {
-        setContent({ type: data.state.type, text: data.state.text ?? '' });
+      if (data.state.type && data.state.promptIndex !== null) {
+        setContent({ type: data.state.type, promptIndex: data.state.promptIndex });
         setAnswer(data.state.answer);
         setPhase('content');
       } else {
@@ -175,6 +177,7 @@ export function TruthOrDareMultiplayer() {
     socket.emit(ClientEvents.ResetMatchScore);
   };
 
+  const contentText = content ? (content.type === 'truth' ? prompts[content.promptIndex].truth : prompts[content.promptIndex].dare) : null;
   const needsWrittenAnswer = content?.type === 'truth' && !answer;
   const readyToValidate = content && (content.type === 'action' || answer);
 
@@ -232,7 +235,7 @@ export function TruthOrDareMultiplayer() {
             <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-primary">
               {content.type === 'truth' ? t('multiplayer.truthOrDare.contentTruth') : t('multiplayer.truthOrDare.contentDare')}
             </span>
-            {content.text}
+            {contentText}
           </div>
 
           {needsWrittenAnswer ? (

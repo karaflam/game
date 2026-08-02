@@ -570,7 +570,7 @@ export class RoomManager {
     const state: WouldYouRatherState = { promptIndex: index };
     room.gameData.wouldYouRather = state;
 
-    return { roomId, prompt: wouldYouRatherPrompts[index] };
+    return { roomId, promptIndex: index };
   }
 
   setWouldYouRatherChoice(socketId: string, selected: 'left' | 'right') {
@@ -905,10 +905,8 @@ export class RoomManager {
     }
 
     state.type = type;
-    const prompt = truthOrDarePrompts[state.promptIndex];
-    const text = type === 'action' ? prompt.dare : prompt.truth;
 
-    return { roomId, type, text };
+    return { roomId, type, promptIndex: state.promptIndex };
   }
 
   submitTruthOrDareAnswer(socketId: string, answer: string) {
@@ -1244,10 +1242,10 @@ export class RoomManager {
 
     const state = room.gameData.wouldYouRather as WouldYouRatherState | undefined;
     if (!state) {
-      return { prompt: null as { left: string; right: string } | null, waiting: false };
+      return { promptIndex: null as number | null, waiting: false };
     }
 
-    return { prompt: wouldYouRatherPrompts[state.promptIndex], waiting: room.choices.has(socketId) };
+    return { promptIndex: state.promptIndex, waiting: room.choices.has(socketId) };
   }
 
   getTruthOrDareState(socketId: string) {
@@ -1266,15 +1264,13 @@ export class RoomManager {
       return null;
     }
 
-    const prompt = truthOrDarePrompts[state.promptIndex];
-    const text = state.type ? (state.type === 'action' ? prompt.dare : prompt.truth) : null;
     const activePlayerName = room.players.find(player => player.id === state.activePlayerId)?.name ?? '';
 
     return {
       activePlayerId: state.activePlayerId,
       activePlayerName,
       type: state.type,
-      text,
+      promptIndex: state.type ? state.promptIndex : null,
       answer: state.answer
     };
   }

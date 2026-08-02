@@ -210,7 +210,7 @@ io.on(ClientEvents.Connect, socket => {
   socket.on(ServerEvents.TruthOrDareChoice, ({ type }) => {
     try {
       const result = roomManager.chooseTruthOrDareType(socket.id, type);
-      io.to(result.roomId).emit(ServerEvents.TruthOrDareContent, { type: result.type, text: result.text });
+      io.to(result.roomId).emit(ServerEvents.TruthOrDareContent, { type: result.type, promptIndex: result.promptIndex });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }
@@ -270,7 +270,7 @@ io.on(ClientEvents.Connect, socket => {
   socket.on(ServerEvents.WouldYouRatherStart, () => {
     try {
       const result = roomManager.startWouldYouRatherRound(socket.id);
-      io.to(result.roomId).emit(ServerEvents.WouldYouRatherUpdate, { prompt: result.prompt });
+      io.to(result.roomId).emit(ServerEvents.WouldYouRatherUpdate, { promptIndex: result.promptIndex });
     } catch (error) {
       socket.emit(ServerEvents.RoomError, { message: (error as Error).message });
     }

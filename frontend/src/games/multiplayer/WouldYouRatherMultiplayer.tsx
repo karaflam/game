@@ -7,10 +7,10 @@ import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import type { Winner } from '@/lib/soloScore';
+import { soloWouldYouRatherPrompts } from '@/data/soloPrompts';
 
 const TARGET_SCORE = 5;
 type Side = 'left' | 'right';
-type Prompt = { left: string; right: string };
 
 type RoundResult = { yourChoice: Side; opponentChoice: Side; sameChoice: boolean };
 
@@ -21,12 +21,14 @@ type WouldYouRatherResultPayload = RoundResult & {
 };
 
 export function WouldYouRatherMultiplayer() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
-  const [prompt, setPrompt] = useState<Prompt | null>(null);
+  const prompts = soloWouldYouRatherPrompts[i18n.language === 'en' ? 'en' : 'fr'];
+  const [promptIndex, setPromptIndex] = useState<number | null>(null);
+  const prompt = promptIndex !== null ? prompts[promptIndex] : null;
   const [waiting, setWaiting] = useState(false);
   const [round, setRound] = useState<RoundResult | null>(null);
   const [awaitingNextRound, setAwaitingNextRound] = useState(false);
@@ -38,8 +40,8 @@ export function WouldYouRatherMultiplayer() {
       return;
     }
 
-    const handleUpdate = (data: { prompt: Prompt }) => {
-      setPrompt(data.prompt);
+    const handleUpdate = (data: { promptIndex: number }) => {
+      setPromptIndex(data.promptIndex);
       setRound(null);
       setAwaitingNextRound(false);
       setWaiting(false);
@@ -58,17 +60,17 @@ export function WouldYouRatherMultiplayer() {
       setMatchOver(false);
       setWinner(null);
       setRound(null);
-      setPrompt(null);
+      setPromptIndex(null);
       setAwaitingNextRound(true);
       setWaiting(false);
     };
 
-    const handleGameState = (data: { gameId: string; state: { prompt: Prompt | null; waiting: boolean } }) => {
+    const handleGameState = (data: { gameId: string; state: { promptIndex: number | null; waiting: boolean } }) => {
       if (data.gameId !== 'would-you-rather') {
         return;
       }
-      if (data.state.prompt) {
-        setPrompt(data.state.prompt);
+      if (data.state.promptIndex !== null) {
+        setPromptIndex(data.state.promptIndex);
         setAwaitingNextRound(false);
         setWaiting(data.state.waiting);
       } else {
