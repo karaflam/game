@@ -6,6 +6,7 @@ import { gameThemes } from '../data/gameThemes';
 import { GameCard } from '../components/GameCard';
 import { Button } from '../components/ui/button';
 import { HOME_HERO_IMAGE_URL } from '../data/gameImages';
+import { useImageAvailable } from '../hooks/useImageAvailable';
 import type { GameTheme } from '../types/game';
 import { useSocket } from '../hooks/useSocket';
 import { useGameStore } from '../store/useGameStore';
@@ -14,6 +15,7 @@ import { getActiveRoom } from '../lib/playerSession';
 export function HomePage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const hasHeroImage = useImageAvailable(HOME_HERO_IMAGE_URL);
   // The actual (re)join handshake lives in useSocket — calling it here just ensures the shared
   // socket exists and its "resume my active room" logic runs even if HomePage is the very first
   // page the app renders (fresh load / bookmark landing on "/"). The global ReconnectingOverlay
@@ -45,21 +47,25 @@ export function HomePage() {
       exit={{ opacity: 0, y: -12 }}
       className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-12 sm:py-16"
     >
-      <section className="relative mb-10 overflow-hidden rounded-2xl bg-card p-10 shadow-lg shadow-slate-900/5">
-        <img
-          src={HOME_HERO_IMAGE_URL}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover opacity-30"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      <section
+        style={hasHeroImage ? { backgroundImage: `url(${HOME_HERO_IMAGE_URL})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+        className="relative mb-10 overflow-hidden rounded-2xl bg-card p-10 shadow-lg shadow-slate-900/5"
+      >
+        {/* No hero image loaded (or it failed) → this stays the plain themed card it was before. */}
+        {hasHeroImage ? (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          </>
+        ) : null}
         <div className="relative space-y-6">
           <div>
             <p className="font-mono-label text-sm font-semibold uppercase tracking-[0.28em] text-primary">{t('home.eyebrow')}</p>
-            <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-white sm:text-6xl">{t('home.title')}</h1>
+            <h1 className={`mt-4 font-display text-4xl font-bold tracking-tight sm:text-6xl ${hasHeroImage ? 'text-white' : 'text-foreground'}`}>
+              {t('home.title')}
+            </h1>
           </div>
-          <p className="max-w-2xl text-lg leading-8 text-white/80">{t('home.subtitle')}</p>
+          <p className={`max-w-2xl text-lg leading-8 ${hasHeroImage ? 'text-white/80' : 'text-muted-foreground'}`}>{t('home.subtitle')}</p>
           <Button variant="secondary" onClick={() => navigate('/rejoindre')}>
             {t('home.joinButton')}
           </Button>

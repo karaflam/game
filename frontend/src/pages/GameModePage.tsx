@@ -3,11 +3,14 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { gameThemes } from '../data/gameThemes';
 import { getGameImageUrl } from '../data/gameImages';
+import { useImageAvailable } from '../hooks/useImageAvailable';
 
 export function GameModePage() {
   const { gameId } = useParams();
   const { t } = useTranslation();
   const game = gameThemes.find(item => item.id === gameId);
+  const imageUrl = game ? getGameImageUrl(game.id) : '';
+  const hasImage = useImageAvailable(imageUrl);
 
   if (!game) {
     return (
@@ -30,41 +33,36 @@ export function GameModePage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Link
           to={`/jeu/${gameId}/salon/solo`}
-          className="group overflow-hidden rounded-2xl border border-border bg-background transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/20"
+          style={hasImage ? { backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+          className="group relative flex h-56 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-background p-8 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/20"
         >
-          <div className="relative h-36 w-full overflow-hidden">
-            <img
-              src={getGameImageUrl(game.id)}
-              alt=""
-              aria-hidden="true"
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-accent/30" />
-          </div>
-          <div className="p-8">
-            <span className="font-mono-label text-xs font-semibold uppercase tracking-[0.3em] text-primary">{t('gameModePage.soloEyebrow')}</span>
-            <h2 className="mt-4 font-display text-2xl font-semibold tracking-tight text-foreground">{t('gameModePage.soloTitle')}</h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">{t('gameModePage.soloDescription')}</p>
+          {/* No image loaded (or it failed) → this stays the plain themed card it was before. */}
+          {hasImage ? <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-accent/20" /> : null}
+          <div className="relative">
+            <span className={`font-mono-label text-xs font-semibold uppercase tracking-[0.3em] ${hasImage ? 'text-accent' : 'text-primary'}`}>
+              {t('gameModePage.soloEyebrow')}
+            </span>
+            <h2 className={`mt-4 font-display text-2xl font-semibold tracking-tight ${hasImage ? 'text-white' : 'text-foreground'}`}>
+              {t('gameModePage.soloTitle')}
+            </h2>
+            <p className={`mt-3 text-sm leading-6 ${hasImage ? 'text-white/80' : 'text-muted-foreground'}`}>{t('gameModePage.soloDescription')}</p>
           </div>
         </Link>
 
         <Link
           to={`/jeu/${gameId}/salon/creer`}
-          className="group overflow-hidden rounded-2xl border border-border bg-background transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
+          style={hasImage ? { backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+          className="group relative flex h-56 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-background p-8 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
         >
-          <div className="relative h-36 w-full overflow-hidden">
-            <img
-              src={getGameImageUrl(game.id)}
-              alt=""
-              aria-hidden="true"
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-primary/30" />
-          </div>
-          <div className="p-8">
-            <span className="font-mono-label text-xs font-semibold uppercase tracking-[0.3em] text-primary">{t('gameModePage.multiplayerEyebrow')}</span>
-            <h2 className="mt-4 font-display text-2xl font-semibold tracking-tight text-foreground">{t('gameModePage.multiplayerTitle')}</h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">{t('gameModePage.multiplayerDescription')}</p>
+          {hasImage ? <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-primary/20" /> : null}
+          <div className="relative">
+            <span className="font-mono-label text-xs font-semibold uppercase tracking-[0.3em] text-primary">
+              {t('gameModePage.multiplayerEyebrow')}
+            </span>
+            <h2 className={`mt-4 font-display text-2xl font-semibold tracking-tight ${hasImage ? 'text-white' : 'text-foreground'}`}>
+              {t('gameModePage.multiplayerTitle')}
+            </h2>
+            <p className={`mt-3 text-sm leading-6 ${hasImage ? 'text-white/80' : 'text-muted-foreground'}`}>{t('gameModePage.multiplayerDescription')}</p>
           </div>
         </Link>
       </div>
