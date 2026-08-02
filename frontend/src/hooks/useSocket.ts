@@ -7,7 +7,6 @@ import { getActiveRoom, getStoredPseudo, getPlayerToken, clearActiveRoom } from 
 
 export function useSocket() {
   const [connected, setConnected] = useState(false);
-  const [message, setMessage] = useState('Tentative de connexion au serveur...');
   const [socketId, setSocketId] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const setPlayers = useGameStore(state => state.setPlayers);
@@ -61,28 +60,20 @@ export function useSocket() {
 
     if (nextSocket.connected) {
       setConnected(true);
-      setMessage('Connecté au serveur.');
       rejoinActiveRoomIfAny();
     }
 
     const handleConnect = () => {
       setConnected(true);
-      setMessage('Connecté au serveur.');
-      nextSocket.emit(ServerEvents.Hello, { source: 'frontend', timestamp: Date.now() });
       rejoinActiveRoomIfAny();
     };
 
     const handleDisconnect = () => {
       setConnected(false);
       setSocketId(null);
-      setMessage('Déconnecté du serveur, reconnexion en cours...');
       if (getActiveRoom()) {
         setReconnecting(true);
       }
-    };
-
-    const handleGreeting = (data: { type: string; payload: string }) => {
-      setMessage(data.payload);
     };
 
     const handleRoomUpdate = (data: { roomId: string; players: Player[]; started?: boolean; scores?: Record<string, number> }) => {
@@ -99,19 +90,17 @@ export function useSocket() {
 
     nextSocket.on('connect', handleConnect);
     nextSocket.on('disconnect', handleDisconnect);
-    nextSocket.on(ServerEvents.Greeting, handleGreeting);
     nextSocket.on(ServerEvents.RoomUpdate, handleRoomUpdate);
     nextSocket.on(ServerEvents.RoomError, handleRoomError);
 
     return () => {
       nextSocket.off('connect', handleConnect);
       nextSocket.off('disconnect', handleDisconnect);
-      nextSocket.off(ServerEvents.Greeting, handleGreeting);
       nextSocket.off(ServerEvents.RoomUpdate, handleRoomUpdate);
       nextSocket.off(ServerEvents.RoomError, handleRoomError);
     };
   }, [setError, setPlayers, setStatus, setScores, setReconnecting]);
 
-  const connection = useMemo(() => ({ connected, message, socket, socketId }), [connected, message, socket, socketId]);
+  const connection = useMemo(() => ({ connected, socket, socketId }), [connected, socket, socketId]);
   return connection;
 }

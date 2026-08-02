@@ -8,6 +8,7 @@ import { useSocket } from '../hooks/useSocket';
 import { ClientEvents, ServerEvents } from '../lib/socketEvents';
 import { useGameStore } from '../store/useGameStore';
 import { getPlayerToken, getStoredPseudo, setStoredPseudo, saveActiveRoom } from '../lib/playerSession';
+import { translateRoomError } from '../lib/roomErrors';
 
 const PSEUDO_MAX_LENGTH = 20;
 
@@ -63,7 +64,7 @@ export function RoomLobbyPage() {
       navigate(`/jeu/${gameId}/salon/${roomId}`);
     });
     socket.once(ServerEvents.RoomError, ({ message }) => {
-      setError(message);
+      setError(translateRoomError(t, message));
     });
   };
 
@@ -97,7 +98,7 @@ export function RoomLobbyPage() {
       navigate(started ? `/jeu/${gameId}/salon/${code}/partie` : `/jeu/${gameId}/salon/${code}`);
     });
     socket.once(ServerEvents.RoomError, ({ message }) => {
-      setError(message);
+      setError(translateRoomError(t, message));
     });
   };
 

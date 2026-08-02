@@ -110,6 +110,31 @@
       "description": "Vulnérabilité et intimité de couple."
     }
   },
+  "roomErrors": {
+    "room-not-found": "Salle introuvable.",
+    "room-game-mismatch": "Ce salon ne correspond pas à ce jeu.",
+    "room-full": "Ce salon est complet (2 joueurs maximum).",
+    "not-in-room": "Vous n’êtes pas dans une salle.",
+    "not-room-member": "Vous n’êtes pas membre de la salle.",
+    "no-dilemma-in-progress": "Aucun dilemme en cours.",
+    "not-enough-players": "Il faut au moins 2 joueurs pour jouer.",
+    "not-your-turn-to-submit": "Ce n’est pas à vous de soumettre pour cette manche.",
+    "round-already-in-progress": "Une manche est déjà en cours. Attendez le vote avant de soumettre à nouveau.",
+    "invalid-statements": "Il faut exactement 3 affirmations et indiquer laquelle est le mensonge.",
+    "no-two-truths-round": "Aucun jeu 2 Vérités 1 Mensonge en cours.",
+    "not-your-turn-to-vote": "Ce n’est pas à vous de voter pour cette manche.",
+    "no-category-selected": "Sélectionnez au moins une catégorie.",
+    "no-truth-or-dare-round": "Aucune manche Action ou Vérité en cours.",
+    "not-active-player": "Vous n’êtes pas le joueur actif de cette manche.",
+    "no-answer-expected": "Aucune réponse écrite attendue pour une action.",
+    "cannot-validate-own-round": "Vous ne pouvez pas valider votre propre manche.",
+    "not-the-leader": "Vous n’êtes pas le meneur de cette manche.",
+    "not-the-guesser": "Vous n’êtes pas le devineur de cette manche.",
+    "word-not-set": "Le mot n’est pas encore défini.",
+    "hint-required": "Un indice est requis pour aider le devineur.",
+    "cannot-start-game": "Impossible de démarrer la partie pour ce salon.",
+    "categories-not-validated": "Les deux joueurs doivent valider les catégories avant de démarrer la partie."
+  },
   "roomLobbyPage": {
     "notFoundMessage": "Retournez à l’accueil et choisissez un jeu pour commencer.",
     "errorPseudoRequired": "Veuillez saisir un pseudo.",

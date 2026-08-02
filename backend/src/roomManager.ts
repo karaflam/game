@@ -122,12 +122,12 @@ export class RoomManager {
 
   joinRoom(roomId: string, socketId: string, name: string, gameId: string, token: string) {
     if (!this.rooms.has(roomId)) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const room = this.rooms.get(roomId)!;
     if (room.gameId !== gameId) {
-      throw new Error('Ce salon ne correspond pas à ce jeu.');
+      throw new Error('room-game-mismatch');
     }
 
     if (room.players.some(player => player.id === socketId)) {
@@ -154,7 +154,7 @@ export class RoomManager {
     // room already has 2 players — checked before touching anything else so a rejected join never
     // has the side effect of evicting this socket from whatever room it was previously in.
     if (!previousEntry && room.players.length >= MAX_PLAYERS_PER_ROOM) {
-      throw new Error('Ce salon est complet (2 joueurs maximum).');
+      throw new Error('room-full');
     }
 
     // A socket can only ever be "in" one room at a time — joining a different room always
@@ -325,12 +325,12 @@ export class RoomManager {
   setGameData(socketId: string, key: string, data: any) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     room.gameData[key] = data;
@@ -372,16 +372,16 @@ export class RoomManager {
   setOddOrEvenChoice(socketId: string, value: number, prediction: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     if (!room.players.some(player => player.id === socketId)) {
-      throw new Error('Vous n’êtes pas membre de la salle.');
+      throw new Error('not-room-member');
     }
 
     room.choices.set(socketId, JSON.stringify({ value, prediction }));
@@ -462,16 +462,16 @@ export class RoomManager {
   setRpsChoice(socketId: string, choice: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     if (!room.players.some(player => player.id === socketId)) {
-      throw new Error('Vous n’êtes pas membre de la salle.');
+      throw new Error('not-room-member');
     }
 
     room.choices.set(socketId, choice);
@@ -530,12 +530,12 @@ export class RoomManager {
   resetScores(socketId: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     for (const player of room.players) {
@@ -549,12 +549,12 @@ export class RoomManager {
   startWouldYouRatherRound(socketId: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const index = this.pickIndexExcluding(wouldYouRatherPrompts.length, room.usedWouldYouRather);
@@ -572,20 +572,20 @@ export class RoomManager {
   setWouldYouRatherChoice(socketId: string, selected: 'left' | 'right') {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     if (!room.players.some(player => player.id === socketId)) {
-      throw new Error('Vous n’êtes pas membre de la salle.');
+      throw new Error('not-room-member');
     }
 
     if (!room.gameData.wouldYouRather) {
-      throw new Error('Aucun dilemme en cours.');
+      throw new Error('no-dilemma-in-progress');
     }
 
     room.choices.set(socketId, selected);
@@ -632,16 +632,16 @@ export class RoomManager {
   beginTwoTruthsOneLieMatch(socketId: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     if (room.players.length < 2) {
-      throw new Error('Il faut au moins 2 joueurs pour jouer.');
+      throw new Error('not-enough-players');
     }
 
     const [first, second] = room.players;
@@ -683,25 +683,25 @@ export class RoomManager {
   submitTwoTruthsOneLie(socketId: string, statements: string[], lieIndex: number) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const roles = room.gameData.twoTruthsOneLieRoles as TwoTruthsOneLieRoles | undefined;
     if (roles && roles.submitterId !== socketId) {
-      throw new Error('Ce n’est pas à vous de soumettre pour cette manche.');
+      throw new Error('not-your-turn-to-submit');
     }
 
     if (room.gameData.twoTruthsOneLie) {
-      throw new Error('Une manche est déjà en cours. Attendez le vote avant de soumettre à nouveau.');
+      throw new Error('round-already-in-progress');
     }
 
     if (!Array.isArray(statements) || statements.length !== 3 || !Number.isInteger(lieIndex) || lieIndex < 0 || lieIndex > 2) {
-      throw new Error('Il faut exactement 3 affirmations et indiquer laquelle est le mensonge.');
+      throw new Error('invalid-statements');
     }
 
     const state: TwoTruthsOneLieState = { statements, lieIndex, submitter: socketId };
@@ -713,22 +713,22 @@ export class RoomManager {
   voteTwoTruthsOneLie(socketId: string, voteIndex: number) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const state = room.gameData.twoTruthsOneLie as TwoTruthsOneLieState | undefined;
     if (!state) {
-      throw new Error('Aucun jeu 2 Vérités 1 Mensonge en cours.');
+      throw new Error('no-two-truths-round');
     }
 
     const roles = room.gameData.twoTruthsOneLieRoles as TwoTruthsOneLieRoles | undefined;
     if (roles && roles.voterId !== socketId) {
-      throw new Error('Ce n’est pas à vous de voter pour cette manche.');
+      throw new Error('not-your-turn-to-vote');
     }
 
     delete room.gameData.twoTruthsOneLie;
@@ -792,22 +792,22 @@ export class RoomManager {
   setTruthOrDareCategories(socketId: string, categories: string[]) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     if (!room.players.some(player => player.id === socketId)) {
-      throw new Error('Vous n’êtes pas membre de la salle.');
+      throw new Error('not-room-member');
     }
 
     const knownIds = new Set(TRUTH_OR_DARE_CATEGORIES.map(category => category.id));
     const sanitized = Array.from(new Set(categories.filter((id): id is TruthOrDareCategoryId => knownIds.has(id as TruthOrDareCategoryId))));
     if (sanitized.length === 0) {
-      throw new Error('Sélectionnez au moins une catégorie.');
+      throw new Error('no-category-selected');
     }
 
     room.truthOrDareCategories = sanitized;
@@ -822,16 +822,16 @@ export class RoomManager {
   validateTruthOrDareCategories(socketId: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     if (!room.players.some(player => player.id === socketId)) {
-      throw new Error('Vous n’êtes pas membre de la salle.');
+      throw new Error('not-room-member');
     }
 
     room.truthOrDareValidatedBy.add(socketId);
@@ -842,16 +842,16 @@ export class RoomManager {
   startTruthOrDare(socketId: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     if (room.players.length < 2) {
-      throw new Error('Il faut au moins 2 joueurs pour jouer.');
+      throw new Error('not-enough-players');
     }
 
     const activeCategories = new Set(room.truthOrDareCategories);
@@ -883,21 +883,21 @@ export class RoomManager {
   chooseTruthOrDareType(socketId: string, type: 'action' | 'truth') {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const state = room.gameData.truthOrDare as TruthOrDareState | undefined;
     if (!state) {
-      throw new Error('Aucune manche Action ou Vérité en cours.');
+      throw new Error('no-truth-or-dare-round');
     }
 
     if (state.activePlayerId !== socketId) {
-      throw new Error('Vous n’êtes pas le joueur actif de cette manche.');
+      throw new Error('not-active-player');
     }
 
     state.type = type;
@@ -910,25 +910,25 @@ export class RoomManager {
   submitTruthOrDareAnswer(socketId: string, answer: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const state = room.gameData.truthOrDare as TruthOrDareState | undefined;
     if (!state) {
-      throw new Error('Aucune manche Action ou Vérité en cours.');
+      throw new Error('no-truth-or-dare-round');
     }
 
     if (state.activePlayerId !== socketId) {
-      throw new Error('Vous n’êtes pas le joueur actif de cette manche.');
+      throw new Error('not-active-player');
     }
 
     if (state.type !== 'truth') {
-      throw new Error('Aucune réponse écrite attendue pour une action.');
+      throw new Error('no-answer-expected');
     }
 
     state.answer = answer;
@@ -938,25 +938,25 @@ export class RoomManager {
   validateTruthOrDare(socketId: string, approved: boolean) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const state = room.gameData.truthOrDare as TruthOrDareState | undefined;
     if (!state) {
-      throw new Error('Aucune manche Action ou Vérité en cours.');
+      throw new Error('no-truth-or-dare-round');
     }
 
     if (!room.players.some(player => player.id === socketId)) {
-      throw new Error('Vous n’êtes pas membre de la salle.');
+      throw new Error('not-room-member');
     }
 
     if (state.activePlayerId === socketId) {
-      throw new Error('Vous ne pouvez pas valider votre propre manche.');
+      throw new Error('cannot-validate-own-round');
     }
 
     delete room.gameData.truthOrDare;
@@ -981,16 +981,16 @@ export class RoomManager {
   beginTwentyQuestionsMatch(socketId: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     if (room.players.length < 2) {
-      throw new Error('Il faut au moins 2 joueurs pour jouer.');
+      throw new Error('not-enough-players');
     }
 
     const [setter, guesser] = room.players;
@@ -1017,21 +1017,21 @@ export class RoomManager {
   setTwentyQuestionsWord(socketId: string, word: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const state = room.gameData.twentyQuestions as TwentyQuestionsState | undefined;
     if (!state) {
-      throw new Error('Aucune manche 20 Questions en cours.');
+      throw new Error('no-twenty-questions-round');
     }
 
     if (state.setterId !== socketId) {
-      throw new Error('Vous n’êtes pas le meneur de cette manche.');
+      throw new Error('not-the-leader');
     }
 
     state.word = word.trim().toLowerCase();
@@ -1041,25 +1041,25 @@ export class RoomManager {
   submitTwentyQuestionsGuess(socketId: string, guess: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const state = room.gameData.twentyQuestions as TwentyQuestionsState | undefined;
     if (!state) {
-      throw new Error('Aucune manche 20 Questions en cours.');
+      throw new Error('no-twenty-questions-round');
     }
 
     if (state.guesserId !== socketId) {
-      throw new Error('Vous n’êtes pas le devineur de cette manche.');
+      throw new Error('not-the-guesser');
     }
 
     if (!state.word) {
-      throw new Error('Le mot n’est pas encore défini.');
+      throw new Error('word-not-set');
     }
 
     state.pendingGuess = guess.trim();
@@ -1069,25 +1069,25 @@ export class RoomManager {
   judgeTwentyQuestionsGuess(socketId: string, correct: boolean, hint?: string) {
     const roomId = this.socketRoom.get(socketId);
     if (!roomId) {
-      throw new Error('Vous n’êtes pas dans une salle.');
+      throw new Error('not-in-room');
     }
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      throw new Error('Salle introuvable.');
+      throw new Error('room-not-found');
     }
 
     const state = room.gameData.twentyQuestions as TwentyQuestionsState | undefined;
     if (!state) {
-      throw new Error('Aucune manche 20 Questions en cours.');
+      throw new Error('no-twenty-questions-round');
     }
 
     if (state.setterId !== socketId) {
-      throw new Error('Vous n’êtes pas le meneur de cette manche.');
+      throw new Error('not-the-leader');
     }
 
     if (!correct && (!hint || !hint.trim())) {
-      throw new Error('Un indice est requis pour aider le devineur.');
+      throw new Error('hint-required');
     }
 
     if (!correct) {

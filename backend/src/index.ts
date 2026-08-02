@@ -375,18 +375,18 @@ io.on(ClientEvents.Connect, socket => {
     try {
       const ownerRoomId = roomManager.getRoomId(socket.id);
       if (!ownerRoomId || ownerRoomId !== roomId) {
-        throw new Error('Impossible de démarrer la partie pour ce salon.');
+        throw new Error('cannot-start-game');
       }
 
       const roomPlayers = roomManager.getPlayers(roomId);
       if (roomPlayers.length < 2) {
-        throw new Error('Il faut au moins 2 joueurs pour démarrer la partie.');
+        throw new Error('not-enough-players');
       }
 
       if (roomManager.getGameId(roomId) === 'truth-or-dare') {
         const categoryState = roomManager.getTruthOrDareCategoryState(socket.id);
         if (!categoryState?.allValidated) {
-          throw new Error('Les deux joueurs doivent valider les catégories avant de démarrer la partie.');
+          throw new Error('categories-not-validated');
         }
       }
 

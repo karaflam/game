@@ -103,8 +103,10 @@ TwentyQuestionsRoundResult({
 
 `TruthOrDareSolo`, `WouldYouRatherSolo`, `TwentyQuestionsSolo`, `TwoTruthsOneLieSolo` gagnent chacun un state `usedIndices: Set<number>` et utilisent `pickRandomIndexExcluding` au lieu de `pickRandomItem` pour sélectionner leur prochain contenu, avec recyclage automatique une fois la liste épuisée.
 
+## `ResultsPage` est actuellement statique mais doit afficher le score de la partie qui se joue dans le salon avec les vraies pseudo.
+
 ## Hors scope
 
-- `ResultsPage` reste statique.
+
 - Pas de limite stricte à 2 joueurs par salon (déjà noté comme dette dans les sessions précédentes).
 - 20 Questions : pas de manche supplémentaire en cas d'égalité de mots pendant un tour (l'égalité ne se gère qu'au niveau du score final de la partie).

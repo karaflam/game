@@ -110,6 +110,31 @@
       "description": "Vulnerability and closeness as a couple."
     }
   },
+  "roomErrors": {
+    "room-not-found": "Room not found.",
+    "room-game-mismatch": "This room doesn't match this game.",
+    "room-full": "This room is full (2 players max).",
+    "not-in-room": "You're not in a room.",
+    "not-room-member": "You're not a member of this room.",
+    "no-dilemma-in-progress": "No dilemma in progress.",
+    "not-enough-players": "You need at least 2 players to play.",
+    "not-your-turn-to-submit": "It's not your turn to submit for this round.",
+    "round-already-in-progress": "A round is already in progress. Wait for the vote before submitting again.",
+    "invalid-statements": "You need exactly 3 statements, with one marked as the lie.",
+    "no-two-truths-round": "No 2 Truths 1 Lie round in progress.",
+    "not-your-turn-to-vote": "It's not your turn to vote for this round.",
+    "no-category-selected": "Select at least one category.",
+    "no-truth-or-dare-round": "No Truth or Dare round in progress.",
+    "not-active-player": "You're not the active player for this round.",
+    "no-answer-expected": "No written answer is expected for a dare.",
+    "cannot-validate-own-round": "You can't approve your own round.",
+    "not-the-leader": "You're not the leader for this round.",
+    "not-the-guesser": "You're not the guesser for this round.",
+    "word-not-set": "The word hasn't been set yet.",
+    "hint-required": "A hint is required to help the guesser.",
+    "cannot-start-game": "Can't start the match for this room.",
+    "categories-not-validated": "Both players need to approve the categories before starting the match."
+  },
   "roomLobbyPage": {
     "notFoundMessage": "Head back home and pick a game to get started.",
     "errorPseudoRequired": "Please enter a nickname.",
