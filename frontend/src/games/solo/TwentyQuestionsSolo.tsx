@@ -15,10 +15,11 @@ const MAX_ATTEMPTS = 20;
 type RoundResult = { outcome: 'player' | 'machine'; answer: string; triesUsed: number };
 
 export function TwentyQuestionsSolo() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const words = soloTwentyQuestionsWords[i18n.language === 'en' ? 'en' : 'fr'];
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(TWENTY_QUESTIONS_TARGET_SCORE);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
-  const [wordIndex, setWordIndex] = useState<number>(() => Math.floor(Math.random() * soloTwentyQuestionsWords.length));
+  const [wordIndex, setWordIndex] = useState<number>(() => Math.floor(Math.random() * words.length));
   const [attempts, setAttempts] = useState(0);
   const [guess, setGuess] = useState('');
   const [message, setMessage] = useState(t('solo.twentyQuestions.instructions'));
@@ -32,7 +33,7 @@ export function TwentyQuestionsSolo() {
     }
   }, [t, hasPlayed]);
 
-  const word = soloTwentyQuestionsWords[wordIndex];
+  const word = words[wordIndex];
   const hint = getHintForAttempt(word.hints, attempts);
 
   const startNewRound = () => {
@@ -40,10 +41,10 @@ export function TwentyQuestionsSolo() {
     currentUsed.add(wordIndex);
 
     let activeUsed = currentUsed;
-    if (activeUsed.size >= soloTwentyQuestionsWords.length) {
+    if (activeUsed.size >= words.length) {
       activeUsed = new Set();
     }
-    const nextIdx = pickRandomIndexExcluding(soloTwentyQuestionsWords.length, activeUsed);
+    const nextIdx = pickRandomIndexExcluding(words.length, activeUsed);
     const newUsed = new Set(activeUsed).add(nextIdx);
 
     setUsedIndices(newUsed);

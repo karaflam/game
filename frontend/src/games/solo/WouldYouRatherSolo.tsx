@@ -11,23 +11,24 @@ type Side = (typeof SIDES)[number];
 type RoundResult = { playerChoice: Side; machineChoice: Side };
 
 export function WouldYouRatherSolo() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const prompts = soloWouldYouRatherPrompts[i18n.language === 'en' ? 'en' : 'fr'];
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
-  const [dilemmaIndex, setDilemmaIndex] = useState<number>(() => Math.floor(Math.random() * soloWouldYouRatherPrompts.length));
+  const [dilemmaIndex, setDilemmaIndex] = useState<number>(() => Math.floor(Math.random() * prompts.length));
   const [revealing, setRevealing] = useState(false);
   const [result, setResult] = useState<RoundResult | null>(null);
 
-  const dilemma = soloWouldYouRatherPrompts[dilemmaIndex];
+  const dilemma = prompts[dilemmaIndex];
 
   const nextDilemma = () => {
     const currentUsed = new Set(usedIndices);
     currentUsed.add(dilemmaIndex);
 
     let activeUsed = currentUsed;
-    if (activeUsed.size >= soloWouldYouRatherPrompts.length) {
+    if (activeUsed.size >= prompts.length) {
       activeUsed = new Set();
     }
-    const nextIdx = pickRandomIndexExcluding(soloWouldYouRatherPrompts.length, activeUsed);
+    const nextIdx = pickRandomIndexExcluding(prompts.length, activeUsed);
     const newUsed = new Set(activeUsed).add(nextIdx);
 
     setUsedIndices(newUsed);

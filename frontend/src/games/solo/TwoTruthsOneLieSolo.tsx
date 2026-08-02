@@ -14,11 +14,12 @@ const TWO_TRUTHS_TARGET_SCORE = 5;
 type RoundResult = { outcome: 'player' | 'machine'; lieText: string };
 
 export function TwoTruthsOneLieSolo() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const triplets = soloTwoTruthsOneLieTriplets[i18n.language === 'en' ? 'en' : 'fr'];
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(TWO_TRUTHS_TARGET_SCORE);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
-  const [tripletIndex, setTripletIndex] = useState<number>(() => Math.floor(Math.random() * soloTwoTruthsOneLieTriplets.length));
-  const [triplet, setTriplet] = useState(() => shuffleTriplet(soloTwoTruthsOneLieTriplets[tripletIndex]));
+  const [tripletIndex, setTripletIndex] = useState<number>(() => Math.floor(Math.random() * triplets.length));
+  const [triplet, setTriplet] = useState(() => shuffleTriplet(triplets[tripletIndex]));
   const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
   const [roundOver, setRoundOver] = useState(false);
 
@@ -27,15 +28,15 @@ export function TwoTruthsOneLieSolo() {
     currentUsed.add(tripletIndex);
 
     let activeUsed = currentUsed;
-    if (activeUsed.size >= soloTwoTruthsOneLieTriplets.length) {
+    if (activeUsed.size >= triplets.length) {
       activeUsed = new Set();
     }
-    const nextIdx = pickRandomIndexExcluding(soloTwoTruthsOneLieTriplets.length, activeUsed);
+    const nextIdx = pickRandomIndexExcluding(triplets.length, activeUsed);
     const newUsed = new Set(activeUsed).add(nextIdx);
 
     setUsedIndices(newUsed);
     setTripletIndex(nextIdx);
-    setTriplet(shuffleTriplet(soloTwoTruthsOneLieTriplets[nextIdx]));
+    setTriplet(shuffleTriplet(triplets[nextIdx]));
     setRoundOver(false);
   };
 

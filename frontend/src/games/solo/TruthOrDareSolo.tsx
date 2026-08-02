@@ -3,35 +3,36 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { PlayerWheel } from '@/components/solo/PlayerWheel';
 import { FlipReveal } from '@/components/solo/reveals/FlipReveal';
-import { soloTruthOrDarePrompts, TRUTH_OR_DARE_CATEGORIES, DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS, type TruthOrDareCategoryId } from '@/data/soloPrompts';
+import { soloTruthOrDarePrompts, TRUTH_OR_DARE_CATEGORIES, DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS, type TruthOrDareCategoryId, type TruthOrDarePrompt } from '@/data/soloPrompts';
 import { pickRandomIndexFromCandidates } from '@/lib/randomPick';
 
 type Phase = 'idle' | 'spinning' | 'landed' | 'revealing';
 
-function eligibleIndices(categories: TruthOrDareCategoryId[]) {
+function eligibleIndices(prompts: TruthOrDarePrompt[], categories: TruthOrDareCategoryId[]) {
   const active = new Set(categories);
-  const indices = soloTruthOrDarePrompts.reduce<number[]>((acc, prompt, index) => {
+  const indices = prompts.reduce<number[]>((acc, prompt, index) => {
     if (active.has(prompt.category)) {
       acc.push(index);
     }
     return acc;
   }, []);
-  return indices.length > 0 ? indices : soloTruthOrDarePrompts.map((_, index) => index);
+  return indices.length > 0 ? indices : prompts.map((_, index) => index);
 }
 
 export function TruthOrDareSolo() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const prompts = soloTruthOrDarePrompts[i18n.language === 'en' ? 'en' : 'fr'];
   const PLAYER_NAME = t('solo.truthOrDare.playerName');
   const [phase, setPhase] = useState<Phase>('idle');
   const [categories, setCategories] = useState<TruthOrDareCategoryId[]>(DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
   const [promptIndex, setPromptIndex] = useState<number>(() => {
-    const candidates = eligibleIndices(DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS);
+    const candidates = eligibleIndices(prompts, DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS);
     return candidates[Math.floor(Math.random() * candidates.length)];
   });
   const [reveal, setReveal] = useState<'truth' | 'dare' | null>(null);
 
-  const prompt = soloTruthOrDarePrompts[promptIndex];
+  const prompt = prompts[promptIndex];
 
   const toggleCategory = (id: TruthOrDareCategoryId) => {
     setCategories(prev => {
@@ -41,7 +42,7 @@ export function TruthOrDareSolo() {
   };
 
   const spin = () => {
-    const candidates = eligibleIndices(categories);
+    const candidates = eligibleIndices(prompts, categories);
     const currentUsed = new Set(usedIndices);
     currentUsed.add(promptIndex);
 
