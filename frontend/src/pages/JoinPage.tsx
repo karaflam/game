@@ -18,6 +18,7 @@ export function JoinPage() {
   const [pseudo, setPseudo] = useState(() => getStoredPseudo());
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const setGameId = useGameStore(state => state.setGameId);
   const setRoomCode = useGameStore(state => state.setRoomCode);
   const setPlayers = useGameStore(state => state.setPlayers);
@@ -32,6 +33,10 @@ export function JoinPage() {
   const trimmedPseudo = pseudo.trim();
 
   const handleJoinRoom = () => {
+    if (submitting) {
+      return;
+    }
+
     if (!trimmedPseudo) {
       setError(t('roomLobbyPage.errorPseudoRequired'));
       return;
@@ -49,8 +54,10 @@ export function JoinPage() {
     }
 
     setError(null);
+    setSubmitting(true);
     socket.emit(ClientEvents.JoinRoom, { roomId: code, name: trimmedPseudo, token: getPlayerToken() });
     socket.once(ServerEvents.RoomUpdate, ({ gameId, players, started, scores }) => {
+      setSubmitting(false);
       setGameId(gameId);
       setRoomCode(code);
       setPlayers(players);
@@ -62,6 +69,7 @@ export function JoinPage() {
       navigate(started ? `/jeu/${gameId}/salon/${code}/partie` : `/jeu/${gameId}/salon/${code}`);
     });
     socket.once(ServerEvents.RoomError, ({ message }) => {
+      setSubmitting(false);
       setError(translateRoomError(t, message));
     });
   };
@@ -118,7 +126,7 @@ export function JoinPage() {
             </div>
           ) : null}
 
-          <Button className="w-full" onClick={handleJoinRoom} disabled={!trimmedPseudo}>
+          <Button className="w-full" onClick={handleJoinRoom} disabled={!trimmedPseudo || submitting}>
             {t('joinPage.joinButton')}
           </Button>
         </div>

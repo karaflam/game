@@ -21,6 +21,7 @@ export function RoomLobbyPage() {
   const [pseudo, setPseudo] = useState(() => getStoredPseudo());
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const setGameId = useGameStore(state => state.setGameId);
   const setRoomCode = useGameStore(state => state.setRoomCode);
   const setPlayers = useGameStore(state => state.setPlayers);
@@ -44,6 +45,10 @@ export function RoomLobbyPage() {
   const trimmedPseudo = pseudo.trim();
 
   const handleCreateRoom = () => {
+    if (submitting) {
+      return;
+    }
+
     if (!trimmedPseudo) {
       setError(t('roomLobbyPage.errorPseudoRequired'));
       return;
@@ -54,8 +59,11 @@ export function RoomLobbyPage() {
       return;
     }
 
+    setError(null);
+    setSubmitting(true);
     socket.emit(ClientEvents.CreateRoom, { name: trimmedPseudo, gameId, token: getPlayerToken() });
     socket.once(ServerEvents.RoomCreated, ({ roomId, players }) => {
+      setSubmitting(false);
       setGameId(gameId);
       setRoomCode(roomId);
       setPlayers(players);
@@ -64,11 +72,16 @@ export function RoomLobbyPage() {
       navigate(`/jeu/${gameId}/salon/${roomId}`);
     });
     socket.once(ServerEvents.RoomError, ({ message }) => {
+      setSubmitting(false);
       setError(translateRoomError(t, message));
     });
   };
 
   const handleJoinRoom = () => {
+    if (submitting) {
+      return;
+    }
+
     if (!trimmedPseudo) {
       setError(t('roomLobbyPage.errorPseudoRequired'));
       return;
@@ -85,8 +98,11 @@ export function RoomLobbyPage() {
       return;
     }
 
+    setError(null);
+    setSubmitting(true);
     socket.emit(ClientEvents.JoinRoom, { roomId: code, name: trimmedPseudo, gameId, token: getPlayerToken() });
     socket.once(ServerEvents.RoomUpdate, ({ players, started, scores }) => {
+      setSubmitting(false);
       setGameId(gameId);
       setRoomCode(code);
       setPlayers(players);
@@ -98,6 +114,7 @@ export function RoomLobbyPage() {
       navigate(started ? `/jeu/${gameId}/salon/${code}/partie` : `/jeu/${gameId}/salon/${code}`);
     });
     socket.once(ServerEvents.RoomError, ({ message }) => {
+      setSubmitting(false);
       setError(translateRoomError(t, message));
     });
   };
@@ -142,14 +159,14 @@ export function RoomLobbyPage() {
           <div className="rounded-3xl border border-border bg-background p-6">
             <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">{t('roomLobbyPage.createRoomTitle')}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('roomLobbyPage.createRoomDescription')}</p>
-            <Button className="mt-4" onClick={handleCreateRoom} disabled={!trimmedPseudo}>
+            <Button className="mt-4" onClick={handleCreateRoom} disabled={!trimmedPseudo || submitting}>
               {t('roomLobbyPage.createRoomButton')}
             </Button>
           </div>
           <div className="rounded-3xl border border-border bg-background p-6">
             <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">{t('roomLobbyPage.joinRoomTitle')}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('roomLobbyPage.joinRoomDescription')}</p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-4 flex flex-col flex-wrap gap-3 sm:flex-row">
               <input
                 value={joinCode}
                 onChange={event => setJoinCode(event.target.value)}
@@ -161,7 +178,7 @@ export function RoomLobbyPage() {
                 placeholder={t('roomLobbyPage.roomCodePlaceholder')}
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
-              <Button variant="secondary" onClick={handleJoinRoom} disabled={!trimmedPseudo}>
+              <Button variant="secondary" onClick={handleJoinRoom} disabled={!trimmedPseudo || submitting}>
                 {t('roomLobbyPage.joinRoomButton')}
               </Button>
             </div>

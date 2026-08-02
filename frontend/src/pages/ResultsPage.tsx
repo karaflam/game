@@ -58,7 +58,7 @@ export function ResultsPage() {
           )}
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col flex-wrap gap-3 sm:flex-row">
           <Button onClick={() => navigate('/')}>{t('resultsPage.backHomeButton')}</Button>
           <Button variant="secondary" onClick={() => navigate(`/jeu/${gameId}/mode`)}>
             {t('resultsPage.playAgainButton')}

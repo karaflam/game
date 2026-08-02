@@ -120,6 +120,17 @@ export class RoomManager {
     return this.rooms.get(roomId)?.players ?? [];
   }
 
+  // Full room membership/score snapshot — used to resync a client whose local player list has
+  // gone stale (e.g. it missed a room:update after a reconnect blip) without waiting for the
+  // next natural room event.
+  getRoomSnapshot(roomId: string) {
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return null;
+    }
+    return { players: room.players, started: room.started, scores: { ...room.scores } };
+  }
+
   // gameId is optional: pass it when the caller already knows/expects a specific game (validated
   // against the room, so a stale/wrong URL can't silently join the wrong game's room), or omit it
   // for a game-agnostic join by code alone — the room's actual gameId is returned either way.

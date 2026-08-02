@@ -427,6 +427,14 @@ io.on(ClientEvents.Connect, socket => {
       return;
     }
 
+    // Also resend the room's membership/score snapshot alongside the per-game state — a client
+    // that suspects it missed a room:update (e.g. after a reconnect blip) gets its player list
+    // repaired by the same resync handshake instead of needing a bespoke event for it.
+    const snapshot = roomManager.getRoomSnapshot(roomId);
+    if (snapshot) {
+      socket.emit(ServerEvents.RoomUpdate, { roomId, ...snapshot });
+    }
+
     const gameId = roomManager.getGameId(roomId);
     const state =
       gameId === 'rps'

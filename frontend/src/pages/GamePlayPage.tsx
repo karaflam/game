@@ -33,6 +33,23 @@ export function GamePlayPage() {
     }
   }, [opponent]);
 
+  // A match can only reach this page with 2 players already in the room — seeing fewer here
+  // means the local player list went stale (e.g. a reconnect's room:update never carried the
+  // full roster). Ask the server for a resync instead of leaving the UI stuck showing a broken
+  // "0 player(s)" match; keep retrying at a low frequency until the roster is complete.
+  useEffect(() => {
+    if (!socket || players.length >= 2) {
+      return;
+    }
+
+    socket.emit(ClientEvents.RequestGameState);
+    const interval = setInterval(() => {
+      socket.emit(ClientEvents.RequestGameState);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [socket, players.length]);
+
   // The match can only ever end while this page is mounted because someone explicitly left
   // (a raw disconnect never touches room.players/started) — the server immediately un-starts
   // the room when that happens, so bounce back to the waiting room instead of leaving this
@@ -69,7 +86,7 @@ export function GamePlayPage() {
             <h1 className="mt-3 break-words text-3xl font-bold text-foreground sm:text-4xl">{t('gamePlayPage.title', { gameTitle: t(`games.${game.id}.title`), roomCode })}</h1>
             <p className="mt-3 text-base leading-7 text-muted-foreground">{t('gamePlayPage.playerCount', { count: players.length })}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" onClick={() => navigate(`/jeu/${gameId}/salon/${roomCode}/resultats`)}>
               {t('gamePlayPage.viewResultsButton')}
             </Button>
