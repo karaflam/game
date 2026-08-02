@@ -25,7 +25,7 @@ function App() {
     <div className="app-shell min-h-screen bg-background text-foreground">
       <ReconnectingOverlay />
       <Header />
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}

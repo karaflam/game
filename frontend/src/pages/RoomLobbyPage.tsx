@@ -103,8 +103,8 @@ export function RoomLobbyPage() {
   };
 
   return (
-    <motion.main initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-      <section className="mb-10 rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
+    <motion.main initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <section className="mb-10 rounded-2xl bg-card p-10 shadow-lg shadow-slate-900/5">
         <div className="space-y-6">
           <div>
             <h1 className="font-display text-4xl font-bold tracking-tight text-foreground">{t(`games.${game.id}.title`)}</h1>

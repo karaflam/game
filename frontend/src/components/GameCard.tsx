@@ -25,12 +25,12 @@ export function GameCard({ game, selected, onSelect }: GameCardProps) {
     <button
       type="button"
       onClick={() => onSelect(game)}
-      className={`group w-full rounded-xl border border-border bg-card p-6 shadow-sm transition-shadow duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+      className={`group w-full rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/40 ${
         selected ? 'ring-2 ring-offset-2 ring-primary' : ''
       }`}
     >
       <div className="flex items-start justify-between gap-4">
-        <span className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Icon className="h-6 w-6" />
         </span>
         <span className="font-mono-label rounded-full bg-secondary px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-secondary-foreground">

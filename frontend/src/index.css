@@ -1,25 +1,27 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/geist";
-@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/inter";
+@import "@fontsource/rajdhani/500.css";
+@import "@fontsource/rajdhani/600.css";
+@import "@fontsource/rajdhani/700.css";
 @import "@fontsource/jetbrains-mono/600.css";
 @import "@fontsource/jetbrains-mono/700.css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Core color tokens (used by Tailwind via --color-*) */
-  --color-background: #F8F9FB;
-  --color-foreground: #1E2430;
+  /* Core color tokens (used by Tailwind via --color-*) — "clair" palette by default */
+  --color-background: #F0F2F7;
+  --color-foreground: #0D0F1A;
   --color-card: #FFFFFF;
-  --color-primary: #4F6BFF;
+  --color-primary: #2563EB;
   --color-primary-foreground: #FFFFFF;
-  --color-secondary: #EEF1F6;
-  --color-accent: #6C63FF;
-  --color-muted: #E4E7EC;
-  --color-muted-foreground: #6B7280;
-  --color-border: #DDE1E8;
-  --color-ring: rgba(79,107,255,0.28);
+  --color-secondary: #E2E8F0;
+  --color-accent: #7C3AED;
+  --color-muted: #E2E8F0;
+  --color-muted-foreground: #64748B;
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-ring: rgba(37, 99, 235, 0.28);
 
   /* Legacy aliases kept for existing CSS in the project */
   --accent: var(--color-accent);
@@ -64,7 +66,8 @@
 body {
   background-color: #f8fafc;
   color: var(--text);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
+  transition: background-color 500ms ease, color 500ms ease;
 }
 
 * {
@@ -86,7 +89,7 @@ input {
   display: grid;
   gap: 24px;
   padding: 32px;
-  border-radius: 24px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(226, 232, 240, 0.7);
   backdrop-filter: blur(12px);
@@ -129,7 +132,7 @@ input {
 .status-card {
   align-self: center;
   padding: 20px;
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
@@ -145,85 +148,92 @@ input {
 .panel-card {
   margin-top: 28px;
   padding: 26px;
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
 
 html[data-theme="clair"] {
-  --color-background: #F8F9FB;
-  --color-foreground: #1E2430;
+  --color-background: #F0F2F7;
+  --color-foreground: #0D0F1A;
   --color-card: #FFFFFF;
-  --color-primary: #4F6BFF;
-  --color-secondary: #EEF1F6;
-  --color-accent: #6C63FF;
-  --color-muted: #E4E7EC;
-  --color-muted-foreground: #6B7280;
-  --color-muted-foreground: #6B7280;
-  --color-border: #DDE1E8;
+  --color-primary: #2563EB;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #E2E8F0;
+  --color-accent: #7C3AED;
+  --color-muted: #E2E8F0;
+  --color-muted-foreground: #64748B;
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-ring: rgba(37, 99, 235, 0.28);
 
   /* legacy aliases */
   --accent: var(--color-accent);
   --surface: var(--color-card);
-  --surface-soft: #f1f5f9;
+  --surface-soft: var(--color-secondary);
   --border: var(--color-border);
   --text: var(--color-foreground);
 }
 
 html[data-theme="sombre"] {
-  --color-background: #12141C;
-  --color-foreground: #E8EAF0;
-  --color-card: #181B26;
-  --color-primary: #7C8CFF;
-  --color-secondary: #1C1F2B;
-  --color-accent: #5EEAD4;
-  --color-muted: #2A2E3D;
-  --color-muted-foreground: #9CA3AF;
-  --color-border: #2E3242;
+  --color-background: #030712;
+  --color-foreground: #E2E8F0;
+  --color-card: #0F1629;
+  --color-primary: #22D3EE;
+  --color-primary-foreground: #04222A;
+  --color-secondary: #1E2A45;
+  --color-accent: #A855F7;
+  --color-muted: #1E2A45;
+  --color-muted-foreground: #94A3B8;
+  --color-border: rgba(34, 211, 238, 0.15);
+  --color-ring: rgba(34, 211, 238, 0.32);
 
   /* legacy aliases */
   --accent: var(--color-accent);
   --surface: var(--color-card);
-  --surface-soft: #1f2937;
+  --surface-soft: var(--color-secondary);
   --border: var(--color-border);
   --text: var(--color-foreground);
 }
 
 html[data-theme="luxueux"] {
-  --color-background: #0F0D0A;
-  --color-foreground: #F5EFE0;
-  --color-card: #171310;
-  --color-primary: #D4AF37;
-  --color-secondary: #1A1611;
-  --color-accent: #8B6F2E;
-  --color-muted: #2A241C;
-  --color-muted-foreground: #B6A67E;
-  --color-border: #3A3226;
+  --color-background: #0A0800;
+  --color-foreground: #FFFBEB;
+  --color-card: #1A1200;
+  --color-primary: #FBBF24;
+  --color-primary-foreground: #1A1200;
+  --color-secondary: #261A00;
+  --color-accent: #FDE047;
+  --color-muted: #261A00;
+  --color-muted-foreground: rgba(253, 230, 138, 0.6);
+  --color-border: rgba(251, 191, 36, 0.2);
+  --color-ring: rgba(251, 191, 36, 0.32);
 
   /* legacy aliases */
   --accent: var(--color-accent);
   --surface: var(--color-card);
-  --surface-soft: #111827;
+  --surface-soft: var(--color-secondary);
   --border: var(--color-border);
   --text: var(--color-foreground);
 }
 
 html[data-theme="romantique"] {
-  --color-background: #FFF7F8;
-  --color-foreground: #3B2233;
-  --color-card: #FFFFFF;
-  --color-primary: #D46A8A;
-  --color-secondary: #FBE8ED;
-  --color-accent: #C97FA0;
-  --color-muted: #F3D9E1;
-  --color-muted-foreground: #8A5A73;
-  --color-border: #F0C9D6;
+  --color-background: #1A0A14;
+  --color-foreground: #FFF1F2;
+  --color-card: #2D1020;
+  --color-primary: #F43F5E;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #3D1530;
+  --color-accent: #F472B4;
+  --color-muted: #3D1530;
+  --color-muted-foreground: rgba(253, 164, 175, 0.7);
+  --color-border: rgba(244, 63, 94, 0.2);
+  --color-ring: rgba(244, 63, 94, 0.32);
 
   /* legacy aliases */
   --accent: var(--color-accent);
   --surface: var(--color-card);
-  --surface-soft: #fff7f8;
+  --surface-soft: var(--color-secondary);
   --border: var(--color-border);
   --text: var(--color-foreground);
 }
@@ -232,7 +242,7 @@ html[data-theme="romantique"] {
   display: grid;
   gap: 12px;
   padding: 22px;
-  border-radius: 24px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: var(--surface-soft);
   text-align: left;
@@ -290,7 +300,7 @@ html[data-theme="romantique"] {
   display: grid;
   gap: 14px;
   padding: 22px;
-  border-radius: 24px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: var(--surface-soft);
   text-align: left;
@@ -347,7 +357,7 @@ html[data-theme="romantique"] {
   display: grid;
   gap: 10px;
   padding: 18px;
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--surface-soft);
   border: 1px dashed var(--border);
 }
@@ -357,7 +367,7 @@ html[data-theme="romantique"] {
 .game-panel {
   margin-top: 24px;
   padding: 22px;
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--surface-soft);
   border: 1px solid var(--border);
 }
@@ -432,7 +442,7 @@ button.secondary {
   }
 
   .hero-panel {
-    border-radius: 24px;
+    border-radius: 16px;
   }
 
   .panel-card {
@@ -445,9 +455,9 @@ button.secondary {
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
-  --font-display: 'Space Grotesk Variable', var(--font-sans);
+  --font-heading: var(--font-display);
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Rajdhani', var(--font-sans);
   --font-mono-label: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);

@@ -19,8 +19,8 @@ export function ResultsPage() {
     .sort((a, b) => b.score - a.score);
 
   return (
-    <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-      <section className="rounded-[2rem] bg-card p-10 shadow-lg shadow-slate-900/5">
+    <motion.main initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <section className="rounded-2xl bg-card p-10 shadow-lg shadow-slate-900/5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <Button
