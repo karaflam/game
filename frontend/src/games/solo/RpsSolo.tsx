@@ -4,6 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { DuelReveal } from '@/components/solo/reveals/DuelReveal';
+import { GameCanvas } from '@/three/GameCanvas';
+import { HandDuelScene } from '@/three/scenes/HandDuelScene';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
 import { useSoloScore } from '@/hooks/useSoloScore';
 import { RPS_MOVES, getRpsOutcome, pickRandomRpsMove, type RpsMove } from '@/lib/rpsLogic';
 
@@ -25,6 +30,8 @@ export function RpsSolo() {
     ciseau: t('solo.rps.moves.ciseau')
   };
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(RPS_TARGET_SCORE);
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
   const [message, setMessage] = useState(t('solo.rps.instructions'));
   const [round, setRound] = useState<RoundData | null>(null);
   const [hasPlayed, setHasPlayed] = useState(false);
@@ -67,7 +74,7 @@ export function RpsSolo() {
     <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
       <ScorePill player={score.player} machine={score.machine} targetScore={RPS_TARGET_SCORE} onReset={reset} />
 
-      {round ? (
+      {round && quality === 'fallback2d' ? (
         <DuelReveal
           playerEmoji={moveEmojis[round.player]}
           playerLabel={moveLabels[round.player]}
@@ -76,6 +83,26 @@ export function RpsSolo() {
           outcome={round.outcome}
           onComplete={handleRevealComplete}
         />
+      ) : round ? (
+        <div className="relative h-72 overflow-hidden rounded-2xl bg-muted">
+          <div className="absolute inset-0">
+            <GameCanvas theme={theme} quality={quality}>
+              <HandDuelScene round={round} material={getThemeMaterial(theme)} onComplete={handleRevealComplete} />
+            </GameCanvas>
+          </div>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1, duration: 0.4 }}
+            className="absolute inset-x-0 bottom-4 text-center text-lg font-bold text-foreground"
+          >
+            {round.outcome === 'player'
+              ? t('solo.rps.duelOutcomeWin')
+              : round.outcome === 'machine'
+                ? t('solo.rps.duelOutcomeLose')
+                : t('solo.rps.duelOutcomeDraw')}
+          </motion.p>
+        </div>
       ) : (
         <>
           <motion.p key={message} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-muted-foreground">
@@ -97,6 +124,14 @@ export function RpsSolo() {
             ))}
           </div>
         </>
+      )}
+
+      {!round && quality !== 'fallback2d' && (
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-3xl opacity-60">
+          <GameCanvas theme={theme} quality={quality}>
+            <HandDuelScene round={null} material={getThemeMaterial(theme)} onComplete={() => {}} />
+          </GameCanvas>
+        </div>
       )}
 
       <MatchEndOverlay winner={winner} onReplay={reset} />
