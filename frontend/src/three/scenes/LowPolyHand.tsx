@@ -3,6 +3,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { HandPose } from './handPoses';
 import type { ThemeMaterial } from '../themeMaterials';
+import { easeOutBack } from '../easing';
 
 type LowPolyHandProps = {
   pose: HandPose;
@@ -14,9 +15,9 @@ type LowPolyHandProps = {
 
 // human_hand_base_mesh.glb: see public/models/license.txt (Sketchfab Standard).
 // The other two were generated with Meshy AI specifically for this project.
-const OPEN_HAND_URL = '/models/human_hand_base_mesh.glb';
-const FIST_URL = '/models/Meshy_AI_Clenched_Fist_0803190636_generate.glb';
-const PEACE_SIGN_URL = '/models/Meshy_AI_Peace_Sign_0803185859_generate.glb';
+export const OPEN_HAND_URL = '/models/human_hand_base_mesh.glb';
+export const FIST_URL = '/models/Meshy_AI_Clenched_Fist_0803190636_generate.glb';
+export const PEACE_SIGN_URL = '/models/Meshy_AI_Peace_Sign_0803185859_generate.glb';
 
 type PoseAsset = { url: string; rotation: [number, number, number]; scale: number };
 
@@ -34,10 +35,6 @@ const POSE_ASSET: Record<HandPose, PoseAsset> = {
   pierre: { url: FIST_URL, rotation: [0, 0, 0], scale: 0.53 },
   ciseau: { url: PEACE_SIGN_URL, rotation: [0, 0, 0], scale: 0.53 }
 };
-
-useGLTF.preload(OPEN_HAND_URL);
-useGLTF.preload(FIST_URL);
-useGLTF.preload(PEACE_SIGN_URL);
 
 function findFirstMeshGeometry(scene: THREE.Object3D, url: string): THREE.BufferGeometry {
   const meshes: THREE.Mesh[] = [];
@@ -61,13 +58,25 @@ function useHandGeometry(url: string): THREE.BufferGeometry {
   return useMemo(() => findFirstMeshGeometry(scene, url), [scene, url]);
 }
 
-function PoseMesh({ pose, material, opacity }: { pose: HandPose; material: ThemeMaterial; opacity: number }) {
+function PoseMesh({
+  pose,
+  material,
+  opacity,
+  renderOrder,
+  easedScale = 1
+}: {
+  pose: HandPose;
+  material: ThemeMaterial;
+  opacity: number;
+  renderOrder: number;
+  easedScale?: number;
+}) {
   const asset = POSE_ASSET[pose];
   const geometry = useHandGeometry(asset.url);
 
   return (
-    <group rotation={asset.rotation} scale={asset.scale}>
-      <mesh geometry={geometry} castShadow receiveShadow>
+    <group rotation={asset.rotation} scale={asset.scale * easedScale}>
+      <mesh geometry={geometry} castShadow receiveShadow renderOrder={renderOrder}>
         <meshStandardMaterial
           color={material.baseColor}
           emissive={material.emissive}
@@ -75,7 +84,7 @@ function PoseMesh({ pose, material, opacity }: { pose: HandPose; material: Theme
           roughness={material.roughness}
           transparent={opacity < 1}
           opacity={opacity}
-          depthWrite={opacity >= 1}
+          depthWrite={opacity >= 0.5}
         />
       </mesh>
     </group>
@@ -92,14 +101,23 @@ export function LowPolyHand({ pose, position, mirrored, material, transitionProg
   }
 
   const t = Math.min(Math.max(transitionProgress, 0), 1);
-  const crossfading = fromPoseRef.current !== pose && t < 1;
+  const crossfading =
+    fromPoseRef.current !== pose && POSE_ASSET[fromPoseRef.current].url !== POSE_ASSET[pose].url && t < 1;
 
   const direction = mirrored ? -1 : 1;
 
   return (
     <group position={position} scale={[direction, 1, 1]}>
-      {crossfading && <PoseMesh pose={fromPoseRef.current} material={material} opacity={1 - t} />}
-      <PoseMesh pose={pose} material={material} opacity={crossfading ? t : 1} />
+      {crossfading && (
+        <PoseMesh pose={fromPoseRef.current} material={material} opacity={1 - t} renderOrder={0} />
+      )}
+      <PoseMesh
+        pose={pose}
+        material={material}
+        opacity={crossfading ? t : 1}
+        renderOrder={1}
+        easedScale={crossfading ? easeOutBack(t) : 1}
+      />
     </group>
   );
 }

@@ -29,6 +29,11 @@ export function GameCanvas({ theme, quality, children }: GameCanvasProps) {
       <directionalLight position={[2, 3, 2]} intensity={1.1} color={material.glowColor} castShadow />
       <Suspense fallback={null}>
         <ParticleField color={material.particleColor} density={particleDensity} />
+      </Suspense>
+      {/* Note: if a hand's .glb is still loading, this subtree suspends and HandDuelScene's
+          clock pauses with it — acceptable for now since useGLTF.preload starts the download
+          at app boot, but a future pass should decouple the duel timer from Suspense. */}
+      <Suspense fallback={null}>
         {children}
       </Suspense>
       {bloomEnabled && (

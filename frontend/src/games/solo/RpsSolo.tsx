@@ -1,16 +1,21 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useGLTF } from '@react-three/drei';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { DuelReveal } from '@/components/solo/reveals/DuelReveal';
-import { GameCanvas } from '@/three/GameCanvas';
-import { HandDuelScene } from '@/three/scenes/HandDuelScene';
 import { getThemeMaterial } from '@/three/themeMaterials';
 import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import { OPEN_HAND_URL, FIST_URL, PEACE_SIGN_URL } from '@/three/scenes/LowPolyHand';
 import useTheme from '@/hooks/useTheme';
 import { useSoloScore } from '@/hooks/useSoloScore';
 import { RPS_MOVES, getRpsOutcome, pickRandomRpsMove, type RpsMove } from '@/lib/rpsLogic';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const HandDuelScene = lazy(() =>
+  import('@/three/scenes/HandDuelScene').then(m => ({ default: m.HandDuelScene }))
+);
 
 const RPS_TARGET_SCORE = 5;
 
@@ -41,6 +46,14 @@ export function RpsSolo() {
       setMessage(t('solo.rps.instructions'));
     }
   }, [t, hasPlayed]);
+
+  useEffect(() => {
+    // Preload the hand models once the player has actually navigated to this
+    // game, rather than at app boot (see LowPolyHand.tsx for the pose->asset map).
+    useGLTF.preload(OPEN_HAND_URL);
+    useGLTF.preload(FIST_URL);
+    useGLTF.preload(PEACE_SIGN_URL);
+  }, []);
 
   const playRound = (move: RpsMove) => {
     if (isMatchOver || round) {
@@ -86,9 +99,11 @@ export function RpsSolo() {
       ) : round ? (
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-72">
           <div className="absolute inset-0">
-            <GameCanvas theme={theme} quality={quality}>
-              <HandDuelScene round={round} material={getThemeMaterial(theme)} onComplete={handleRevealComplete} />
-            </GameCanvas>
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <HandDuelScene round={round} material={getThemeMaterial(theme)} onComplete={handleRevealComplete} />
+              </GameCanvas>
+            </Suspense>
           </div>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -128,9 +143,11 @@ export function RpsSolo() {
 
       {!round && quality !== 'fallback2d' && (
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-3xl opacity-60">
-          <GameCanvas theme={theme} quality={quality}>
-            <HandDuelScene round={null} material={getThemeMaterial(theme)} onComplete={() => {}} />
-          </GameCanvas>
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <HandDuelScene round={null} material={getThemeMaterial(theme)} onComplete={() => {}} />
+            </GameCanvas>
+          </Suspense>
         </div>
       )}
 

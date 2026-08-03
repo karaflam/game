@@ -6,3 +6,21 @@ Model Information:
 Model License:
 * license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
 * requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
+
+Model Information:
+* title:	Clenched Fist
+* file:	Meshy_AI_Clenched_Fist_0803190636_generate.glb
+* source:	Generated with Meshy AI specifically for this project (not sourced from a third party)
+* generation date:	2026-08-03 (per filename timestamp)
+
+Model License:
+* license type:	None (no external license) — created for and owned by this project
+
+Model Information:
+* title:	Peace Sign
+* file:	Meshy_AI_Peace_Sign_0803185859_generate.glb
+* source:	Generated with Meshy AI specifically for this project (not sourced from a third party)
+* generation date:	2026-08-03 (per filename timestamp)
+
+Model License:
+* license type:	None (no external license) — created for and owned by this project

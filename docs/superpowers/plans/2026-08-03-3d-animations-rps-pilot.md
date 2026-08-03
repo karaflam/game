@@ -490,6 +490,8 @@ git commit -m "feat: add duel scene timeline phase/progress calculator"
 
 ### Task 6: Finger pose data
 
+**Superseded — see the design spec's revision note.**
+
 **Files:**
 - Create: `frontend/src/three/scenes/handPoses.ts`
 - Test: `frontend/src/three/scenes/handPoses.test.ts`
@@ -776,6 +778,8 @@ git commit -m "feat: add theme-aware GameCanvas wrapper with quality-gated bloom
 ---
 
 ### Task 10: Low-poly hand component
+
+**Superseded — see the design spec's revision note.**
 
 **Files:**
 - Create: `frontend/src/three/scenes/LowPolyHand.tsx`
