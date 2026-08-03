@@ -25,9 +25,20 @@ const FACE_HEIGHT = 0.32;
 const DRAG_SENSITIVITY = 0.012; // radians per pixel of horizontal drag
 
 function faceLabel(mode: NumberDrumMode, faceIndexZeroBased: number): string {
-  if (mode.kind === 'masked') return '?';
-  if (mode.kind === 'rolling') return String(faceIndexZeroBased + 1);
-  return String(faceIndexZeroBased + 1);
+  switch (mode.kind) {
+    case 'masked':
+      return '?';
+    case 'rolling':
+      return String(faceIndexZeroBased + 1);
+    case 'settled':
+      return String(faceIndexZeroBased + 1);
+    case 'interactive':
+      return String(faceIndexZeroBased + 1);
+    default: {
+      const _exhaustive: never = mode;
+      return '?';
+    }
+  }
 }
 
 export function NumberDrum({ mode, material, position }: NumberDrumProps) {
@@ -42,14 +53,23 @@ export function NumberDrum({ mode, material, position }: NumberDrumProps) {
     const drum = drumRef.current;
     if (!drum) return;
 
-    if (mode.kind === 'rolling') {
-      drum.rotation.x = getRollAngle(mode.elapsedMs, mode.targetValue - 1);
-    } else if (mode.kind === 'settled') {
-      drum.rotation.x = faceIndexToAngle(mode.value - 1);
-    } else if (mode.kind === 'masked') {
-      drum.rotation.x = 0;
-    } else {
-      drum.rotation.x = dragStateRef.current.angle;
+    switch (mode.kind) {
+      case 'rolling':
+        drum.rotation.x = getRollAngle(mode.elapsedMs, mode.targetValue - 1);
+        break;
+      case 'settled':
+        drum.rotation.x = faceIndexToAngle(mode.value - 1);
+        break;
+      case 'masked':
+        drum.rotation.x = 0;
+        break;
+      case 'interactive':
+        drum.rotation.x = dragStateRef.current.angle;
+        break;
+      default: {
+        const _exhaustive: never = mode;
+        drum.rotation.x = 0;
+      }
     }
   });
 
@@ -71,8 +91,13 @@ export function NumberDrum({ mode, material, position }: NumberDrumProps) {
   };
 
   const handlePointerUp = () => {
-    if (mode.kind !== 'interactive') return;
+    // Always clear the drag flag, even if `mode` has changed away from
+    // 'interactive' mid-drag (e.g. the round started while the pointer was
+    // still down). Otherwise a stale `dragging: true` would make the next
+    // plain pointermove — once this drum becomes interactive again — be
+    // treated as an active drag with no preceding pointerdown.
     dragStateRef.current.dragging = false;
+    if (mode.kind !== 'interactive') return;
     const snappedFace = angleToFaceIndex(dragStateRef.current.angle);
     dragStateRef.current.angle = faceIndexToAngle(snappedFace);
     mode.onChange(snappedFace + 1);
