@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
@@ -8,7 +8,16 @@ import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { FlipReveal } from '@/components/solo/reveals/FlipReveal';
 import { NumberTokenPicker } from '@/components/solo/NumberTokenPicker';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
+import { NumberDrum } from '@/three/scenes/NumberDrum';
 import type { Winner } from '@/lib/soloScore';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const OddOrEvenDuelScene = lazy(() =>
+  import('@/three/scenes/OddOrEvenDuelScene').then(m => ({ default: m.OddOrEvenDuelScene }))
+);
 
 const ODD_OR_EVEN_TARGET_SCORE = 5;
 type Parity = 'pair' | 'impair';
@@ -35,6 +44,8 @@ type OddOrEvenResultPayload = RoundResult & {
 export function OddOrEvenMultiplayer() {
   const { t } = useTranslation();
   const { socket, socketId } = useSocket();
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
@@ -122,7 +133,7 @@ export function OddOrEvenMultiplayer() {
   };
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
+    <div className="relative isolate space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill
         player={myScore}
         machine={opponentScore}
@@ -133,7 +144,7 @@ export function OddOrEvenMultiplayer() {
         hasOpponent={!!opponent}
       />
 
-      {round ? (
+      {round && quality === 'fallback2d' ? (
         <FlipReveal
           cards={[
             { id: 'player', content: round.yourValue, highlight: round.outcome === 'player' },
@@ -146,13 +157,51 @@ export function OddOrEvenMultiplayer() {
           }
           onComplete={handleRevealComplete}
         />
+      ) : round ? (
+        <div className="relative h-72 w-full overflow-hidden rounded-2xl bg-muted">
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <OddOrEvenDuelScene
+                round={{
+                  yourValue: round.yourValue,
+                  opponentValue: round.opponentValue,
+                  sum: round.sum,
+                  parityLabel: round.parity === 'pair' ? t('solo.oddOrEven.even') : t('solo.oddOrEven.odd'),
+                  outcomeLabel: round.bothCorrect
+                    ? t('multiplayer.oddOrEven.outcomeBothRight', { sum: round.sum, parity: round.parity })
+                    : t('multiplayer.oddOrEven.outcome', { sum: round.sum, parity: round.parity })
+                }}
+                material={getThemeMaterial(theme)}
+                onComplete={handleRevealComplete}
+              />
+            </GameCanvas>
+          </Suspense>
+        </div>
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             {waiting ? t('multiplayer.oddOrEven.waitingOpponent') : t('multiplayer.oddOrEven.instructions')}
           </p>
 
-          <NumberTokenPicker value={playerNumber} onChange={setPlayerNumber} disabled={waiting || matchOver} />
+          {quality === 'fallback2d' ? (
+            <NumberTokenPicker value={playerNumber} onChange={setPlayerNumber} disabled={waiting || matchOver} />
+          ) : (
+            <div className="relative h-40 w-full overflow-hidden rounded-2xl bg-muted">
+              <Suspense fallback={null}>
+                <GameCanvas theme={theme} quality={quality}>
+                  <NumberDrum
+                    mode={
+                      waiting || matchOver
+                        ? { kind: 'settled', value: playerNumber }
+                        : { kind: 'interactive', value: playerNumber, onChange: setPlayerNumber }
+                    }
+                    material={getThemeMaterial(theme)}
+                    position={[0, 0, 0]}
+                  />
+                </GameCanvas>
+              </Suspense>
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-3">
             {PARITIES.map(parity => (
