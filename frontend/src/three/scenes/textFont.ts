@@ -6,4 +6,7 @@ import rajdhaniLatin500Url from '@fontsource/rajdhani/files/rajdhani-latin-500-n
 
 export const DRUM_FONT_URL = rajdhaniLatin500Url;
 
-preloadFont({ font: DRUM_FONT_URL, characters: '0123456789?' });
+// troika's preloadFont always invokes its second argument once loading finishes
+// (it forwards straight to getTextRenderInfo(args, callback)) — omitting it
+// throws "callback is not a function" the moment the font resolves.
+preloadFont({ font: DRUM_FONT_URL, characters: '0123456789?' }, () => {});

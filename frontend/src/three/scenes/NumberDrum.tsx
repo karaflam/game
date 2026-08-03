@@ -20,9 +20,11 @@ type NumberDrumProps = {
   position: [number, number, number];
 };
 
-const DRUM_RADIUS = 0.55;
-const FACE_WIDTH = 0.5;
-const FACE_HEIGHT = 0.32;
+// Sized to read clearly on a phone screen inside its own small canvas —
+// the original, smaller values left the digits legible only up close.
+const DRUM_RADIUS = 0.95;
+const FACE_WIDTH = 0.85;
+const FACE_HEIGHT = 0.55;
 const DRAG_SENSITIVITY = 0.012; // radians per pixel of horizontal drag
 
 function faceLabel(mode: NumberDrumMode, faceIndexZeroBased: number): string {
@@ -111,28 +113,48 @@ export function NumberDrum({ mode, material, position }: NumberDrumProps) {
 
   return (
     <group position={position}>
-      <group
-        ref={drumRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-      >
+      {/* Invisible hit target covering the whole drum's silhouette. A <group>
+          has no geometry of its own, so pointer events only fired when the
+          cursor happened to land exactly on the one small face currently
+          facing forward — everywhere else in the visual drum area was dead
+          space. This sphere makes the entire drum draggable, not just its
+          thin front face. */}
+      {mode.kind === 'interactive' && (
+        <mesh
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+        >
+          <sphereGeometry args={[DRUM_RADIUS + 0.15, 12, 12]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      )}
+      <group ref={drumRef}>
         {Array.from({ length: FACE_COUNT }).map((_, i) => (
           <group key={i} rotation={[i * ((2 * Math.PI) / FACE_COUNT), 0, 0]}>
+            {/* The face itself stays non-emissive: every theme's `emissive`
+                is the same color as `glowColor` (used for the digit below),
+                so a glowing face made the digit blend into its own
+                background in every theme except the one where the effect
+                happened to be subtle enough not to matter. */}
+            {/* FrontSide (the default — no `side` prop) is deliberate: with
+                9 faces arranged around the drum, only one ever needs to be
+                visible at a time. DoubleSide rendered the *backs* of all 8
+                faces not currently facing the camera too, and on at least
+                one real mobile GPU that overlap of near-coincident quads
+                sorted incorrectly, blacking out the actual front face. */}
             <mesh position={[0, 0, DRUM_RADIUS]}>
               <planeGeometry args={[FACE_WIDTH, FACE_HEIGHT]} />
               <meshStandardMaterial
                 color={isMasked ? '#1a1a24' : material.baseColor}
-                emissive={isMasked ? '#000000' : material.emissive}
                 metalness={material.metalness}
                 roughness={material.roughness}
-                side={THREE.DoubleSide}
               />
             </mesh>
             <Text
               position={[0, 0, DRUM_RADIUS + 0.01]}
-              fontSize={0.22}
+              fontSize={0.4}
               color={isMasked ? '#5b5f72' : material.glowColor}
               anchorX="center"
               anchorY="middle"

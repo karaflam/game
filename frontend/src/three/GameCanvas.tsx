@@ -10,19 +10,27 @@ type GameCanvasProps = {
   theme: ThemeId;
   quality: Quality;
   children?: ReactNode;
+  /** Bloom/glow post-processing — on by default (Pierre-Feuille-Ciseaux's hand
+   * duel reads well with it), but other scenes (e.g. the Odd or Even number
+   * drums) found it more distracting than useful, so callers can opt out. */
+  bloom?: boolean;
 };
 
-export function GameCanvas({ theme, quality, children }: GameCanvasProps) {
+export function GameCanvas({ theme, quality, children, bloom = true }: GameCanvasProps) {
   if (quality === 'fallback2d') {
     return null;
   }
 
   const material = getThemeMaterial(theme);
   const particleDensity = quality === 'high' ? 150 : quality === 'medium' ? 70 : 25;
-  const bloomEnabled = quality === 'high' || quality === 'medium';
+  const bloomEnabled = bloom && (quality === 'high' || quality === 'medium');
 
   return (
-    <Canvas camera={{ position: [0, 0.6, 3.2], fov: 45 }} dpr={[1, quality === 'high' ? 2 : 1]}>
+    <Canvas
+      camera={{ position: [0, 0.6, 3.2], fov: 45 }}
+      dpr={[1, quality === 'high' ? 2 : 1]}
+      style={{ touchAction: 'none' }}
+    >
       <color attach="background" args={[material.sceneBackground]} />
       <fog attach="fog" args={[material.sceneBackground, 4, 9]} />
       <ambientLight intensity={0.6} />

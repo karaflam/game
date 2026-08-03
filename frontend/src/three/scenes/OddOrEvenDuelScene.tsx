@@ -51,9 +51,9 @@ export function OddOrEvenDuelScene({ round, material, onComplete }: OddOrEvenDue
   if (!round) {
     return (
       <group>
-        <NumberDrum mode={{ kind: 'masked' }} material={material} position={[-1, 0, 0]} />
+        <NumberDrum mode={{ kind: 'masked' }} material={material} position={[-1.3, 0, 0]} />
         <PlusSymbol3D material={material} position={[0, 0, 0]} />
-        <NumberDrum mode={{ kind: 'masked' }} material={material} position={[1, 0, 0]} />
+        <NumberDrum mode={{ kind: 'masked' }} material={material} position={[1.3, 0, 0]} />
       </group>
     );
   }
@@ -65,9 +65,9 @@ export function OddOrEvenDuelScene({ round, material, onComplete }: OddOrEvenDue
 
   return (
     <group>
-      <NumberDrum mode={{ kind: 'settled', value: round.yourValue }} material={material} position={[-1, 0, 0]} />
+      <NumberDrum mode={{ kind: 'settled', value: round.yourValue }} material={material} position={[-1.3, 0, 0]} />
       <PlusSymbol3D material={material} position={[0, 0, 0]} />
-      <NumberDrum mode={opponentMode} material={material} position={[1, 0, 0]} />
+      <NumberDrum mode={opponentMode} material={material} position={[1.3, 0, 0]} />
       <SumPlate3D
         sum={round.sum}
         parityLabel={round.parityLabel}

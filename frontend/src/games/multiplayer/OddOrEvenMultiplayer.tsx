@@ -158,9 +158,9 @@ export function OddOrEvenMultiplayer() {
           onComplete={handleRevealComplete}
         />
       ) : round ? (
-        <div className="relative h-72 w-full overflow-hidden rounded-2xl bg-muted">
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-[28rem]">
           <Suspense fallback={null}>
-            <GameCanvas theme={theme} quality={quality}>
+            <GameCanvas theme={theme} quality={quality} bloom={false}>
               <OddOrEvenDuelScene
                 round={{
                   yourValue: round.yourValue,
@@ -186,9 +186,9 @@ export function OddOrEvenMultiplayer() {
           {quality === 'fallback2d' ? (
             <NumberTokenPicker value={playerNumber} onChange={setPlayerNumber} disabled={waiting || matchOver} />
           ) : (
-            <div className="relative h-40 w-full overflow-hidden rounded-2xl bg-muted">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-72">
               <Suspense fallback={null}>
-                <GameCanvas theme={theme} quality={quality}>
+                <GameCanvas theme={theme} quality={quality} bloom={false}>
                   <NumberDrum
                     mode={
                       waiting || matchOver
@@ -220,16 +220,6 @@ export function OddOrEvenMultiplayer() {
           <Button type="button" onClick={playRound} disabled={waiting || matchOver}>
             {t('solo.oddOrEven.playButton')}
           </Button>
-        </div>
-      )}
-
-      {!round && quality !== 'fallback2d' && (
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-3xl opacity-60">
-          <Suspense fallback={null}>
-            <GameCanvas theme={theme} quality={quality}>
-              <OddOrEvenDuelScene round={null} material={getThemeMaterial(theme)} onComplete={() => {}} />
-            </GameCanvas>
-          </Suspense>
         </div>
       )}
 

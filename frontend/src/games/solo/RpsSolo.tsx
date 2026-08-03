@@ -97,7 +97,7 @@ export function RpsSolo() {
           onComplete={handleRevealComplete}
         />
       ) : round ? (
-        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-72">
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-[28rem]">
           <div className="absolute inset-0">
             <Suspense fallback={null}>
               <GameCanvas theme={theme} quality={quality}>

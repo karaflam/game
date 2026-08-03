@@ -28,11 +28,13 @@ export function SumPlate3D({ sum, parityLabel, outcomeLabel, material, position,
 
   return (
     <group ref={groupRef} position={position}>
+      {/* Non-emissive plate: `emissive` and `glowColor` are the same color in
+          every theme, so a glowing plate made the text below blend into its
+          own background — see the identical fix in NumberDrum.tsx. */}
       <mesh>
         <planeGeometry args={[1.6, 0.6]} />
         <meshStandardMaterial
           color={material.baseColor}
-          emissive={material.emissive}
           metalness={material.metalness}
           roughness={material.roughness}
           side={THREE.DoubleSide}
