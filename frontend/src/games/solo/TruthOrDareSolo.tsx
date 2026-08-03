@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { PlayerWheel } from '@/components/solo/PlayerWheel';
 import { FlipReveal } from '@/components/solo/reveals/FlipReveal';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
 import { soloTruthOrDarePrompts, TRUTH_OR_DARE_CATEGORIES, DEFAULT_TRUTH_OR_DARE_CATEGORY_IDS, type TruthOrDareCategoryId, type TruthOrDarePrompt } from '@/data/soloPrompts';
 import { pickRandomIndexFromCandidates } from '@/lib/randomPick';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const CardFlipScene = lazy(() => import('@/three/scenes/CardFlipScene').then(m => ({ default: m.CardFlipScene })));
 
 type Phase = 'idle' | 'spinning' | 'landed' | 'revealing';
 
@@ -31,6 +37,8 @@ export function TruthOrDareSolo() {
     return candidates[Math.floor(Math.random() * candidates.length)];
   });
   const [reveal, setReveal] = useState<'truth' | 'dare' | null>(null);
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
 
   const prompt = prompts[promptIndex];
 
@@ -128,13 +136,38 @@ export function TruthOrDareSolo() {
         </div>
       ) : null}
 
-      {phase === 'revealing' && reveal ? (
+      {phase === 'revealing' && reveal && quality === 'fallback2d' ? (
         <FlipReveal
           cardSize="lg"
           cards={[{ id: 'prompt', content: reveal === 'truth' ? prompt.truth : prompt.dare }]}
           outcomeLabel={reveal === 'truth' ? t('solo.truthOrDare.revealTruth') : t('solo.truthOrDare.revealDare')}
           onComplete={handleRevealComplete}
         />
+      ) : phase === 'revealing' && reveal ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleRevealComplete}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              handleRevealComplete();
+            }
+          }}
+          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+        >
+          <div className="relative h-64 w-48">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <CardFlipScene material={getThemeMaterial(theme)} />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="max-w-sm text-sm font-medium text-foreground">{reveal === 'truth' ? prompt.truth : prompt.dare}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            {reveal === 'truth' ? t('solo.truthOrDare.revealTruth') : t('solo.truthOrDare.revealDare')}
+          </p>
+          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+        </div>
       ) : null}
     </div>
   );
