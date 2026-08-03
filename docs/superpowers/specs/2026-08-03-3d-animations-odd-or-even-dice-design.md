@@ -1,41 +1,50 @@
-# Animations 3D — Sous-projet 3 : Pair ou Impair (dé 3D, solo + multijoueur)
+# Animations 3D — Sous-projet 3 : Pair ou Impair (tambour 3D, solo + multijoueur)
 
 ## Contexte
 
-Pair ou Impair (`OddOrEvenSolo.tsx` / `OddOrEvenMultiplayer.tsx`) fonctionne ainsi : le joueur choisit un nombre fixe entre 1 et 9 via `NumberTokenPicker` et une prédiction pair/impair ; la machine (ou l'adversaire, en multi) tire un nombre entre 1 et 9 (`pickRandomNumber`, voir `frontend/src/lib/oddOrEvenLogic.ts`) ; la parité de la somme détermine le gagnant. Le reveal actuel réutilise `FlipReveal` (le même composant que Pierre-Feuille-Ciseaux utilisait avant le sous-projet 1) : deux petites cartes qui se retournent pour révéler `playerNumber` et `machineNumber`.
+Pair ou Impair (`OddOrEvenSolo.tsx` / `OddOrEvenMultiplayer.tsx`) fonctionne ainsi : le joueur choisit un nombre fixe entre 1 et 9 via `NumberTokenPicker` (une grille de bulles de chiffres) et une prédiction pair/impair ; la machine (ou l'adversaire, en multi) tire un nombre entre 1 et 9 (`pickRandomNumber`, voir `frontend/src/lib/oddOrEvenLogic.ts`) ; la parité de la somme détermine le gagnant. Le reveal actuel réutilise `FlipReveal`.
 
-Point important qui distingue ce jeu d'un vrai lancer de dé : **le nombre du joueur n'est pas aléatoire** — il est choisi à l'avance via les jetons numérotés. Seul le nombre de l'adversaire/machine est réellement tiré au hasard. Un dé physique classique (6 faces) ne représente pas non plus fidèlement une plage 1-9. La scène 3D doit donc traiter les deux "dés" différemment : celui du joueur affiche directement le nombre déjà choisi (pas de suspense à simuler), celui de l'adversaire/machine effectue un vrai lancer physique avant de s'arrêter sur son nombre.
+**Ce spec a été révisé après une session de maquettage visuel avec l'utilisateur** (voir historique de conversation) : contrairement au sous-projet 1 où seul le *reveal* passe en 3D, ici la **sélection du nombre elle-même** passe en 3D — les bulles de `NumberTokenPicker` ont été jugées inadéquates (trop petites, peu attrayantes sur mobile). Une comparaison de deux directions (tambour qu'on fait glisser vs dé à 12 facettes avec 3 facettes inutilisées) a été tranchée en faveur du **tambour/rouleau** : pas de contrainte géométrique arbitraire (9 nombres réels, pas 12), grandes cibles tactiles, geste de glissement naturel sur mobile.
+
+Autre point validé : le nombre de l'adversaire/machine ne doit **jamais** être visible avant le duel — le tambour adverse affiche des faces masquées (`?`, pas de chiffre du tout, pour éviter toute confusion) tant que le round n'a pas démarré, puis roule visiblement (rotation animée, pas un pop instantané) avant de s'arrêter sur son vrai chiffre au moment du reveal.
 
 ## Approche retenue
 
-Réutilise les fondations du sous-projet 1 (`GameCanvas`, thèmes, `useAdaptiveQuality`, fallback 2D) et ajoute une nouvelle brique : `@react-three/rapier` (moteur physique, compatible React 18 comme les autres paquets `@react-three/*` déjà installés — vérifier la même contrainte de version que dans le sous-projet 1) pour un vrai lancer avec rebond/rotation.
+Réutilise les fondations du sous-projet 1 (`GameCanvas`, thèmes via `getThemeMaterial`, `useAdaptiveQuality`, fallback 2D). **Pas besoin de `@react-three/rapier`/physique** : contrairement à l'idée initiale d'un lancer physique, le tambour est un cylindre à rotation contrôlée (comme `HandDuelScene` pilote ses propres animations via `useFrame`, pas une simulation physique) — plus simple, plus prévisible, et suffisant pour l'effet recherché (glisser pour choisir, puis rotation animée qui s'arrête sur un chiffre précis).
 
-**Représentation du nombre :** plutôt qu'un cube à 6 faces numérotées de force jusqu'à 9 (anatomiquement faux), le "dé" est un cube stylisé qui roule/rebondit physiquement (spectacle du lancer, faces neutres ou à motif du thème), et le nombre réel s'affiche comme un chiffre 3D flottant qui apparaît juste après que le dé a fini de rebondir et de s'immobiliser — un peu comme un résultat de machine à sous. Ça découple l'aspect "lancer physique crédible" de la contrainte numérique 1-9, sans mentir visuellement sur un dé à 9 faces qui n'existe pas dans la réalité.
+**Layout de la scène (les deux tambours + le duel) :**
+- Un tambour "Toi" à gauche (9 faces, une par nombre 1-9, texte toujours visible — c'est ton propre choix).
+- Un symbole "+" 3D flottant au centre, animation idle continue (léger flottement + rotation lente), séparant visuellement les deux tambours.
+- Un tambour "Adversaire" à droite : faces masquées (`?`, thème sombre/atténué) tant qu'aucun round n'est en cours ou que l'adversaire n'a pas encore joué ; au moment du reveal, les faces sont remplacées par les vrais chiffres puis le tambour tourne (plusieurs tours animés, easing style `easeOutBack`/décélération) avant de s'immobiliser sur le chiffre tiré.
+- Après l'arrêt : une plaque 3D flottante (matériau/glow du thème, légère oscillation idle) affiche la somme et la parité — remplace l'actuel texte 2D plat de `FlipReveal.outcomeLabel`, mais reste un overlay HTML positionné en 3D-style (texte net, pas de géométrie de caractères) comme pour le texte de résultat du sous-projet 1.
 
 **Composants nouveaux (`frontend/src/three/scenes/`) :**
-- `DiceScene.tsx` — scène héros : un `<Physics>` (rapier) contenant un `RigidBody` cube pour le dé de l'adversaire/machine (lancé avec une impulsion + rotation aléatoires au début du round, immobilisé naturellement par la physique), et un cube statique (pas de `RigidBody` dynamique, ou un `RigidBody` de type `fixed`) pour le nombre déjà choisi du joueur, qui fait juste une courte animation de pop/rotation d'arrivée (pas un vrai lancer).
-- Un petit composant de texte 3D (`@react-three/drei`'s `Text` ou équivalent) pour afficher le chiffre au-dessus de chaque dé une fois celui-ci immobile — détection d'immobilité via la vélocité angulaire/linéaire du `RigidBody` (rapier expose ces valeurs), pas un minuteur fixe, pour rester crédible quel que soit le rebond réel.
+- `NumberDrum.tsx` — un tambour réutilisable : 9 faces disposées en cylindre (comme la maquette validée), avec deux modes :
+  - **Interactif** (tambour du joueur, en phase de sélection) : rotation pilotée par glissement pointeur (`onPointerDown`/`onPointerMove`/`onPointerUp` de React Three Fiber), qui s'aimante (snap) sur la face la plus proche au relâchement — remplace `NumberTokenPicker`. Émet la valeur choisie au parent (même contrat que `NumberTokenPicker`'s `onChange`).
+  - **Résultat** (tambour adverse) : rotation entièrement pilotée par état (`pose`-like : masqué / en train de tourner vers une valeur cible / arrêté), pas d'interaction pointeur.
+- `PlusSymbol3D.tsx` — le séparateur "+" flottant, idle uniquement (pas d'état de jeu).
+- `SumPlate3D.tsx` — la plaque flottante de résultat (somme + parité), reçoit le texte déjà calculé (pas de nouvelle logique de calcul, `getParity`/somme restent dans `oddOrEvenLogic.ts`).
 - Réutilisation directe de `getThemeMaterial`/`GameCanvas`/`useAdaptiveQuality` sans modification.
 
-**Solo et multijoueur en parallèle** (comme demandé lors du brainstorming initial) : `OddOrEvenSolo.tsx` et `OddOrEvenMultiplayer.tsx` reçoivent la même intégration, chacun avec sa propre source de données de round (locale vs socket), suivant le même pattern de branchement sur `quality` que Pierre-Feuille-Ciseaux (`fallback2d` → `FlipReveal` existant inchangé ; sinon → nouvelle scène 3D).
+**Solo et multijoueur en parallèle** : `OddOrEvenSolo.tsx` et `OddOrEvenMultiplayer.tsx` reçoivent la même intégration, chacun avec sa propre source de données (locale vs socket). Le tambour du joueur remplace `NumberTokenPicker` dans les deux ; le tambour adverse + le "+" + la plaque de résultat remplacent `FlipReveal` au moment du round.
 
-## Composant héros : `DiceScene`
+## Composant héros : la scène de duel des tambours
 
-Choréographie, déclenchée par le round (`{ playerNumber, machineNumber, outcome }`) :
+Choréographie :
 
-1. **Idle continu** : les deux dés flottent doucement (mêmes particules d'ambiance que Pierre-Feuille-Ciseaux), faces neutres, pas de nombre affiché.
-2. **Lancer** : au démarrage d'un round, le dé de l'adversaire/machine reçoit une impulsion physique (force + couple aléatoires) et rebondit sur un sol invisible (`RigidBody` fixe) pendant ~0.8-1.2s ; le dé du joueur fait une rotation de pop courte (~300ms) vers sa position de repos.
-3. **Résultat** : dès que la vélocité du dé de l'adversaire/machine repasse sous un seuil (immobile), le chiffre correspondant apparaît en 3D au-dessus de chaque dé (`playerNumber` déjà connu affiché immédiatement, `machineNumber` affiché au moment de l'arrêt réel du lancer) ; la somme et sa parité s'affichent en overlay texte 2D par-dessus, comme le fait `FlipReveal.outcomeLabel` aujourd'hui.
+1. **Phase de sélection** : le tambour "Toi" est interactif (glisser pour choisir), le tambour "Adversaire" est visible mais masqué (`?` sur toutes les faces), le "+" flotte doucement entre les deux. En multijoueur, le tambour adverse reste masqué même après que l'adversaire a joué (pas de fuite d'information avant le duel).
+2. **Lancement du round** : dès que les deux nombres sont connus (le tien confirmé, celui de l'adversaire reçu du serveur ou tiré localement en solo), les faces masquées de l'adversaire sont remplacées par les vrais chiffres (à cet instant précis seulement, jamais avant), puis le tambour adverse tourne visiblement plusieurs tours avant de décélérer et s'arrêter sur la bonne face — jamais un arrêt instantané.
+3. **Résultat** : une fois les deux tambours immobiles, la plaque 3D de somme/parité apparaît (pop + flottement idle), avec le style visuel gagnant/perdant du thème actif.
 4. Fin → callback `onComplete`, même contrat que l'actuel `FlipReveal`.
 
 ## Dégradation automatique
 
-Si `quality === 'fallback2d'`, la scène physique ne se monte jamais (même garde que dans `GameCanvas`) et le jeu retombe sur `FlipReveal` — aucune régression possible. Le calcul physique (rapier) est plus coûteux qu'une simple rotation de main ; à `quality === 'low'`, envisager de désactiver le rebond réaliste (position finale calculée directement, sans simulation physique) plutôt que de réduire seulement les particules — à trancher pendant l'écriture du plan d'implémentation détaillé.
+Si `quality === 'fallback2d'`, la scène 3D ne se monte jamais et le jeu retombe sur `NumberTokenPicker` (sélection) + `FlipReveal` (reveal) — comportement actuel inchangé, aucune régression. Le tambour interactif (drag-to-select) est plus coûteux en interaction qu'un simple bouton, mais reste une rotation simple (pas de physique) — pas d'inquiétude de performance particulière au-delà de ce que le ratchet de qualité gère déjà.
 
 ## Tests
 
-- Logique pure testable : la fonction de détection "dé immobile" (seuil de vélocité) et le mapping nombre→position/rotation d'arrivée peuvent être extraits en fonctions pures et testées en Vitest, comme les modules `qualityTracker.ts`/`duelTimeline.ts` du sous-projet 1.
-- Le rendu physique/WebGL lui-même n'est pas testable en CI — vérification manuelle en navigateur dans les 4 thèmes, en solo et en multijoueur (deux onglets), avant de considérer ce sous-projet terminé.
+- Logique pure testable : la fonction de "snap à la face la plus proche" (angle de rotation → index de face 0-8) et la fonction de calcul de la trajectoire de rotation du tambour adverse (nombre de tours + easing → angle en fonction du temps, par analogie avec `duelTimeline.ts`) peuvent être extraites et testées en Vitest.
+- Le rendu WebGL et l'interaction de glissement ne sont pas testables en CI — vérification manuelle en navigateur (glisser pour choisir un nombre, vérifier qu'aucun chiffre de l'adversaire n'apparaît avant le lancement du round, vérifier que le tambour adverse tourne visiblement avant de s'arrêter) dans les 4 thèmes, en solo et en multijoueur (deux onglets), avant de considérer ce sous-projet terminé.
 
 ## Hors périmètre
 
