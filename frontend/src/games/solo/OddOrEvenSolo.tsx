@@ -1,12 +1,21 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { FlipReveal } from '@/components/solo/reveals/FlipReveal';
 import { NumberTokenPicker } from '@/components/solo/NumberTokenPicker';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
+import { NumberDrum } from '@/three/scenes/NumberDrum';
 import { useSoloScore } from '@/hooks/useSoloScore';
 import { getOddOrEvenOutcome, getParity, pickRandomNumber, type Parity } from '@/lib/oddOrEvenLogic';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const OddOrEvenDuelScene = lazy(() =>
+  import('@/three/scenes/OddOrEvenDuelScene').then(m => ({ default: m.OddOrEvenDuelScene }))
+);
 
 const ODD_OR_EVEN_TARGET_SCORE = 5;
 const PARITIES: Parity[] = ['pair', 'impair'];
@@ -16,6 +25,8 @@ type RoundData = { playerNumber: number; machineNumber: number; outcome: 'player
 export function OddOrEvenSolo() {
   const { t } = useTranslation();
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(ODD_OR_EVEN_TARGET_SCORE);
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
   const [playerNumber, setPlayerNumber] = useState(1);
   const [prediction, setPrediction] = useState<Parity>('pair');
   const [message, setMessage] = useState(t('solo.oddOrEven.instructions'));
@@ -61,10 +72,10 @@ export function OddOrEvenSolo() {
   };
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative isolate space-y-6 rounded-3xl border border-border bg-background p-8">
       <ScorePill player={score.player} machine={score.machine} targetScore={ODD_OR_EVEN_TARGET_SCORE} onReset={reset} />
 
-      {round ? (
+      {round && quality === 'fallback2d' ? (
         <FlipReveal
           cards={[
             { id: 'player', content: round.playerNumber, highlight: round.outcome === 'player' },
@@ -76,11 +87,44 @@ export function OddOrEvenSolo() {
           })}
           onComplete={handleRevealComplete}
         />
+      ) : round ? (
+        <div className="relative h-72 w-full overflow-hidden rounded-2xl bg-muted">
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <OddOrEvenDuelScene
+                round={{
+                  yourValue: round.playerNumber,
+                  opponentValue: round.machineNumber,
+                  sum: round.playerNumber + round.machineNumber,
+                  parityLabel:
+                    getParity(round.playerNumber + round.machineNumber) === 'pair' ? t('solo.oddOrEven.even') : t('solo.oddOrEven.odd'),
+                  outcomeLabel: round.outcome === 'player' ? t('solo.oddOrEven.outcomeWin') : t('solo.oddOrEven.outcomeLose')
+                }}
+                material={getThemeMaterial(theme)}
+                onComplete={handleRevealComplete}
+              />
+            </GameCanvas>
+          </Suspense>
+        </div>
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">{message}</p>
 
-          <NumberTokenPicker value={playerNumber} onChange={setPlayerNumber} disabled={isMatchOver} />
+          {quality === 'fallback2d' ? (
+            <NumberTokenPicker value={playerNumber} onChange={setPlayerNumber} disabled={isMatchOver} />
+          ) : (
+            <div className="relative h-40 w-full overflow-hidden rounded-2xl bg-muted">
+              <Suspense fallback={null}>
+                <GameCanvas theme={theme} quality={quality}>
+                  <NumberDrum
+                    mode={{ kind: 'interactive', value: playerNumber, onChange: setPlayerNumber }}
+                    material={getThemeMaterial(theme)}
+                    position={[0, 0, 0]}
+                  />
+                </GameCanvas>
+              </Suspense>
+            </div>
+          )}
 
           <div className="flex gap-3">
             {PARITIES.map(parity => (
