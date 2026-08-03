@@ -10,6 +10,7 @@ describe('getThemeMaterial', () => {
     expect(material.emissive).toMatch(/^#[0-9A-Fa-f]{6}$/);
     expect(material.glowColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
     expect(material.particleColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
+    expect(material.sceneBackground).toMatch(/^#[0-9A-Fa-f]{6}$/);
     expect(material.metalness).toBeGreaterThanOrEqual(0);
     expect(material.metalness).toBeLessThanOrEqual(1);
     expect(material.roughness).toBeGreaterThanOrEqual(0);

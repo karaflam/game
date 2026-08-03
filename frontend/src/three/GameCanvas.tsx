@@ -23,8 +23,8 @@ export function GameCanvas({ theme, quality, children }: GameCanvasProps) {
 
   return (
     <Canvas camera={{ position: [0, 0.6, 3.2], fov: 45 }} dpr={[1, quality === 'high' ? 2 : 1]}>
-      <color attach="background" args={[material.baseColor]} />
-      <fog attach="fog" args={[material.baseColor, 4, 9]} />
+      <color attach="background" args={[material.sceneBackground]} />
+      <fog attach="fog" args={[material.sceneBackground, 4, 9]} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[2, 3, 2]} intensity={1.1} color={material.glowColor} castShadow />
       <Suspense fallback={null}>

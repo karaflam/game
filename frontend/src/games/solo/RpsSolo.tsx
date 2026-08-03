@@ -71,7 +71,7 @@ export function RpsSolo() {
   };
 
   return (
-    <div className="relative isolate space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative isolate space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill player={score.player} machine={score.machine} targetScore={RPS_TARGET_SCORE} onReset={reset} />
 
       {round && quality === 'fallback2d' ? (
@@ -84,7 +84,7 @@ export function RpsSolo() {
           onComplete={handleRevealComplete}
         />
       ) : round ? (
-        <div className="relative h-72 overflow-hidden rounded-2xl bg-muted">
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-72">
           <div className="absolute inset-0">
             <GameCanvas theme={theme} quality={quality}>
               <HandDuelScene round={round} material={getThemeMaterial(theme)} onComplete={handleRevealComplete} />

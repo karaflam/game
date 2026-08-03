@@ -1,8 +1,7 @@
-import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef } from 'react';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { FINGER_CURLS, type HandPose } from './handPoses';
-import { easeOutBack } from '../easing';
+import type { HandPose } from './handPoses';
 import type { ThemeMaterial } from '../themeMaterials';
 
 type LowPolyHandProps = {
@@ -13,63 +12,94 @@ type LowPolyHandProps = {
   transitionProgress: number; // 0..1, where the hand's pose transition currently stands
 };
 
-const FINGER_COUNT = 5;
-const FINGER_SPACING = 0.16;
+// human_hand_base_mesh.glb: see public/models/license.txt (Sketchfab Standard).
+// The other two were generated with Meshy AI specifically for this project.
+const OPEN_HAND_URL = '/models/human_hand_base_mesh.glb';
+const FIST_URL = '/models/Meshy_AI_Clenched_Fist_0803190636_generate.glb';
+const PEACE_SIGN_URL = '/models/Meshy_AI_Peace_Sign_0803185859_generate.glb';
 
-export function LowPolyHand({ pose, position, mirrored, material, transitionProgress }: LowPolyHandProps) {
-  const fingerRefs = useRef<(THREE.Group | null)[]>([]);
-  const previousPoseRef = useRef<HandPose>(pose);
-  const fromCurlsRef = useRef(FINGER_CURLS[pose]);
+type PoseAsset = { url: string; rotation: [number, number, number]; scale: number };
 
-  if (previousPoseRef.current !== pose) {
-    fromCurlsRef.current = FINGER_CURLS[previousPoseRef.current];
-    previousPoseRef.current = pose;
-  }
+// Each pose is a separate, already-posed mesh (no shared topology, so poses
+// crossfade via opacity rather than vertex morphing). human_hand_base_mesh.glb
+// has fingers along +Z needing a corrective rotation to stand upright; the
+// Meshy-generated meshes are already Y-up.
+//
+// Scales are normalized so every pose reads as roughly the same hand size —
+// the raw meshes are not: the open-hand mesh is ~1.47 units tall vs. ~1.9 for
+// the fist/peace-sign meshes, which made the hand visibly grow mid-crossfade.
+const POSE_ASSET: Record<HandPose, PoseAsset> = {
+  neutral: { url: OPEN_HAND_URL, rotation: [-Math.PI / 2, 0, 0], scale: 0.68 },
+  feuille: { url: OPEN_HAND_URL, rotation: [-Math.PI / 2, 0, 0], scale: 0.68 },
+  pierre: { url: FIST_URL, rotation: [0, 0, 0], scale: 0.53 },
+  ciseau: { url: PEACE_SIGN_URL, rotation: [0, 0, 0], scale: 0.53 }
+};
 
-  useFrame(() => {
-    const targetCurls = FINGER_CURLS[pose];
-    const eased = easeOutBack(Math.min(Math.max(transitionProgress, 0), 1));
-    for (let i = 0; i < FINGER_COUNT; i++) {
-      const group = fingerRefs.current[i];
-      if (!group) continue;
-      const from = fromCurlsRef.current[i];
-      const to = targetCurls[i];
-      group.rotation.x = -(from + (to - from) * eased);
+useGLTF.preload(OPEN_HAND_URL);
+useGLTF.preload(FIST_URL);
+useGLTF.preload(PEACE_SIGN_URL);
+
+function findFirstMeshGeometry(scene: THREE.Object3D, url: string): THREE.BufferGeometry {
+  const meshes: THREE.Mesh[] = [];
+  scene.traverse(obj => {
+    if ((obj as THREE.Mesh).isMesh) {
+      meshes.push(obj as THREE.Mesh);
     }
   });
+  const geometry = meshes[0]?.geometry;
+  if (!geometry) {
+    throw new Error(`LowPolyHand: no mesh found in ${url}`);
+  }
+  if (!geometry.attributes.normal) {
+    geometry.computeVertexNormals();
+  }
+  return geometry;
+}
 
-  const direction = mirrored ? -1 : 1;
+function useHandGeometry(url: string): THREE.BufferGeometry {
+  const { scene } = useGLTF(url);
+  return useMemo(() => findFirstMeshGeometry(scene, url), [scene, url]);
+}
+
+function PoseMesh({ pose, material, opacity }: { pose: HandPose; material: ThemeMaterial; opacity: number }) {
+  const asset = POSE_ASSET[pose];
+  const geometry = useHandGeometry(asset.url);
 
   return (
-    <group position={position} scale={[direction, 1, 1]}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[0.65, 0.75, 0.22]} />
+    <group rotation={asset.rotation} scale={asset.scale}>
+      <mesh geometry={geometry} castShadow receiveShadow>
         <meshStandardMaterial
           color={material.baseColor}
           emissive={material.emissive}
           metalness={material.metalness}
           roughness={material.roughness}
+          transparent={opacity < 1}
+          opacity={opacity}
+          depthWrite={opacity >= 1}
         />
       </mesh>
-      {Array.from({ length: FINGER_COUNT }).map((_, i) => (
-        <group
-          key={i}
-          ref={el => {
-            fingerRefs.current[i] = el;
-          }}
-          position={[-0.26 + i * FINGER_SPACING, 0.38, 0]}
-        >
-          <mesh castShadow position={[0, 0.22, 0]}>
-            <boxGeometry args={[0.11, 0.44, 0.16]} />
-            <meshStandardMaterial
-              color={material.baseColor}
-              emissive={material.emissive}
-              metalness={material.metalness}
-              roughness={material.roughness}
-            />
-          </mesh>
-        </group>
-      ))}
+    </group>
+  );
+}
+
+export function LowPolyHand({ pose, position, mirrored, material, transitionProgress }: LowPolyHandProps) {
+  const previousPoseRef = useRef<HandPose>(pose);
+  const fromPoseRef = useRef<HandPose>(pose);
+
+  if (previousPoseRef.current !== pose) {
+    fromPoseRef.current = previousPoseRef.current;
+    previousPoseRef.current = pose;
+  }
+
+  const t = Math.min(Math.max(transitionProgress, 0), 1);
+  const crossfading = fromPoseRef.current !== pose && t < 1;
+
+  const direction = mirrored ? -1 : 1;
+
+  return (
+    <group position={position} scale={[direction, 1, 1]}>
+      {crossfading && <PoseMesh pose={fromPoseRef.current} material={material} opacity={1 - t} />}
+      <PoseMesh pose={pose} material={material} opacity={crossfading ? t : 1} />
     </group>
   );
 }

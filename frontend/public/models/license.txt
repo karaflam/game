@@ -1,0 +1,8 @@
+Model Information:
+* title:	Human Hand Base Mesh
+* source:	https://sketchfab.com/3d-models/human-hand-base-mesh-eaaa6a35c6bb48bda6524de748695be4
+* author:	ferrumiron6 (https://sketchfab.com/ferrumiron6)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
