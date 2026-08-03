@@ -71,7 +71,7 @@ export function RpsSolo() {
   };
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative isolate space-y-6 rounded-3xl border border-border bg-background p-8">
       <ScorePill player={score.player} machine={score.machine} targetScore={RPS_TARGET_SCORE} onReset={reset} />
 
       {round && quality === 'fallback2d' ? (
