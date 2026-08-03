@@ -146,6 +146,16 @@ export function OddOrEvenSolo() {
         </div>
       )}
 
+      {!round && quality !== 'fallback2d' && (
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-3xl opacity-60">
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <OddOrEvenDuelScene round={null} material={getThemeMaterial(theme)} onComplete={() => {}} />
+            </GameCanvas>
+          </Suspense>
+        </div>
+      )}
+
       <MatchEndOverlay winner={winner} onReplay={reset} />
     </div>
   );

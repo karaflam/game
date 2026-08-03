@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { FACE_COUNT, FACE_STEP, angleToFaceIndex, faceIndexToAngle, normalizeAngle } from './drumMath';
+import {
+  FACE_COUNT,
+  FACE_STEP,
+  angleToFaceIndex,
+  drumRotationToFrontFace,
+  faceIndexToAngle,
+  faceIndexToDrumRotation,
+  normalizeAngle
+} from './drumMath';
 
 describe('drumMath', () => {
   it('has 9 faces, one per number 1-9', () => {
@@ -28,5 +36,17 @@ describe('drumMath', () => {
 
   it('angleToFaceIndex wraps around at the 8→0 boundary', () => {
     expect(angleToFaceIndex(faceIndexToAngle(8) + FACE_STEP * 0.6)).toBe(0);
+  });
+
+  it('faceIndexToDrumRotation and drumRotationToFrontFace round-trip for every face', () => {
+    for (let i = 0; i < FACE_COUNT; i++) {
+      expect(drumRotationToFrontFace(faceIndexToDrumRotation(i))).toBe(i);
+    }
+  });
+
+  it('faceIndexToDrumRotation is the negation of faceIndexToAngle', () => {
+    for (let i = 0; i < FACE_COUNT; i++) {
+      expect(faceIndexToDrumRotation(i)).toBeCloseTo(-faceIndexToAngle(i), 10);
+    }
   });
 });

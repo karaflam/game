@@ -3,8 +3,9 @@ import { useRef } from 'react';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { FACE_COUNT, angleToFaceIndex, faceIndexToAngle } from './drumMath';
+import { FACE_COUNT, drumRotationToFrontFace, faceIndexToDrumRotation } from './drumMath';
 import { getRollAngle, isRollSettled } from './rollTimeline';
+import { DRUM_FONT_URL } from './textFont';
 import type { ThemeMaterial } from '../themeMaterials';
 
 export type NumberDrumMode =
@@ -46,7 +47,7 @@ export function NumberDrum({ mode, material, position }: NumberDrumProps) {
   const dragStateRef = useRef<{ dragging: boolean; lastX: number; angle: number }>({
     dragging: false,
     lastX: 0,
-    angle: mode.kind === 'interactive' ? faceIndexToAngle(mode.value - 1) : 0
+    angle: mode.kind === 'interactive' ? faceIndexToDrumRotation(mode.value - 1) : 0
   });
 
   useFrame(() => {
@@ -58,7 +59,7 @@ export function NumberDrum({ mode, material, position }: NumberDrumProps) {
         drum.rotation.x = getRollAngle(mode.elapsedMs, mode.targetValue - 1);
         break;
       case 'settled':
-        drum.rotation.x = faceIndexToAngle(mode.value - 1);
+        drum.rotation.x = faceIndexToDrumRotation(mode.value - 1);
         break;
       case 'masked':
         drum.rotation.x = 0;
@@ -96,11 +97,14 @@ export function NumberDrum({ mode, material, position }: NumberDrumProps) {
     // still down). Otherwise a stale `dragging: true` would make the next
     // plain pointermove — once this drum becomes interactive again — be
     // treated as an active drag with no preceding pointerdown.
+    const wasDragging = dragStateRef.current.dragging;
     dragStateRef.current.dragging = false;
-    if (mode.kind !== 'interactive') return;
-    const snappedFace = angleToFaceIndex(dragStateRef.current.angle);
-    dragStateRef.current.angle = faceIndexToAngle(snappedFace);
-    mode.onChange(snappedFace + 1);
+    // This is also the onPointerLeave handler, so bail out unless a drag was
+    // genuinely in progress — a plain hover-out must not commit a value.
+    if (mode.kind !== 'interactive' || !wasDragging) return;
+    const shownFace = drumRotationToFrontFace(dragStateRef.current.angle);
+    dragStateRef.current.angle = faceIndexToDrumRotation(shownFace);
+    mode.onChange(shownFace + 1);
   };
 
   const isMasked = mode.kind === 'masked';
@@ -119,7 +123,7 @@ export function NumberDrum({ mode, material, position }: NumberDrumProps) {
             <mesh position={[0, 0, DRUM_RADIUS]}>
               <planeGeometry args={[FACE_WIDTH, FACE_HEIGHT]} />
               <meshStandardMaterial
-                color={isMasked ? '#1a1a2444' : material.baseColor}
+                color={isMasked ? '#1a1a24' : material.baseColor}
                 emissive={isMasked ? '#000000' : material.emissive}
                 metalness={material.metalness}
                 roughness={material.roughness}
@@ -132,6 +136,7 @@ export function NumberDrum({ mode, material, position }: NumberDrumProps) {
               color={isMasked ? '#5b5f72' : material.glowColor}
               anchorX="center"
               anchorY="middle"
+              font={DRUM_FONT_URL}
             >
               {faceLabel(mode, i)}
             </Text>

@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
+import { DRUM_FONT_URL } from './textFont';
 import type { ThemeMaterial } from '../themeMaterials';
 
 type SumPlate3DProps = {
@@ -39,10 +40,24 @@ export function SumPlate3D({ sum, parityLabel, outcomeLabel, material, position,
           opacity={0.92}
         />
       </mesh>
-      <Text position={[0, 0.12, 0.01]} fontSize={0.16} color={material.glowColor} anchorX="center" anchorY="middle">
+      <Text
+        position={[0, 0.12, 0.01]}
+        fontSize={0.16}
+        color={material.glowColor}
+        anchorX="center"
+        anchorY="middle"
+        font={DRUM_FONT_URL}
+      >
         {`${sum} — ${parityLabel}`}
       </Text>
-      <Text position={[0, -0.14, 0.01]} fontSize={0.13} color={material.glowColor} anchorX="center" anchorY="middle">
+      <Text
+        position={[0, -0.14, 0.01]}
+        fontSize={0.13}
+        color={material.glowColor}
+        anchorX="center"
+        anchorY="middle"
+        font={DRUM_FONT_URL}
+      >
         {outcomeLabel}
       </Text>
     </group>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { faceIndexToAngle } from './drumMath';
+import { faceIndexToDrumRotation } from './drumMath';
 import { ROLL_DURATION_MS, getRollAngle, isRollSettled } from './rollTimeline';
 
 describe('rollTimeline', () => {
@@ -10,7 +10,7 @@ describe('rollTimeline', () => {
   it('ends exactly on the target face angle plus full turns, at the full duration', () => {
     const targetFace = 4;
     const finalAngle = getRollAngle(ROLL_DURATION_MS, targetFace, 3);
-    const expected = faceIndexToAngle(targetFace) + 3 * 2 * Math.PI;
+    const expected = faceIndexToDrumRotation(targetFace) + 3 * 2 * Math.PI;
     expect(finalAngle).toBeCloseTo(expected, 5);
   });
 

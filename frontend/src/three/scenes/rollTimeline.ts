@@ -1,4 +1,4 @@
-import { faceIndexToAngle } from './drumMath';
+import { faceIndexToDrumRotation } from './drumMath';
 
 export const ROLL_DURATION_MS = 1100;
 const DEFAULT_EXTRA_TURNS = 3;
@@ -11,7 +11,7 @@ function easeOutCubic(t: number): number {
 export function getRollAngle(elapsedMs: number, targetFaceIndex: number, extraTurns: number = DEFAULT_EXTRA_TURNS): number {
   const t = Math.min(Math.max(elapsedMs / ROLL_DURATION_MS, 0), 1);
   const eased = easeOutCubic(t);
-  const totalAngle = extraTurns * 2 * Math.PI + faceIndexToAngle(targetFaceIndex);
+  const totalAngle = extraTurns * 2 * Math.PI + faceIndexToDrumRotation(targetFaceIndex);
   return totalAngle * eased;
 }
 

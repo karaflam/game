@@ -15,3 +15,15 @@ export function angleToFaceIndex(angleRadians: number): number {
   const index = Math.round(normalized / FACE_STEP) % FACE_COUNT;
   return index;
 }
+
+// Each drum face lives in a child group rotated by +faceIndex * FACE_STEP about X,
+// and rotations about the same axis compose additively. So face `i` is front-facing
+// (world +z, toward the camera) when i * FACE_STEP + drumRotation ≡ 0 (mod 2π) —
+// i.e. the drum rotation needed to show face `i` is the *negation* of its own angle.
+export function faceIndexToDrumRotation(faceIndex: number): number {
+  return -faceIndexToAngle(faceIndex);
+}
+
+export function drumRotationToFrontFace(rotation: number): number {
+  return angleToFaceIndex(-rotation);
+}

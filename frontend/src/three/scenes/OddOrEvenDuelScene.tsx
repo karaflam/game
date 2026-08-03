@@ -28,10 +28,13 @@ export function OddOrEvenDuelScene({ round, material, onComplete }: OddOrEvenDue
   const [elapsedMs, setElapsedMs] = useState(0);
   const completedRef = useRef(false);
 
+  // Key the reset on the round's primitive values, not on object identity: callers
+  // build `round` as a fresh object literal every render, so depending on `round`
+  // itself would restart the reveal on any unrelated parent re-render.
   useEffect(() => {
     completedRef.current = false;
     setElapsedMs(0);
-  }, [round]);
+  }, [round?.yourValue, round?.opponentValue]);
 
   useFrame((_, delta) => {
     if (!round || completedRef.current) return;
