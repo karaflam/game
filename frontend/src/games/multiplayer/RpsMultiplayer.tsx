@@ -1,12 +1,22 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useGLTF } from '@react-three/drei';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
 import { ClientEvents, ServerEvents } from '@/lib/socketEvents';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { DuelReveal } from '@/components/solo/reveals/DuelReveal';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import { OPEN_HAND_URL, FIST_URL, PEACE_SIGN_URL } from '@/three/scenes/LowPolyHand';
+import useTheme from '@/hooks/useTheme';
 import type { Winner } from '@/lib/soloScore';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const HandDuelScene = lazy(() =>
+  import('@/three/scenes/HandDuelScene').then(m => ({ default: m.HandDuelScene }))
+);
 
 const RPS_TARGET_SCORE = 5;
 const RPS_MOVES = ['pierre', 'feuille', 'ciseau'] as const;
@@ -39,10 +49,20 @@ export function RpsMultiplayer() {
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
   const [waiting, setWaiting] = useState(false);
   const [round, setRound] = useState<RoundResult | null>(null);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
+
+  useEffect(() => {
+    // Preload the hand models once the player has actually navigated to this
+    // game, rather than at app boot (see LowPolyHand.tsx for the pose->asset map).
+    useGLTF.preload(OPEN_HAND_URL);
+    useGLTF.preload(FIST_URL);
+    useGLTF.preload(PEACE_SIGN_URL);
+  }, []);
 
   useEffect(() => {
     if (!socket || !socketId) {
@@ -118,7 +138,7 @@ export function RpsMultiplayer() {
   };
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
+    <div className="relative isolate space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill
         player={myScore}
         machine={opponentScore}
@@ -129,7 +149,7 @@ export function RpsMultiplayer() {
         hasOpponent={!!opponent}
       />
 
-      {round ? (
+      {round && quality === 'fallback2d' ? (
         <DuelReveal
           playerEmoji={moveEmojis[round.yourMove]}
           playerLabel={moveLabels[round.yourMove]}
@@ -138,6 +158,27 @@ export function RpsMultiplayer() {
           outcome={round.outcome}
           onComplete={handleRevealComplete}
         />
+      ) : round ? (
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-72">
+          <div className="absolute inset-0">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <HandDuelScene
+                  round={{ player: round.yourMove, machine: round.opponentMove, outcome: round.outcome }}
+                  material={getThemeMaterial(theme)}
+                  onComplete={handleRevealComplete}
+                />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="absolute inset-x-0 bottom-4 text-center text-lg font-bold text-foreground">
+            {round.outcome === 'player'
+              ? t('solo.rps.duelOutcomeWin')
+              : round.outcome === 'machine'
+                ? t('solo.rps.duelOutcomeLose')
+                : t('solo.rps.duelOutcomeDraw')}
+          </p>
+        </div>
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
@@ -158,6 +199,16 @@ export function RpsMultiplayer() {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {!round && quality !== 'fallback2d' && (
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-3xl opacity-60">
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <HandDuelScene round={null} material={getThemeMaterial(theme)} onComplete={() => {}} />
+            </GameCanvas>
+          </Suspense>
         </div>
       )}
 
