@@ -17,10 +17,16 @@ type PlayerWheelSceneProps = {
 
 const WHEEL_RADIUS = 1.1;
 const WEDGE_THICKNESS = 0.15;
+const BEVEL_THICKNESS = 0.02;
 const RIM_RADIUS = 1.18;
 const RIM_THICKNESS = 0.08;
 const HUB_RADIUS = 0.18;
 const HUB_HEIGHT = 0.2;
+// Text must clear the wedge's true beveled front face, which sits at
+// WEDGE_THICKNESS + BEVEL_THICKNESS (ExtrudeGeometry's bevel adds its own
+// thickness on top of `depth`), not just WEDGE_THICKNESS. The extra +0.13
+// keeps this at the same total offset (0.30) already confirmed visible.
+const TEXT_Z_OFFSET = WEDGE_THICKNESS + BEVEL_THICKNESS + 0.13;
 
 // Camera looks down at the wheel from ~36° above the horizontal instead of
 // straight overhead, so the wedges' thickness, bevel, and metal shading are
@@ -60,7 +66,7 @@ function buildWedgeGeometry(index: number, wedgeCount: number): THREE.ExtrudeGeo
   return new THREE.ExtrudeGeometry(shape, {
     depth: WEDGE_THICKNESS,
     bevelEnabled: true,
-    bevelThickness: 0.02,
+    bevelThickness: BEVEL_THICKNESS,
     bevelSize: 0.02,
     bevelSegments: 2
   });
@@ -120,6 +126,16 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
     [wedgeCount]
   );
 
+  // R3F only auto-disposes geometries it constructs from JSX (<bufferGeometry>
+  // etc.) — geometries passed in via a `geometry={...}` prop, like these, are
+  // the caller's responsibility. Without this, every remount/round or
+  // wedgeCount change (players joining/leaving) leaks the old GPU buffers.
+  useEffect(() => {
+    return () => {
+      wedgeGeometries.forEach(g => g.dispose());
+    };
+  }, [wedgeGeometries]);
+
   return (
     <group>
       <WheelCamera />
@@ -160,16 +176,17 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
                   this color in place on an existing troika-three-text
                   instance, which can leave its SDF glyph render stuck blank
                   instead of redrawing — see NumberDrum.tsx's identical fix. */}
-              {/* z-offset of WEDGE_THICKNESS + 0.15 (not + 0.01): a smaller
-                  offset put the text close enough to the wedge's own front
-                  face to be occluded/z-fight against it, rendering fully
-                  invisible in manual testing — confirmed by moving the text
-                  far in front (z=1) as a debug check, where it rendered
-                  correctly, then dialing the offset back down to the
-                  smallest value that stayed reliably visible. */}
+              {/* TEXT_Z_OFFSET must clear the wedge's true beveled front face
+                  at WEDGE_THICKNESS + BEVEL_THICKNESS, not just
+                  WEDGE_THICKNESS. The earlier bug (offset WEDGE_THICKNESS +
+                  0.01) sat behind that beveled face, so the text was simply
+                  occluded by the wedge geometry — not z-fighting against it —
+                  confirmed by moving the text far in front (z=1) as a debug
+                  check, where it rendered correctly, then dialing the offset
+                  back down to the smallest value that stayed visible. */}
               <Text
                 key={`${i}-${material.glowColor}`}
-                position={[textRadius * Math.cos(mathAngle), textRadius * Math.sin(mathAngle), WEDGE_THICKNESS + 0.15]}
+                position={[textRadius * Math.cos(mathAngle), textRadius * Math.sin(mathAngle), TEXT_Z_OFFSET]}
                 rotation={[0, 0, -textAngle]}
                 fontSize={0.2}
                 color={material.glowColor}
