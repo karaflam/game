@@ -18,6 +18,10 @@ const VARIANT_COLOR: Record<BurstVariant, (material: ThemeMaterial) => string> =
   neutral: material => material.particleColor
 };
 
+export function getVariantColor(variant: BurstVariant, material: ThemeMaterial): string {
+  return VARIANT_COLOR[variant](material);
+}
+
 function IconShape({ variant, color }: { variant: BurstVariant; color: string }) {
   if (variant === 'success') {
     // Checkmark: two short bars meeting at an angle.
@@ -72,7 +76,7 @@ export function BurstBadge({ variant, material }: BurstBadgeProps) {
     group.scale.setScalar(getBadgeScale(elapsedMs));
   });
 
-  const color = VARIANT_COLOR[variant](material);
+  const color = getVariantColor(variant, material);
 
   return (
     <group ref={groupRef}>

@@ -1,4 +1,4 @@
-import { BurstBadge, type BurstVariant } from './BurstBadge';
+import { BurstBadge, getVariantColor, type BurstVariant } from './BurstBadge';
 import { BurstParticles } from './BurstParticles';
 import type { ThemeMaterial } from '../themeMaterials';
 
@@ -8,7 +8,7 @@ type BadgeBurstSceneProps = {
 };
 
 export function BadgeBurstScene({ variant, material }: BadgeBurstSceneProps) {
-  const burstColor = variant === 'success' ? material.glowColor : variant === 'fail' ? '#7a2b2b' : material.particleColor;
+  const burstColor = getVariantColor(variant, material);
 
   return (
     <group>
