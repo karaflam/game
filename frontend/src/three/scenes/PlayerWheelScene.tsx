@@ -28,6 +28,15 @@ const HUB_HEIGHT = 0.2;
 // keeps this at the same total offset (0.30) already confirmed visible.
 const TEXT_Z_OFFSET = WEDGE_THICKNESS + BEVEL_THICKNESS + 0.13;
 
+// Fixed, theme-independent brushed-steel tone for the rim and hub, rather
+// than a theme color: baseColor/drumBaseColor were tuned for small carousel
+// cards against a background, not a large solid metal disc, and in practice
+// stayed too close to sceneBackground in more than one theme (clair and
+// romantique, not just the sombre/luxueux pair drumBaseColor was written
+// for). A neutral mid-gray sits distinctly between every theme's near-white
+// and near-black background by construction, so it can't repeat this bug.
+const RIM_HUB_COLOR = '#9CA6B5';
+
 // Camera looks down at the wheel from ~36° above the horizontal instead of
 // straight overhead, so the wedges' thickness, bevel, and metal shading are
 // actually visible — a flat top-down view reads as "almost 2D" even with
@@ -70,6 +79,19 @@ function buildWedgeGeometry(index: number, wedgeCount: number): THREE.ExtrudeGeo
     bevelSize: 0.02,
     bevelSegments: 2
   });
+}
+
+// Picks a legible label color for a given wedge fill: the wedge alternates
+// between glowColor and particleColor, and neither is reliably light or
+// dark across all 4 themes (luxueux's glowColor is a bright gold, for
+// instance), so a fixed text color would go invisible on some wedges.
+function getContrastTextColor(hexColor: string): string {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.55 ? '#111111' : '#ffffff';
 }
 
 function truncateLabel(name: string): string {
@@ -146,11 +168,7 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
           without any wheel-specific color logic. */}
       <mesh position={[0, 0, -RIM_THICKNESS / 2]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[RIM_RADIUS, RIM_RADIUS, RIM_THICKNESS, 48]} />
-        <meshStandardMaterial
-          color={material.baseColor}
-          metalness={Math.min(1, material.metalness + 0.3)}
-          roughness={Math.max(0.1, material.roughness - 0.1)}
-        />
+        <meshStandardMaterial color={RIM_HUB_COLOR} metalness={0.85} roughness={0.25} />
       </mesh>
 
       {/* Fixed pointer, outside the rotating group — stays at "up" regardless
@@ -162,7 +180,14 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
 
       <group ref={wedgeGroupRef}>
         {Array.from({ length: wedgeCount }).map((_, i) => {
-          const fillColor = i % 2 === 0 ? material.baseColor : material.particleColor;
+          // glowColor/particleColor (not baseColor/drumBaseColor): both are
+          // already proven to read clearly against every theme's background
+          // — they're what the pointer, the digit text, and the ambient
+          // particles already use. baseColor-family colors kept turning out
+          // too close to sceneBackground in one theme or another (sombre and
+          // luxueux, then clair and romantique too) to trust for a wedge
+          // that's a large chunk of the wheel's visible surface.
+          const fillColor = i % 2 === 0 ? material.glowColor : material.particleColor;
           const textAngle = wedgeCenterAngle(i, wedgeCount);
           const mathAngle = clockwiseToMathAngle(textAngle);
           const textRadius = WHEEL_RADIUS * 0.62;
@@ -172,10 +197,11 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
               <mesh geometry={wedgeGeometries[i]}>
                 <meshStandardMaterial color={fillColor} metalness={material.metalness} roughness={material.roughness} />
               </mesh>
-              {/* Keyed on the color it renders: switching themes live changes
-                  this color in place on an existing troika-three-text
-                  instance, which can leave its SDF glyph render stuck blank
-                  instead of redrawing — see NumberDrum.tsx's identical fix. */}
+              {/* Keyed on the wedge's fill color: switching themes live
+                  changes the derived text color in place on an existing
+                  troika-three-text instance, which can leave its SDF glyph
+                  render stuck blank instead of redrawing — see
+                  NumberDrum.tsx's identical fix. */}
               {/* TEXT_Z_OFFSET must clear the wedge's true beveled front face
                   at WEDGE_THICKNESS + BEVEL_THICKNESS, not just
                   WEDGE_THICKNESS. The earlier bug (offset WEDGE_THICKNESS +
@@ -185,11 +211,11 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
                   check, where it rendered correctly, then dialing the offset
                   back down to the smallest value that stayed visible. */}
               <Text
-                key={`${i}-${material.glowColor}`}
+                key={`${i}-${fillColor}`}
                 position={[textRadius * Math.cos(mathAngle), textRadius * Math.sin(mathAngle), TEXT_Z_OFFSET]}
                 rotation={[0, 0, -textAngle]}
                 fontSize={0.2}
-                color={material.glowColor}
+                color={getContrastTextColor(fillColor)}
                 anchorX="center"
                 anchorY="middle"
                 font={DRUM_FONT_URL}
@@ -204,11 +230,7 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
       {/* Hub: sits in front of the wedges, covering their inner point. */}
       <mesh position={[0, 0, WEDGE_THICKNESS + 0.02]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[HUB_RADIUS, HUB_RADIUS, HUB_HEIGHT, 24]} />
-        <meshStandardMaterial
-          color={material.baseColor}
-          metalness={Math.min(1, material.metalness + 0.3)}
-          roughness={Math.max(0.1, material.roughness - 0.1)}
-        />
+        <meshStandardMaterial color={RIM_HUB_COLOR} metalness={0.85} roughness={0.25} />
       </mesh>
     </group>
   );
