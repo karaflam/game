@@ -30,7 +30,11 @@ const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
     glowColor: '#2563EB',
     particleColor: '#7C3AED',
     sceneBackground: '#F0F2F7',
-    cardColor: '#E2E8F0'
+    // Lighter than ScorePill's actual --color-secondary (#E2E8F0) on purpose —
+    // reveal cards (BurstBadge/CardFlipScene, the only readers of this field)
+    // read better a shade brighter in clair specifically. sombre/luxueux/
+    // romantique's cardColor still mirrors their --color-secondary exactly.
+    cardColor: '#FAFBFD'
   },
   sombre: {
     baseColor: '#0F1629',
