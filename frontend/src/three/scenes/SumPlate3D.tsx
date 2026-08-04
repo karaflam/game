@@ -30,11 +30,17 @@ export function SumPlate3D({ sum, parityLabel, outcomeLabel, material, position,
     <group ref={groupRef} position={position}>
       {/* Non-emissive plate: `emissive` and `glowColor` are the same color in
           every theme, so a glowing plate made the text below blend into its
-          own background — see the identical fix in NumberDrum.tsx. */}
+          own background — see the identical fix in NumberDrum.tsx.
+          Fixed neutral color (not material.baseColor): baseColor kept
+          turning out too close to sceneBackground in one theme or another
+          for other 3D elements (the number carousel's cards, the player
+          wheel's rim/hub) — a dark, theme-independent slate reads as a
+          distinct backing panel in every theme, with glowColor text (below,
+          already proven to pop against every theme's background) on top. */}
       <mesh>
         <planeGeometry args={[1.6, 0.6]} />
         <meshStandardMaterial
-          color={material.baseColor}
+          color="#1F2430"
           metalness={material.metalness}
           roughness={material.roughness}
           side={THREE.DoubleSide}
