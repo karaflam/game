@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScorePill } from '@/components/solo/ScorePill';
@@ -8,6 +8,12 @@ import { useSoloScore } from '@/hooks/useSoloScore';
 import { soloTwentyQuestionsWords } from '@/data/soloPrompts';
 import { pickRandomIndexExcluding } from '@/lib/randomPick';
 import { getHintForAttempt, isCorrectGuess } from '@/lib/twentyQuestionsLogic';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
 
 const TWENTY_QUESTIONS_TARGET_SCORE = 3;
 const MAX_ATTEMPTS = 20;
@@ -16,6 +22,8 @@ type RoundResult = { outcome: 'player' | 'machine'; answer: string; triesUsed: n
 
 export function TwentyQuestionsSolo() {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
   const words = soloTwentyQuestionsWords[i18n.language === 'en' ? 'en' : 'fr'];
   const { score, winner, isMatchOver, recordRound, reset } = useSoloScore(TWENTY_QUESTIONS_TARGET_SCORE);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(() => new Set());
@@ -98,7 +106,7 @@ export function TwentyQuestionsSolo() {
     <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
       <ScorePill player={score.player} machine={score.machine} targetScore={TWENTY_QUESTIONS_TARGET_SCORE} onReset={reset} />
 
-      {roundResult ? (
+      {roundResult && quality === 'fallback2d' ? (
         <BurstReveal
           icon={roundResult.outcome === 'player' ? 'success' : 'fail'}
           headline={
@@ -109,6 +117,35 @@ export function TwentyQuestionsSolo() {
           detail={roundResult.outcome === 'player' ? t('solo.twentyQuestions.revealDetail', { tries: roundResult.triesUsed }) : undefined}
           onComplete={handleRevealComplete}
         />
+      ) : roundResult ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleRevealComplete}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              handleRevealComplete();
+            }
+          }}
+          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+        >
+          <div className="relative h-40 w-40">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <BadgeBurstScene variant={roundResult.outcome === 'player' ? 'success' : 'fail'} material={getThemeMaterial(theme)} />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="max-w-sm text-sm font-semibold text-foreground">
+            {roundResult.outcome === 'player'
+              ? t('solo.twentyQuestions.revealWon', { answer: roundResult.answer })
+              : t('solo.twentyQuestions.revealLost', { answer: roundResult.answer })}
+          </p>
+          {roundResult.outcome === 'player' ? (
+            <p className="text-sm text-muted-foreground">{t('solo.twentyQuestions.revealDetail', { tries: roundResult.triesUsed })}</p>
+          ) : null}
+          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+        </div>
       ) : (
         <>
           <p className="text-sm text-muted-foreground">{message}</p>
