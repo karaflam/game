@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
 import { useSoloScore } from '@/hooks/useSoloScore';
 import { soloTwoTruthsOneLieTriplets } from '@/data/soloPrompts';
 import { pickRandomIndexExcluding } from '@/lib/randomPick';
 import { shuffleTriplet } from '@/lib/twoTruthsLogic';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
 
 const TWO_TRUTHS_TARGET_SCORE = 5;
 
@@ -22,6 +28,8 @@ export function TwoTruthsOneLieSolo() {
   const [triplet, setTriplet] = useState(() => shuffleTriplet(triplets[tripletIndex]));
   const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
   const [roundOver, setRoundOver] = useState(false);
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
 
   const nextRound = () => {
     const currentUsed = new Set(usedIndices);
@@ -62,13 +70,38 @@ export function TwoTruthsOneLieSolo() {
     <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
       <ScorePill player={score.player} machine={score.machine} targetScore={TWO_TRUTHS_TARGET_SCORE} onReset={reset} />
 
-      {roundResult ? (
+      {roundResult && quality === 'fallback2d' ? (
         <BurstReveal
           icon={roundResult.outcome === 'player' ? 'success' : 'fail'}
           headline={roundResult.outcome === 'player' ? t('solo.twoTruthsOneLie.won') : t('solo.twoTruthsOneLie.lost')}
           detail={t('solo.twoTruthsOneLie.detail', { lie: roundResult.lieText })}
           onComplete={handleRevealComplete}
         />
+      ) : roundResult ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleRevealComplete}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              handleRevealComplete();
+            }
+          }}
+          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+        >
+          <div className="relative h-40 w-40">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <BadgeBurstScene variant={roundResult.outcome === 'player' ? 'success' : 'fail'} material={getThemeMaterial(theme)} />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="max-w-sm text-sm font-semibold text-foreground">
+            {roundResult.outcome === 'player' ? t('solo.twoTruthsOneLie.won') : t('solo.twoTruthsOneLie.lost')}
+          </p>
+          <p className="text-sm text-muted-foreground">{t('solo.twoTruthsOneLie.detail', { lie: roundResult.lieText })}</p>
+          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+        </div>
       ) : (
         <>
           <p className="text-sm text-muted-foreground">{t('solo.twoTruthsOneLie.instructions')}</p>
