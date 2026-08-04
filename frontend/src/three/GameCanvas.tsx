@@ -1,10 +1,48 @@
-import { Suspense, type ReactNode } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Suspense, useEffect, type ReactNode } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import * as THREE from 'three';
 import { ParticleField } from './ambient/ParticleField';
 import { getThemeMaterial } from './themeMaterials';
 import type { ThemeId } from '@/hooks/useTheme';
 import type { Quality } from './qualityTracker';
+
+// A fixed vertical FOV means the *horizontal* FOV shrinks on a narrow/tall
+// container (hFov depends on vFov and aspect) — on a narrow mobile reveal
+// box this pushed content spread out sideways (e.g. Odd or Even's two
+// number drums) outside the camera's view entirely, rendering as clipped
+// fragments at the frame edges.
+//
+// This only kicks in for portrait-ish containers (aspect < 1, i.e. taller
+// than wide — the mobile case). Landscape/desktop containers keep the
+// original fixed vertical FOV: applying the same horizontal-FOV-preserving
+// formula there would shrink the vertical FOV drastically on a wide desktop
+// canvas (e.g. aspect ~2.4 → vertical FOV collapses to ~22°), visibly
+// changing how every scene is framed on desktop just to fix a mobile-only
+// clipping bug.
+const BASE_VERTICAL_FOV_DEG = 45;
+const TARGET_HORIZONTAL_FOV_DEG = 50;
+
+function ResponsiveCamera() {
+  const camera = useThree(state => state.camera);
+  const size = useThree(state => state.size);
+
+  useEffect(() => {
+    if (!(camera instanceof THREE.PerspectiveCamera) || size.height === 0) return;
+    const aspect = size.width / size.height;
+
+    if (aspect >= 1) {
+      camera.fov = BASE_VERTICAL_FOV_DEG;
+    } else {
+      const horizontalFovRad = (TARGET_HORIZONTAL_FOV_DEG * Math.PI) / 180;
+      const verticalFovRad = 2 * Math.atan(Math.tan(horizontalFovRad / 2) / aspect);
+      camera.fov = (verticalFovRad * 180) / Math.PI;
+    }
+    camera.updateProjectionMatrix();
+  }, [camera, size]);
+
+  return null;
+}
 
 type GameCanvasProps = {
   theme: ThemeId;
@@ -31,6 +69,7 @@ export function GameCanvas({ theme, quality, children, bloom = true }: GameCanva
       dpr={[1, quality === 'high' ? 2 : 1]}
       style={{ touchAction: 'none' }}
     >
+      <ResponsiveCamera />
       <color attach="background" args={[material.sceneBackground]} />
       <fog attach="fog" args={[material.sceneBackground, 4, 9]} />
       <ambientLight intensity={0.6} />

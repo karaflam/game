@@ -158,7 +158,7 @@ export function OddOrEvenMultiplayer() {
           onComplete={handleRevealComplete}
         />
       ) : round ? (
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-[28rem]">
+        <div className="relative -mx-4 aspect-[3/4] w-[calc(100%+2rem)] overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[28rem] sm:w-full">
           <Suspense fallback={null}>
             <GameCanvas theme={theme} quality={quality} bloom={false}>
               <OddOrEvenDuelScene
@@ -186,7 +186,7 @@ export function OddOrEvenMultiplayer() {
           {quality === 'fallback2d' ? (
             <NumberTokenPicker value={playerNumber} onChange={setPlayerNumber} disabled={waiting || matchOver} />
           ) : (
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-72">
+            <div className="relative -mx-4 aspect-[4/3] w-[calc(100%+2rem)] overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-72 sm:w-full">
               <Suspense fallback={null}>
                 <GameCanvas theme={theme} quality={quality} bloom={false}>
                   <NumberDrum

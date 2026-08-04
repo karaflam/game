@@ -11,6 +11,10 @@ export type ThemeMaterial = {
    * itself never blends into its own backdrop (an issue on the light theme,
    * where the page background is nearly white). */
   sceneBackground: string;
+  /** Optional override for the number drum's face color specifically —
+   * falls back to baseColor when unset. Only defined for themes where
+   * baseColor turned out too close to sceneBackground for the drum. */
+  drumBaseColor?: string;
 };
 
 const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
@@ -30,7 +34,12 @@ const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
     roughness: 0.25,
     glowColor: '#22D3EE',
     particleColor: '#A855F7',
-    sceneBackground: '#030712'
+    sceneBackground: '#030712',
+    // #0F1629 (baseColor) sits close enough to #030712 (sceneBackground) in
+    // luminance that the number drum's card faces blended into the canvas
+    // background. Only the drum reads this — RPS hands, cards, and badges
+    // still use baseColor and are unaffected.
+    drumBaseColor: '#1E2A4A'
   },
   luxueux: {
     baseColor: '#1A1200',
@@ -39,7 +48,10 @@ const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
     roughness: 0.2,
     glowColor: '#FBBF24',
     particleColor: '#FDE047',
-    sceneBackground: '#0A0800'
+    sceneBackground: '#0A0800',
+    // Same issue as sombre: baseColor was nearly indistinguishable from
+    // sceneBackground for the drum's faces specifically.
+    drumBaseColor: '#3A2A08'
   },
   romantique: {
     baseColor: '#2D1020',

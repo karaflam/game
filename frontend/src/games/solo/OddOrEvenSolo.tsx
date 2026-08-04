@@ -72,7 +72,7 @@ export function OddOrEvenSolo() {
   };
 
   return (
-    <div className="relative isolate space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative isolate space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill player={score.player} machine={score.machine} targetScore={ODD_OR_EVEN_TARGET_SCORE} onReset={reset} />
 
       {round && quality === 'fallback2d' ? (
@@ -88,7 +88,7 @@ export function OddOrEvenSolo() {
           onComplete={handleRevealComplete}
         />
       ) : round ? (
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-[28rem]">
+        <div className="relative -mx-4 aspect-[3/4] w-[calc(100%+2rem)] overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[28rem] sm:w-full">
           <Suspense fallback={null}>
             <GameCanvas theme={theme} quality={quality} bloom={false}>
               <OddOrEvenDuelScene
@@ -113,7 +113,7 @@ export function OddOrEvenSolo() {
           {quality === 'fallback2d' ? (
             <NumberTokenPicker value={playerNumber} onChange={setPlayerNumber} disabled={isMatchOver} />
           ) : (
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-muted sm:aspect-auto sm:h-72">
+            <div className="relative -mx-4 aspect-[4/3] w-[calc(100%+2rem)] overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-72 sm:w-full">
               <Suspense fallback={null}>
                 <GameCanvas theme={theme} quality={quality} bloom={false}>
                   <NumberDrum

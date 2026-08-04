@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { NumberDrum } from './NumberDrum';
 import { PlusSymbol3D } from './PlusSymbol3D';
 import { SumPlate3D } from './SumPlate3D';
-import { isRollSettled, ROLL_DURATION_MS } from './rollTimeline';
+import { isRollSettled, ROLL_DURATION_MS } from './carouselTimeline';
 import type { ThemeMaterial } from '../themeMaterials';
 
 export type OddOrEvenRound = {
@@ -48,12 +48,25 @@ export function OddOrEvenDuelScene({ round, material, onComplete }: OddOrEvenDue
     });
   });
 
+  // Two carousels side by side: vertical orientation (cards stack above/below
+  // center) instead of horizontal, so each carousel's neighbor cards spread
+  // up and down within its own column instead of reaching sideways into the
+  // other carousel's space and the plus sign between them.
+  // The desktop reveal container keeps a fixed (non-responsive) 45° vertical
+  // camera FOV, which at this scene's camera distance leaves only about
+  // ±1.3 world units of vertical room in total — split between the
+  // carousels and the plate below them. These values are sized to that
+  // budget: the plate must stay above roughly y=-0.7 to remain on-screen.
+  const DRUM_X = 1.05;
+  const DRUM_Y = 0.55;
+  const PLATE_Y = -0.45;
+
   if (!round) {
     return (
       <group>
-        <NumberDrum mode={{ kind: 'masked' }} material={material} position={[-1.3, 0, 0]} />
-        <PlusSymbol3D material={material} position={[0, 0, 0]} />
-        <NumberDrum mode={{ kind: 'masked' }} material={material} position={[1.3, 0, 0]} />
+        <NumberDrum mode={{ kind: 'masked' }} material={material} position={[-DRUM_X, DRUM_Y, 0]} orientation="vertical" />
+        <PlusSymbol3D material={material} position={[0, DRUM_Y, 0]} />
+        <NumberDrum mode={{ kind: 'masked' }} material={material} position={[DRUM_X, DRUM_Y, 0]} orientation="vertical" />
       </group>
     );
   }
@@ -65,15 +78,20 @@ export function OddOrEvenDuelScene({ round, material, onComplete }: OddOrEvenDue
 
   return (
     <group>
-      <NumberDrum mode={{ kind: 'settled', value: round.yourValue }} material={material} position={[-1.3, 0, 0]} />
-      <PlusSymbol3D material={material} position={[0, 0, 0]} />
-      <NumberDrum mode={opponentMode} material={material} position={[1.3, 0, 0]} />
+      <NumberDrum
+        mode={{ kind: 'settled', value: round.yourValue }}
+        material={material}
+        position={[-DRUM_X, DRUM_Y, 0]}
+        orientation="vertical"
+      />
+      <PlusSymbol3D material={material} position={[0, DRUM_Y, 0]} />
+      <NumberDrum mode={opponentMode} material={material} position={[DRUM_X, DRUM_Y, 0]} orientation="vertical" />
       <SumPlate3D
         sum={round.sum}
         parityLabel={round.parityLabel}
         outcomeLabel={round.outcomeLabel}
         material={material}
-        position={[0, -0.9, 0]}
+        position={[0, PLATE_Y, 0]}
         visible={elapsedMs >= PLATE_DELAY_MS}
       />
     </group>
