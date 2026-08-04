@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
@@ -10,6 +10,12 @@ import { PlayerWheel } from '@/components/solo/PlayerWheel';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import type { Winner } from '@/lib/soloScore';
 import { soloTruthOrDarePrompts } from '@/data/soloPrompts';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
 
 const TARGET_SCORE = 5;
 
@@ -18,6 +24,8 @@ type ContentType = 'action' | 'truth';
 
 export function TruthOrDareMultiplayer() {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
   const { socket, socketId } = useSocket();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
@@ -282,7 +290,7 @@ export function TruthOrDareMultiplayer() {
         </div>
       ) : null}
 
-      {phase === 'result' ? (
+      {phase === 'result' && quality === 'fallback2d' ? (
         <BurstReveal
           icon={resultApproved ? 'success' : 'fail'}
           headline={
@@ -296,6 +304,36 @@ export function TruthOrDareMultiplayer() {
           }
           onComplete={handleResultRevealComplete}
         />
+      ) : phase === 'result' ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleResultRevealComplete}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              handleResultRevealComplete();
+            }
+          }}
+          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+        >
+          <div className="relative h-40 w-40">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <BadgeBurstScene variant={resultApproved ? 'success' : 'fail'} material={getThemeMaterial(theme)} />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="max-w-sm text-sm font-semibold text-foreground">
+            {isActive
+              ? resultApproved
+                ? t('multiplayer.truthOrDare.resultValidated')
+                : t('multiplayer.truthOrDare.resultRefused')
+              : resultApproved
+                ? t('multiplayer.truthOrDare.resultOpponentGains', { name: activePlayerName })
+                : t('multiplayer.truthOrDare.resultOpponentNoGain', { name: activePlayerName })}
+          </p>
+          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+        </div>
       ) : null}
 
       <MatchEndOverlay winner={winner} onReplay={handleReplay} opponentLabel={opponent?.name ?? t('multiplayer.common.opponentFallback')} />
