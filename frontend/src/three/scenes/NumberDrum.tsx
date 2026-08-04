@@ -180,6 +180,14 @@ export function NumberDrum({ mode, material, position, orientation = 'horizontal
               <meshBasicMaterial color={isMasked ? '#1a1a24' : material.drumBaseColor ?? material.baseColor} />
             </mesh>
             <Text
+              // Keyed on the color it renders: switching themes live (not a
+              // page reload) changes this color in place on the existing
+              // troika-three-text instance, which can leave its SDF glyph
+              // render stuck blank instead of redrawing — a hard refresh
+              // "fixes" it only because it forces a fresh mount. Keying on
+              // the color forces that same fresh mount on every theme
+              // switch instead of patching the live instance.
+              key={isMasked ? 'masked' : material.glowColor}
               position={[0, 0, 0.01]}
               fontSize={0.5}
               color={isMasked ? '#5b5f72' : material.glowColor}

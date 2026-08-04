@@ -42,7 +42,13 @@ export function SumPlate3D({ sum, parityLabel, outcomeLabel, material, position,
           opacity={0.92}
         />
       </mesh>
+      {/* Keyed on color: switching themes live (not a page reload) changes
+          this color in place on the existing troika-three-text instance,
+          which can leave its SDF glyph render stuck blank instead of
+          redrawing. Keying on the color forces a fresh mount on every
+          theme switch instead of patching the live instance. */}
       <Text
+        key={`sum-${material.glowColor}`}
         position={[0, 0.12, 0.01]}
         fontSize={0.16}
         color={material.glowColor}
@@ -53,6 +59,7 @@ export function SumPlate3D({ sum, parityLabel, outcomeLabel, material, position,
         {`${sum} — ${parityLabel}`}
       </Text>
       <Text
+        key={`outcome-${material.glowColor}`}
         position={[0, -0.14, 0.01]}
         fontSize={0.13}
         color={material.glowColor}
