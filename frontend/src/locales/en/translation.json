@@ -293,7 +293,7 @@
     },
     "wouldYouRather": {
       "yourChoice": "You: “{{choice}}”",
-      "aiSame": "AI: “{{choice}}” — same wavelength!",
+      "aiSame": "You both picked: “{{choice}}” — same wavelength!",
       "aiDifferent": "AI: “{{choice}}” — not on the same page this time.",
       "instructions": "Would you rather...",
       "nextDilemmaButton": "Next dilemma",
@@ -407,7 +407,7 @@
     },
     "wouldYouRather": {
       "yourChoice": "You: “{{choice}}”",
-      "opponentSame": "{{name}}: “{{choice}}” — same choice, +1 each!",
+      "opponentSame": "You and {{name}} both picked: “{{choice}}” — +1 each!",
       "opponentDifferent": "{{name}}: “{{choice}}” — different choices this time.",
       "waitingOpponent": "Choice sent, waiting for the opponent...",
       "instructions": "Would you rather...",

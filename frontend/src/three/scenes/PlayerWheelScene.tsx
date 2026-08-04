@@ -5,6 +5,7 @@ import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { WHEEL_SPIN_DURATION_MS, getWheelRotation, isWheelSpinSettled, wedgeCenterAngle } from './wheelTimeline';
 import { DRUM_FONT_URL } from './textFont';
+import { getContrastTextColor } from '../colorContrast';
 import type { ThemeMaterial } from '../themeMaterials';
 
 type PlayerWheelSceneProps = {
@@ -79,19 +80,6 @@ function buildWedgeGeometry(index: number, wedgeCount: number): THREE.ExtrudeGeo
     bevelSize: 0.02,
     bevelSegments: 2
   });
-}
-
-// Picks a legible label color for a given wedge fill: the wedge alternates
-// between glowColor and particleColor, and neither is reliably light or
-// dark across all 4 themes (luxueux's glowColor is a bright gold, for
-// instance), so a fixed text color would go invisible on some wedges.
-function getContrastTextColor(hexColor: string): string {
-  const hex = hexColor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance > 0.55 ? '#111111' : '#ffffff';
 }
 
 function truncateLabel(name: string): string {
@@ -212,6 +200,11 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
                   back down to the smallest value that stayed visible. */}
               <Text
                 key={`${i}-${fillColor}`}
+                // See NumberDrum.tsx: troika's async glyph build can leave a
+                // stale/empty bounding sphere on the first frame, which default
+                // frustum culling can mistake for off-screen — worse here since
+                // this text also sits inside a group that rotates every frame.
+                frustumCulled={false}
                 position={[textRadius * Math.cos(mathAngle), textRadius * Math.sin(mathAngle), TEXT_Z_OFFSET]}
                 rotation={[0, 0, -textAngle]}
                 fontSize={0.2}

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGLTF } from '@react-three/drei';
 import { useSocket } from '@/hooks/useSocket';
@@ -55,6 +55,11 @@ export function RpsMultiplayer() {
   const [round, setRound] = useState<RoundResult | null>(null);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
+  // Set only once the duel reveal's onComplete fires (handleRevealComplete), not on
+  // receipt of the result: MatchEndOverlay renders as an absolute inset-0 overlay in
+  // the same container as the reveal, so committing this immediately would cover the
+  // last round's reveal animation before the player ever sees it finish.
+  const pendingMatchEndRef = useRef<{ matchOver: boolean; winner: Winner } | null>(null);
 
   useEffect(() => {
     // Preload the hand models once the player has actually navigated to this
@@ -73,12 +78,15 @@ export function RpsMultiplayer() {
       setWaiting(false);
       setRound({ yourMove: data.yourMove, opponentMove: data.opponentMove, outcome: data.outcome });
       setStoreScores(data.scores);
-      setMatchOver(data.matchOver);
-      setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
+      pendingMatchEndRef.current = {
+        matchOver: data.matchOver,
+        winner: data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null
+      };
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
       setStoreScores(data.scores);
+      pendingMatchEndRef.current = null;
       setMatchOver(false);
       setWinner(null);
       setRound(null);
@@ -128,6 +136,11 @@ export function RpsMultiplayer() {
 
   const handleRevealComplete = () => {
     setRound(null);
+    if (pendingMatchEndRef.current) {
+      setMatchOver(pendingMatchEndRef.current.matchOver);
+      setWinner(pendingMatchEndRef.current.winner);
+      pendingMatchEndRef.current = null;
+    }
   };
 
   const handleReplay = () => {

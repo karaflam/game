@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
@@ -41,6 +41,11 @@ export function TruthOrDareMultiplayer() {
   const [resultApproved, setResultApproved] = useState(false);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
+  // Set only once the result reveal's onComplete fires (handleResultRevealComplete), not
+  // on receipt of the result: MatchEndOverlay renders as an absolute inset-0 overlay in
+  // the same container as the reveal, so committing this immediately would cover the
+  // last round's reveal animation before the player ever sees it finish.
+  const pendingMatchEndRef = useRef<{ matchOver: boolean; winner: Winner } | null>(null);
 
   useEffect(() => {
     if (!socket || !socketId) {
@@ -68,13 +73,16 @@ export function TruthOrDareMultiplayer() {
     const handleResult = (data: { approved: boolean; scores: Record<string, number>; matchOver: boolean; winnerId: string | null }) => {
       setResultApproved(data.approved);
       setStoreScores(data.scores);
-      setMatchOver(data.matchOver);
-      setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
+      pendingMatchEndRef.current = {
+        matchOver: data.matchOver,
+        winner: data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null
+      };
       setPhase('result');
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
       setStoreScores(data.scores);
+      pendingMatchEndRef.current = null;
       setMatchOver(false);
       setWinner(null);
       setPhase('idle');
@@ -177,6 +185,11 @@ export function TruthOrDareMultiplayer() {
     setContent(null);
     setAnswer(null);
     setAnswerDraft('');
+    if (pendingMatchEndRef.current) {
+      setMatchOver(pendingMatchEndRef.current.matchOver);
+      setWinner(pendingMatchEndRef.current.winner);
+      pendingMatchEndRef.current = null;
+    }
   };
 
   const handleReplay = () => {
@@ -329,25 +342,26 @@ export function TruthOrDareMultiplayer() {
               handleResultRevealComplete();
             }
           }}
-          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+          className="relative -mx-4 aspect-square w-[calc(100%+2rem)] cursor-pointer overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[26rem] sm:w-full"
         >
-          <div className="relative h-40 w-40">
-            <Suspense fallback={null}>
-              <GameCanvas theme={theme} quality={quality}>
-                <BadgeBurstScene variant={resultApproved ? 'success' : 'fail'} material={getThemeMaterial(theme)} />
-              </GameCanvas>
-            </Suspense>
-          </div>
-          <p className="max-w-sm text-sm font-semibold text-foreground">
-            {isActive
-              ? resultApproved
-                ? t('multiplayer.truthOrDare.resultValidated')
-                : t('multiplayer.truthOrDare.resultRefused')
-              : resultApproved
-                ? t('multiplayer.truthOrDare.resultOpponentGains', { name: activePlayerName })
-                : t('multiplayer.truthOrDare.resultOpponentNoGain', { name: activePlayerName })}
-          </p>
-          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <BadgeBurstScene
+                variant={resultApproved ? 'success' : 'fail'}
+                material={getThemeMaterial(theme)}
+                headline={
+                  isActive
+                    ? resultApproved
+                      ? t('multiplayer.truthOrDare.resultValidated')
+                      : t('multiplayer.truthOrDare.resultRefused')
+                    : resultApproved
+                      ? t('multiplayer.truthOrDare.resultOpponentGains', { name: activePlayerName })
+                      : t('multiplayer.truthOrDare.resultOpponentNoGain', { name: activePlayerName })
+                }
+              />
+            </GameCanvas>
+          </Suspense>
+          <p className="absolute inset-x-0 bottom-4 text-center text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
         </div>
       ) : null}
 

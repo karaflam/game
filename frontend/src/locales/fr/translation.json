@@ -293,7 +293,7 @@
     },
     "wouldYouRather": {
       "yourChoice": "Vous : « {{choice}} »",
-      "aiSame": "IA : « {{choice}} » — même longueur d’onde !",
+      "aiSame": "Vous avez tous les deux choisi : « {{choice}} » — même longueur d’onde !",
       "aiDifferent": "IA : « {{choice}} » — pas d’accord cette fois.",
       "instructions": "Tu préfères...",
       "nextDilemmaButton": "Prochain dilemme",
@@ -407,7 +407,7 @@
     },
     "wouldYouRather": {
       "yourChoice": "Vous : « {{choice}} »",
-      "opponentSame": "{{name}} : « {{choice}} » — même choix, +1 chacun !",
+      "opponentSame": "Vous et {{name}} avez tous les deux choisi : « {{choice}} » — +1 chacun !",
       "opponentDifferent": "{{name}} : « {{choice}} » — choix différents cette fois.",
       "waitingOpponent": "Choix envoyé, en attente de l’adversaire...",
       "instructions": "Tu préfères...",

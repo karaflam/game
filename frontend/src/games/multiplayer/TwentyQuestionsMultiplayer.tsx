@@ -99,8 +99,6 @@ export function TwentyQuestionsMultiplayer() {
       }
 
       setRoundResult(data);
-      setMatchOver(data.matchOver);
-      setWinner(data.matchOver ? (data.isDraw ? 'draw' : data.winnerId === socketId ? 'player' : 'machine') : null);
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
@@ -200,6 +198,8 @@ export function TwentyQuestionsMultiplayer() {
 
     if (roundResult.matchOver) {
       setRoundResult(null);
+      setMatchOver(true);
+      setWinner(roundResult.isDraw ? 'draw' : roundResult.winnerId === socketId ? 'player' : 'machine');
       return;
     }
 
@@ -267,24 +267,25 @@ export function TwentyQuestionsMultiplayer() {
               handleRoundRevealComplete();
             }
           }}
-          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+          className="relative -mx-4 aspect-square w-[calc(100%+2rem)] cursor-pointer overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[26rem] sm:w-full"
         >
-          <div className="relative h-40 w-40">
-            <Suspense fallback={null}>
-              <GameCanvas theme={theme} quality={quality}>
-                <BadgeBurstScene variant={roundResult.correct ? 'success' : 'fail'} material={getThemeMaterial(theme)} />
-              </GameCanvas>
-            </Suspense>
-          </div>
-          <p className="max-w-sm text-sm font-semibold text-foreground">
-            {roundResult.correct
-              ? isGuesser
-                ? t('multiplayer.twentyQuestions.wonRound', { points: roundResult.attemptsRemaining })
-                : t('multiplayer.twentyQuestions.opponentWonRound', { name: opponentName })
-              : t('multiplayer.twentyQuestions.roundExhausted')}
-          </p>
-          <p className="text-sm text-muted-foreground">{t('multiplayer.twentyQuestions.roundSummary', { turn: roundResult.turnIndex, total: TOTAL_TURNS })}</p>
-          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <BadgeBurstScene
+                variant={roundResult.correct ? 'success' : 'fail'}
+                material={getThemeMaterial(theme)}
+                headline={
+                  roundResult.correct
+                    ? isGuesser
+                      ? t('multiplayer.twentyQuestions.wonRound', { points: roundResult.attemptsRemaining })
+                      : t('multiplayer.twentyQuestions.opponentWonRound', { name: opponentName })
+                    : t('multiplayer.twentyQuestions.roundExhausted')
+                }
+                detail={t('multiplayer.twentyQuestions.roundSummary', { turn: roundResult.turnIndex, total: TOTAL_TURNS })}
+              />
+            </GameCanvas>
+          </Suspense>
+          <p className="absolute inset-x-0 bottom-4 text-center text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
         </div>
       ) : (
         <div className="space-y-4">

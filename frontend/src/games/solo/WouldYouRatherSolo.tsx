@@ -7,6 +7,7 @@ import { pickRandomItem, pickRandomIndexExcluding } from '@/lib/randomPick';
 import useTheme from '@/hooks/useTheme';
 import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
 import { getThemeMaterial } from '@/three/themeMaterials';
+import { MATCH_CARD_COLOR, MISMATCH_CARD_COLOR } from '@/three/outcomeColors';
 
 const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
 const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
@@ -76,22 +77,29 @@ export function WouldYouRatherSolo() {
               setRevealing(false);
             }
           }}
-          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+          className="relative -mx-4 aspect-square w-[calc(100%+2rem)] cursor-pointer overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[26rem] sm:w-full"
         >
-          <div className="relative h-40 w-40">
-            <Suspense fallback={null}>
-              <GameCanvas theme={theme} quality={quality}>
-                <BadgeBurstScene variant="neutral" material={getThemeMaterial(theme)} />
-              </GameCanvas>
-            </Suspense>
-          </div>
-          <p className="max-w-sm text-sm font-semibold text-foreground">{t('solo.wouldYouRather.yourChoice', { choice: dilemma[result.playerChoice] })}</p>
-          <p className="text-sm text-muted-foreground">
-            {result.playerChoice === result.machineChoice
-              ? t('solo.wouldYouRather.aiSame', { choice: dilemma[result.machineChoice] })
-              : t('solo.wouldYouRather.aiDifferent', { choice: dilemma[result.machineChoice] })}
-          </p>
-          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <BadgeBurstScene
+                variant={result.playerChoice === result.machineChoice ? 'success' : 'fail'}
+                material={getThemeMaterial(theme)}
+                showIcon={false}
+                cardColorOverride={result.playerChoice === result.machineChoice ? MATCH_CARD_COLOR : MISMATCH_CARD_COLOR}
+                headline={
+                  result.playerChoice === result.machineChoice
+                    ? t('solo.wouldYouRather.aiSame', { choice: dilemma[result.playerChoice] })
+                    : t('solo.wouldYouRather.yourChoice', { choice: dilemma[result.playerChoice] })
+                }
+                detail={
+                  result.playerChoice === result.machineChoice
+                    ? undefined
+                    : t('solo.wouldYouRather.aiDifferent', { choice: dilemma[result.machineChoice] })
+                }
+              />
+            </GameCanvas>
+          </Suspense>
+          <p className="absolute inset-x-0 bottom-4 text-center text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
         </div>
       ) : (
         <>

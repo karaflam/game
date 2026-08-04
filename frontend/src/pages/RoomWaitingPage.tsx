@@ -292,7 +292,7 @@ export function RoomWaitingPage() {
               </div>
             ) : null}
             <div className="mt-6 flex flex-col gap-3">
-              <Button disabled={!canStart} onClick={handleStartClick}>
+              <Button className="h-auto whitespace-normal" disabled={!canStart} onClick={handleStartClick}>
                 {!isHost
                   ? t('roomWaitingPage.startButtonWaitingHost')
                   : isTruthOrDare && !allValidated

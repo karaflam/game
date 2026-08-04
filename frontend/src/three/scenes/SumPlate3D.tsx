@@ -55,6 +55,10 @@ export function SumPlate3D({ sum, parityLabel, outcomeLabel, material, position,
           theme switch instead of patching the live instance. */}
       <Text
         key={`sum-${material.glowColor}`}
+        // See NumberDrum.tsx: troika's async glyph build can leave a stale/
+        // empty bounding sphere on the first frame, which default frustum
+        // culling can mistake for off-screen.
+        frustumCulled={false}
         position={[0, 0.12, 0.01]}
         fontSize={0.16}
         color={material.glowColor}
@@ -66,6 +70,7 @@ export function SumPlate3D({ sum, parityLabel, outcomeLabel, material, position,
       </Text>
       <Text
         key={`outcome-${material.glowColor}`}
+        frustumCulled={false}
         position={[0, -0.14, 0.01]}
         fontSize={0.13}
         color={material.glowColor}

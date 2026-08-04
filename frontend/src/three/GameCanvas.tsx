@@ -67,7 +67,10 @@ export function GameCanvas({ theme, quality, children, bloom = true }: GameCanva
     <Canvas
       camera={{ position: [0, 0.6, 3.2], fov: 45 }}
       dpr={[1, quality === 'high' ? 2 : 1]}
-      style={{ touchAction: 'none' }}
+      // pan-y (not none): the only pointer-driven interaction in any scene is
+      // NumberDrum's horizontal carousel drag — vertical page scroll should
+      // pass through untouched instead of getting captured by the canvas.
+      style={{ touchAction: 'pan-y' }}
     >
       <ResponsiveCamera />
       <color attach="background" args={[material.sceneBackground]} />

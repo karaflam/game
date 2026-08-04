@@ -127,24 +127,23 @@ export function TwentyQuestionsSolo() {
               handleRevealComplete();
             }
           }}
-          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+          className="relative -mx-4 aspect-square w-[calc(100%+2rem)] cursor-pointer overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[26rem] sm:w-full"
         >
-          <div className="relative h-40 w-40">
-            <Suspense fallback={null}>
-              <GameCanvas theme={theme} quality={quality}>
-                <BadgeBurstScene variant={roundResult.outcome === 'player' ? 'success' : 'fail'} material={getThemeMaterial(theme)} />
-              </GameCanvas>
-            </Suspense>
-          </div>
-          <p className="max-w-sm text-sm font-semibold text-foreground">
-            {roundResult.outcome === 'player'
-              ? t('solo.twentyQuestions.revealWon', { answer: roundResult.answer })
-              : t('solo.twentyQuestions.revealLost', { answer: roundResult.answer })}
-          </p>
-          {roundResult.outcome === 'player' ? (
-            <p className="text-sm text-muted-foreground">{t('solo.twentyQuestions.revealDetail', { tries: roundResult.triesUsed })}</p>
-          ) : null}
-          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <BadgeBurstScene
+                variant={roundResult.outcome === 'player' ? 'success' : 'fail'}
+                material={getThemeMaterial(theme)}
+                headline={
+                  roundResult.outcome === 'player'
+                    ? t('solo.twentyQuestions.revealWon', { answer: roundResult.answer })
+                    : t('solo.twentyQuestions.revealLost', { answer: roundResult.answer })
+                }
+                detail={roundResult.outcome === 'player' ? t('solo.twentyQuestions.revealDetail', { tries: roundResult.triesUsed }) : undefined}
+              />
+            </GameCanvas>
+          </Suspense>
+          <p className="absolute inset-x-0 bottom-4 text-center text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
         </div>
       ) : (
         <>

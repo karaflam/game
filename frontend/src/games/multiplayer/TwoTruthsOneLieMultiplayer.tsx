@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
@@ -44,6 +44,15 @@ export function TwoTruthsOneLieMultiplayer() {
   const [result, setResult] = useState<ResultPayload | null>(null);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
+  // handlePrompt is registered once at mount (inside the effect below) and so
+  // would otherwise close over a stale `result` from that first render — this
+  // ref keeps it readable with the latest value without re-subscribing the
+  // socket listeners on every reveal.
+  const resultRef = useRef<ResultPayload | null>(null);
+
+  useEffect(() => {
+    resultRef.current = result;
+  }, [result]);
 
   useEffect(() => {
     if (!socket || !socketId) {
@@ -59,14 +68,32 @@ export function TwoTruthsOneLieMultiplayer() {
     };
 
     const handlePrompt = (data: { statements: string[] }) => {
+      // A fresh prompt only ever arrives once the round has genuinely
+      // advanced server-side (roles are swapped there the moment the vote is
+      // cast — see roomManager.voteTwoTruthsOneLie). If we're still showing
+      // the previous round's reveal because the local player hasn't
+      // dismissed it yet, apply the same role swap dismissing it
+      // (handleRevealComplete) would have applied right now — otherwise the
+      // stale reveal keeps winning the render below (it's checked first)
+      // until the player finally clicks through, at which point
+      // handleRevealComplete would wipe this very `votingStatements` back to
+      // null, desyncing the room until a refresh forces a resync.
+      const pendingResult = resultRef.current;
+      if (pendingResult) {
+        setResult(null);
+        setStatements(['', '', '']);
+        setLieChoice(0);
+        if (!pendingResult.matchOver) {
+          setSubmitterId(pendingResult.nextSubmitterId);
+          setVoterId(pendingResult.nextVoterId);
+        }
+      }
       setVotingStatements(data.statements);
     };
 
     const handleResult = (data: ResultPayload) => {
       setResult(data);
       setStoreScores(data.scores);
-      setMatchOver(data.matchOver);
-      setWinner(data.winnerId ? (data.winnerId === socketId ? 'player' : 'machine') : null);
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
@@ -155,6 +182,8 @@ export function TwoTruthsOneLieMultiplayer() {
     setVotingStatements(null);
     setStatements(['', '', '']);
     setLieChoice(0);
+    setMatchOver(result.matchOver);
+    setWinner(result.winnerId ? (result.winnerId === socketId ? 'player' : 'machine') : null);
 
     if (!result.matchOver) {
       setSubmitterId(result.nextSubmitterId);
@@ -216,26 +245,27 @@ export function TwoTruthsOneLieMultiplayer() {
               handleRevealComplete();
             }
           }}
-          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+          className="relative -mx-4 aspect-square w-[calc(100%+2rem)] cursor-pointer overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[26rem] sm:w-full"
         >
-          <div className="relative h-40 w-40">
-            <Suspense fallback={null}>
-              <GameCanvas theme={theme} quality={quality}>
-                <BadgeBurstScene variant={myOutcome} material={getThemeMaterial(theme)} />
-              </GameCanvas>
-            </Suspense>
-          </div>
-          <p className="max-w-sm text-sm font-semibold text-foreground">
-            {result.voterSocketId === socketId
-              ? result.correct
-                ? t('multiplayer.twoTruthsOneLie.won')
-                : t('multiplayer.twoTruthsOneLie.lost')
-              : result.correct
-                ? t('multiplayer.twoTruthsOneLie.opponentFound', { name: opponentName })
-                : t('multiplayer.twoTruthsOneLie.opponentMissed', { name: opponentName })}
-          </p>
-          <p className="text-sm text-muted-foreground">{t('multiplayer.twoTruthsOneLie.lieWas', { index: result.lieIndex + 1 })}</p>
-          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <BadgeBurstScene
+                variant={myOutcome}
+                material={getThemeMaterial(theme)}
+                headline={
+                  result.voterSocketId === socketId
+                    ? result.correct
+                      ? t('multiplayer.twoTruthsOneLie.won')
+                      : t('multiplayer.twoTruthsOneLie.lost')
+                    : result.correct
+                      ? t('multiplayer.twoTruthsOneLie.opponentFound', { name: opponentName })
+                      : t('multiplayer.twoTruthsOneLie.opponentMissed', { name: opponentName })
+                }
+                detail={t('multiplayer.twoTruthsOneLie.lieWas', { index: result.lieIndex + 1 })}
+              />
+            </GameCanvas>
+          </Suspense>
+          <p className="absolute inset-x-0 bottom-4 text-center text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
         </div>
       ) : votingStatements && isVoter ? (
         <div className="space-y-4">

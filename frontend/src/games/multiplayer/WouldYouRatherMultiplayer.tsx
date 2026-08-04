@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
@@ -11,6 +11,7 @@ import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
 import useTheme from '@/hooks/useTheme';
 import type { Winner } from '@/lib/soloScore';
 import { soloWouldYouRatherPrompts } from '@/data/soloPrompts';
+import { MATCH_CARD_COLOR, MISMATCH_CARD_COLOR } from '@/three/outcomeColors';
 
 const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
 const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
@@ -40,6 +41,11 @@ export function WouldYouRatherMultiplayer() {
   const [awaitingNextRound, setAwaitingNextRound] = useState(false);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
+  // Set only once the round reveal's onComplete fires (handleRevealComplete), not on
+  // receipt of the result: MatchEndOverlay renders as an absolute inset-0 overlay in
+  // the same container as the reveal, so committing this immediately would cover the
+  // last round's reveal animation before the player ever sees it finish.
+  const pendingMatchEndRef = useRef<{ matchOver: boolean; winner: Winner } | null>(null);
   const { theme } = useTheme();
   const quality = useAdaptiveQuality();
 
@@ -59,12 +65,15 @@ export function WouldYouRatherMultiplayer() {
       setWaiting(false);
       setRound({ yourChoice: data.yourChoice, opponentChoice: data.opponentChoice, sameChoice: data.sameChoice });
       setStoreScores(data.scores);
-      setMatchOver(data.matchOver);
-      setWinner(data.teamResult === 'win' ? 'player' : data.teamResult === 'lose' ? 'machine' : null);
+      pendingMatchEndRef.current = {
+        matchOver: data.matchOver,
+        winner: data.teamResult === 'win' ? 'player' : data.teamResult === 'lose' ? 'machine' : null
+      };
     };
 
     const handleScoreReset = (data: { scores: Record<string, number> }) => {
       setStoreScores(data.scores);
+      pendingMatchEndRef.current = null;
       setMatchOver(false);
       setWinner(null);
       setRound(null);
@@ -130,6 +139,11 @@ export function WouldYouRatherMultiplayer() {
   const handleRevealComplete = () => {
     setRound(null);
     setAwaitingNextRound(true);
+    if (pendingMatchEndRef.current) {
+      setMatchOver(pendingMatchEndRef.current.matchOver);
+      setWinner(pendingMatchEndRef.current.winner);
+      pendingMatchEndRef.current = null;
+    }
   };
 
   const handleReplay = () => {
@@ -178,28 +192,35 @@ export function WouldYouRatherMultiplayer() {
               handleRevealComplete();
             }
           }}
-          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+          className="relative -mx-4 aspect-square w-[calc(100%+2rem)] cursor-pointer overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[26rem] sm:w-full"
         >
-          <div className="relative h-40 w-40">
-            <Suspense fallback={null}>
-              <GameCanvas theme={theme} quality={quality}>
-                <BadgeBurstScene variant={round.sameChoice ? 'success' : 'neutral'} material={getThemeMaterial(theme)} />
-              </GameCanvas>
-            </Suspense>
-          </div>
-          <p className="max-w-sm text-sm font-semibold text-foreground">{t('multiplayer.wouldYouRather.yourChoice', { choice: prompt[round.yourChoice] })}</p>
-          <p className="text-sm text-muted-foreground">
-            {round.sameChoice
-              ? t('multiplayer.wouldYouRather.opponentSame', {
-                  name: opponent?.name ?? t('multiplayer.common.opponentFallback'),
-                  choice: prompt[round.opponentChoice]
-                })
-              : t('multiplayer.wouldYouRather.opponentDifferent', {
-                  name: opponent?.name ?? t('multiplayer.common.opponentFallback'),
-                  choice: prompt[round.opponentChoice]
-                })}
-          </p>
-          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <BadgeBurstScene
+                variant={round.sameChoice ? 'success' : 'fail'}
+                material={getThemeMaterial(theme)}
+                showIcon={false}
+                cardColorOverride={round.sameChoice ? MATCH_CARD_COLOR : MISMATCH_CARD_COLOR}
+                headline={
+                  round.sameChoice
+                    ? t('multiplayer.wouldYouRather.opponentSame', {
+                        name: opponent?.name ?? t('multiplayer.common.opponentFallback'),
+                        choice: prompt[round.yourChoice]
+                      })
+                    : t('multiplayer.wouldYouRather.yourChoice', { choice: prompt[round.yourChoice] })
+                }
+                detail={
+                  round.sameChoice
+                    ? undefined
+                    : t('multiplayer.wouldYouRather.opponentDifferent', {
+                        name: opponent?.name ?? t('multiplayer.common.opponentFallback'),
+                        choice: prompt[round.opponentChoice]
+                      })
+                }
+              />
+            </GameCanvas>
+          </Suspense>
+          <p className="absolute inset-x-0 bottom-4 text-center text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
         </div>
       ) : prompt && !awaitingNextRound ? (
         <div className="space-y-4">

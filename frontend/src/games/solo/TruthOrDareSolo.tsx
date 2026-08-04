@@ -168,20 +168,17 @@ export function TruthOrDareSolo() {
               handleRevealComplete();
             }
           }}
-          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+          className="relative -mx-4 aspect-square w-[calc(100%+2rem)] cursor-pointer overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[26rem] sm:w-full"
         >
-          <div className="relative h-64 w-48">
-            <Suspense fallback={null}>
-              <GameCanvas theme={theme} quality={quality}>
-                <CardFlipScene material={getThemeMaterial(theme)} />
-              </GameCanvas>
-            </Suspense>
-          </div>
-          <p className="max-w-sm text-sm font-medium text-foreground">{reveal === 'truth' ? prompt.truth : prompt.dare}</p>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <CardFlipScene material={getThemeMaterial(theme)} message={reveal === 'truth' ? prompt.truth : prompt.dare} />
+            </GameCanvas>
+          </Suspense>
+          <p className="absolute inset-x-0 top-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             {reveal === 'truth' ? t('solo.truthOrDare.revealTruth') : t('solo.truthOrDare.revealDare')}
           </p>
-          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+          <p className="absolute inset-x-0 bottom-4 text-center text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
         </div>
       ) : null}
     </div>

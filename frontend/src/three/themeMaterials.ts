@@ -15,6 +15,10 @@ export type ThemeMaterial = {
    * falls back to baseColor when unset. Only defined for themes where
    * baseColor turned out too close to sceneBackground for the drum. */
   drumBaseColor?: string;
+  /** Same hex as this theme's `--color-secondary` CSS variable (index.css) —
+   * the fill ScorePill's frame uses. Kept in sync manually since the 3D
+   * scenes can't read CSS custom properties directly. */
+  cardColor: string;
 };
 
 const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
@@ -25,7 +29,8 @@ const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
     roughness: 0.35,
     glowColor: '#2563EB',
     particleColor: '#7C3AED',
-    sceneBackground: '#F0F2F7'
+    sceneBackground: '#F0F2F7',
+    cardColor: '#E2E8F0'
   },
   sombre: {
     baseColor: '#0F1629',
@@ -39,7 +44,8 @@ const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
     // luminance that the number drum's card faces blended into the canvas
     // background. Only the drum reads this — RPS hands, cards, and badges
     // still use baseColor and are unaffected.
-    drumBaseColor: '#1E2A4A'
+    drumBaseColor: '#1E2A4A',
+    cardColor: '#1E2A45'
   },
   luxueux: {
     baseColor: '#1A1200',
@@ -51,7 +57,8 @@ const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
     sceneBackground: '#0A0800',
     // Same issue as sombre: baseColor was nearly indistinguishable from
     // sceneBackground for the drum's faces specifically.
-    drumBaseColor: '#3A2A08'
+    drumBaseColor: '#3A2A08',
+    cardColor: '#261A00'
   },
   romantique: {
     baseColor: '#2D1020',
@@ -60,7 +67,8 @@ const THEME_MATERIALS: Record<ThemeId, ThemeMaterial> = {
     roughness: 0.4,
     glowColor: '#F43F5E',
     particleColor: '#F472B4',
-    sceneBackground: '#1A0A14'
+    sceneBackground: '#1A0A14',
+    cardColor: '#3D1530'
   }
 };
 

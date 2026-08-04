@@ -188,6 +188,12 @@ export function NumberDrum({ mode, material, position, orientation = 'horizontal
               // the color forces that same fresh mount on every theme
               // switch instead of patching the live instance.
               key={isMasked ? 'masked' : material.glowColor}
+              // troika builds the glyph geometry asynchronously (SDF atlas job),
+              // so on the very first frame(s) the mesh can exist with a stale or
+              // empty bounding sphere — Three's default frustum culling can then
+              // decide the (fully on-screen) card is out of view and skip
+              // rendering it.
+              frustumCulled={false}
               position={[0, 0, 0.01]}
               fontSize={0.5}
               color={isMasked ? '#5b5f72' : material.glowColor}
