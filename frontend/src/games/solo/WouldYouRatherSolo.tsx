@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
@@ -6,9 +6,10 @@ import { soloWouldYouRatherPrompts } from '@/data/soloPrompts';
 import { pickRandomItem, pickRandomIndexExcluding } from '@/lib/randomPick';
 import useTheme from '@/hooks/useTheme';
 import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
-import { GameCanvas } from '@/three/GameCanvas';
-import { BadgeBurstScene } from '@/three/scenes/BadgeBurstScene';
 import { getThemeMaterial } from '@/three/themeMaterials';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
 
 const SIDES = ['left', 'right'] as const;
 type Side = (typeof SIDES)[number];
