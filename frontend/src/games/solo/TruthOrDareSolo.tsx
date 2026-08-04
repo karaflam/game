@@ -11,6 +11,7 @@ import { pickRandomIndexFromCandidates } from '@/lib/randomPick';
 
 const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
 const CardFlipScene = lazy(() => import('@/three/scenes/CardFlipScene').then(m => ({ default: m.CardFlipScene })));
+const PlayerWheelScene = lazy(() => import('@/three/scenes/PlayerWheelScene').then(m => ({ default: m.PlayerWheelScene })));
 
 type Phase = 'idle' | 'spinning' | 'landed' | 'revealing';
 
@@ -113,13 +114,27 @@ export function TruthOrDareSolo() {
         </>
       ) : null}
 
-      {phase === 'spinning' || phase === 'landed' ? (
+      {(phase === 'spinning' || phase === 'landed') && quality === 'fallback2d' ? (
         <PlayerWheel
           players={[PLAYER_NAME]}
           landedOn={PLAYER_NAME}
           spinning={phase === 'spinning'}
           onSpinComplete={handleSpinComplete}
         />
+      ) : phase === 'spinning' || phase === 'landed' ? (
+        <div className="relative -mx-4 aspect-square w-[calc(100%+2rem)] overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[24rem] sm:w-full">
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <PlayerWheelScene
+                players={[PLAYER_NAME]}
+                landedOn={PLAYER_NAME}
+                spinning={phase === 'spinning'}
+                onSpinComplete={handleSpinComplete}
+                material={getThemeMaterial(theme)}
+              />
+            </GameCanvas>
+          </Suspense>
+        </div>
       ) : null}
 
       {phase === 'landed' ? (
