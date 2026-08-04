@@ -48,8 +48,9 @@ function clockwiseToMathAngle(clockwiseAngle: number): number {
 
 function buildWedgeGeometry(index: number, wedgeCount: number): THREE.ExtrudeGeometry {
   const wedgeAngle = (2 * Math.PI) / wedgeCount;
-  const mathStart = clockwiseToMathAngle(index * wedgeAngle);
-  const mathEnd = clockwiseToMathAngle((index + 1) * wedgeAngle);
+  const center = wedgeCenterAngle(index, wedgeCount);
+  const mathStart = clockwiseToMathAngle(center - wedgeAngle / 2);
+  const mathEnd = clockwiseToMathAngle(center + wedgeAngle / 2);
 
   const shape = new THREE.Shape();
   shape.moveTo(0, 0);
