@@ -160,11 +160,18 @@ export function PlayerWheelScene({ players, landedOn, spinning, onSpinComplete, 
                   this color in place on an existing troika-three-text
                   instance, which can leave its SDF glyph render stuck blank
                   instead of redrawing — see NumberDrum.tsx's identical fix. */}
+              {/* z-offset of WEDGE_THICKNESS + 0.15 (not + 0.01): a smaller
+                  offset put the text close enough to the wedge's own front
+                  face to be occluded/z-fight against it, rendering fully
+                  invisible in manual testing — confirmed by moving the text
+                  far in front (z=1) as a debug check, where it rendered
+                  correctly, then dialing the offset back down to the
+                  smallest value that stayed reliably visible. */}
               <Text
                 key={`${i}-${material.glowColor}`}
-                position={[textRadius * Math.cos(mathAngle), textRadius * Math.sin(mathAngle), WEDGE_THICKNESS + 0.01]}
+                position={[textRadius * Math.cos(mathAngle), textRadius * Math.sin(mathAngle), WEDGE_THICKNESS + 0.15]}
                 rotation={[0, 0, -textAngle]}
-                fontSize={0.14}
+                fontSize={0.2}
                 color={material.glowColor}
                 anchorX="center"
                 anchorY="middle"
