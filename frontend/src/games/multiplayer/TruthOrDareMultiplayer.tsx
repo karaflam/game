@@ -16,6 +16,7 @@ import useTheme from '@/hooks/useTheme';
 
 const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
 const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
+const PlayerWheelScene = lazy(() => import('@/three/scenes/PlayerWheelScene').then(m => ({ default: m.PlayerWheelScene })));
 
 const TARGET_SCORE = 5;
 
@@ -210,13 +211,27 @@ export function TruthOrDareMultiplayer() {
         </div>
       ) : null}
 
-      {(phase === 'spinning' || (phase === 'choosing' && activePlayerName)) ? (
+      {(phase === 'spinning' || (phase === 'choosing' && activePlayerName)) && quality === 'fallback2d' ? (
         <PlayerWheel
           players={players.map(player => player.name)}
           landedOn={activePlayerName ?? ''}
           spinning={phase === 'spinning'}
           onSpinComplete={handleSpinComplete}
         />
+      ) : phase === 'spinning' || (phase === 'choosing' && activePlayerName) ? (
+        <div className="relative -mx-4 aspect-square w-[calc(100%+2rem)] overflow-hidden rounded-2xl bg-muted sm:mx-0 sm:aspect-auto sm:h-[24rem] sm:w-full">
+          <Suspense fallback={null}>
+            <GameCanvas theme={theme} quality={quality}>
+              <PlayerWheelScene
+                players={players.map(player => player.name)}
+                landedOn={activePlayerName ?? ''}
+                spinning={phase === 'spinning'}
+                onSpinComplete={handleSpinComplete}
+                material={getThemeMaterial(theme)}
+              />
+            </GameCanvas>
+          </Suspense>
+        </div>
       ) : null}
 
       {phase === 'choosing' ? (
