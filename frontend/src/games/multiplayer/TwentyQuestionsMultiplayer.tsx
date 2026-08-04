@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,13 @@ import { useGameStore } from '@/store/useGameStore';
 import { ClientEvents, ServerEvents } from '@/lib/socketEvents';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
 import type { Winner } from '@/lib/soloScore';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
 
 const MAX_ATTEMPTS_PER_TURN = 10;
 const TOTAL_TURNS = 2;
@@ -29,6 +35,8 @@ type RoundResultPayload = {
 export function TwentyQuestionsMultiplayer() {
   const { t } = useTranslation();
   const { socket, socketId } = useSocket();
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
@@ -236,7 +244,7 @@ export function TwentyQuestionsMultiplayer() {
         </p>
       </div>
 
-      {roundResult ? (
+      {roundResult && quality === 'fallback2d' ? (
         <BurstReveal
           icon={roundResult.correct ? 'success' : 'fail'}
           headline={
@@ -249,6 +257,35 @@ export function TwentyQuestionsMultiplayer() {
           detail={t('multiplayer.twentyQuestions.roundSummary', { turn: roundResult.turnIndex, total: TOTAL_TURNS })}
           onComplete={handleRoundRevealComplete}
         />
+      ) : roundResult ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleRoundRevealComplete}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              handleRoundRevealComplete();
+            }
+          }}
+          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+        >
+          <div className="relative h-40 w-40">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <BadgeBurstScene variant={roundResult.correct ? 'success' : 'fail'} material={getThemeMaterial(theme)} />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="max-w-sm text-sm font-semibold text-foreground">
+            {roundResult.correct
+              ? isGuesser
+                ? t('multiplayer.twentyQuestions.wonRound', { points: roundResult.attemptsRemaining })
+                : t('multiplayer.twentyQuestions.opponentWonRound', { name: opponentName })
+              : t('multiplayer.twentyQuestions.roundExhausted')}
+          </p>
+          <p className="text-sm text-muted-foreground">{t('multiplayer.twentyQuestions.roundSummary', { turn: roundResult.turnIndex, total: TOTAL_TURNS })}</p>
+          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+        </div>
       ) : (
         <div className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
