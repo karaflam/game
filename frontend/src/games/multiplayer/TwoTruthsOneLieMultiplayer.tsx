@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
@@ -7,7 +7,13 @@ import { ClientEvents, ServerEvents } from '@/lib/socketEvents';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
 import type { Winner } from '@/lib/soloScore';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
 
 const TARGET_SCORE = 5;
 
@@ -28,6 +34,8 @@ export function TwoTruthsOneLieMultiplayer() {
   const players = useGameStore(state => state.players);
   const scores = useGameStore(state => state.scores);
   const setStoreScores = useGameStore(state => state.setScores);
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
   const [submitterId, setSubmitterId] = useState<string | null>(null);
   const [voterId, setVoterId] = useState<string | null>(null);
   const [statements, setStatements] = useState(['', '', '']);
@@ -183,7 +191,7 @@ export function TwoTruthsOneLieMultiplayer() {
         hasOpponent={!!opponent}
       />
 
-      {result && myOutcome ? (
+      {result && myOutcome && quality === 'fallback2d' ? (
         <BurstReveal
           icon={myOutcome === 'success' ? 'success' : 'fail'}
           headline={
@@ -198,6 +206,37 @@ export function TwoTruthsOneLieMultiplayer() {
           detail={t('multiplayer.twoTruthsOneLie.lieWas', { index: result.lieIndex + 1 })}
           onComplete={handleRevealComplete}
         />
+      ) : result && myOutcome ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleRevealComplete}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              handleRevealComplete();
+            }
+          }}
+          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+        >
+          <div className="relative h-40 w-40">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <BadgeBurstScene variant={myOutcome} material={getThemeMaterial(theme)} />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="max-w-sm text-sm font-semibold text-foreground">
+            {result.voterSocketId === socketId
+              ? result.correct
+                ? t('multiplayer.twoTruthsOneLie.won')
+                : t('multiplayer.twoTruthsOneLie.lost')
+              : result.correct
+                ? t('multiplayer.twoTruthsOneLie.opponentFound', { name: opponentName })
+                : t('multiplayer.twoTruthsOneLie.opponentMissed', { name: opponentName })}
+          </p>
+          <p className="text-sm text-muted-foreground">{t('multiplayer.twoTruthsOneLie.lieWas', { index: result.lieIndex + 1 })}</p>
+          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+        </div>
       ) : votingStatements && isVoter ? (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">{t('multiplayer.twoTruthsOneLie.instructions', { name: opponentName })}</p>
