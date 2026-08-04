@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/useGameStore';
@@ -6,8 +6,14 @@ import { ClientEvents, ServerEvents } from '@/lib/socketEvents';
 import { ScorePill } from '@/components/solo/ScorePill';
 import { MatchEndOverlay } from '@/components/solo/MatchEndOverlay';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
+import { getThemeMaterial } from '@/three/themeMaterials';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import useTheme from '@/hooks/useTheme';
 import type { Winner } from '@/lib/soloScore';
 import { soloWouldYouRatherPrompts } from '@/data/soloPrompts';
+
+const GameCanvas = lazy(() => import('@/three/GameCanvas').then(m => ({ default: m.GameCanvas })));
+const BadgeBurstScene = lazy(() => import('@/three/scenes/BadgeBurstScene').then(m => ({ default: m.BadgeBurstScene })));
 
 const TARGET_SCORE = 5;
 type Side = 'left' | 'right';
@@ -34,6 +40,8 @@ export function WouldYouRatherMultiplayer() {
   const [awaitingNextRound, setAwaitingNextRound] = useState(false);
   const [matchOver, setMatchOver] = useState(false);
   const [winner, setWinner] = useState<Winner>(null);
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
 
   useEffect(() => {
     if (!socket || !socketId) {
@@ -143,7 +151,7 @@ export function WouldYouRatherMultiplayer() {
         hasOpponent={!!opponent}
       />
 
-      {round && prompt ? (
+      {round && prompt && quality === 'fallback2d' ? (
         <BurstReveal
           icon={round.sameChoice ? 'success' : 'neutral'}
           headline={t('multiplayer.wouldYouRather.yourChoice', { choice: prompt[round.yourChoice] })}
@@ -160,6 +168,39 @@ export function WouldYouRatherMultiplayer() {
           }
           onComplete={handleRevealComplete}
         />
+      ) : round && prompt ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleRevealComplete}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              handleRevealComplete();
+            }
+          }}
+          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+        >
+          <div className="relative h-40 w-40">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <BadgeBurstScene variant={round.sameChoice ? 'success' : 'neutral'} material={getThemeMaterial(theme)} />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="max-w-sm text-sm font-semibold text-foreground">{t('multiplayer.wouldYouRather.yourChoice', { choice: prompt[round.yourChoice] })}</p>
+          <p className="text-sm text-muted-foreground">
+            {round.sameChoice
+              ? t('multiplayer.wouldYouRather.opponentSame', {
+                  name: opponent?.name ?? t('multiplayer.common.opponentFallback'),
+                  choice: prompt[round.opponentChoice]
+                })
+              : t('multiplayer.wouldYouRather.opponentDifferent', {
+                  name: opponent?.name ?? t('multiplayer.common.opponentFallback'),
+                  choice: prompt[round.opponentChoice]
+                })}
+          </p>
+          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+        </div>
       ) : prompt && !awaitingNextRound ? (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
