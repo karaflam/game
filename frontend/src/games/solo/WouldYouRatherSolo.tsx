@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { BurstReveal } from '@/components/solo/reveals/BurstReveal';
 import { soloWouldYouRatherPrompts } from '@/data/soloPrompts';
 import { pickRandomItem, pickRandomIndexExcluding } from '@/lib/randomPick';
+import useTheme from '@/hooks/useTheme';
+import { useAdaptiveQuality } from '@/three/useAdaptiveQuality';
+import { GameCanvas } from '@/three/GameCanvas';
+import { BadgeBurstScene } from '@/three/scenes/BadgeBurstScene';
+import { getThemeMaterial } from '@/three/themeMaterials';
 
 const SIDES = ['left', 'right'] as const;
 type Side = (typeof SIDES)[number];
@@ -17,6 +22,8 @@ export function WouldYouRatherSolo() {
   const [dilemmaIndex, setDilemmaIndex] = useState<number>(() => Math.floor(Math.random() * prompts.length));
   const [revealing, setRevealing] = useState(false);
   const [result, setResult] = useState<RoundResult | null>(null);
+  const { theme } = useTheme();
+  const quality = useAdaptiveQuality();
 
   const dilemma = prompts[dilemmaIndex];
 
@@ -47,7 +54,7 @@ export function WouldYouRatherSolo() {
 
   return (
     <div className="space-y-6 rounded-3xl border border-border bg-background p-8">
-      {revealing && result ? (
+      {revealing && result && quality === 'fallback2d' ? (
         <BurstReveal
           icon="neutral"
           headline={t('solo.wouldYouRather.yourChoice', { choice: dilemma[result.playerChoice] })}
@@ -58,6 +65,33 @@ export function WouldYouRatherSolo() {
           }
           onComplete={() => setRevealing(false)}
         />
+      ) : revealing && result ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setRevealing(false)}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              setRevealing(false);
+            }
+          }}
+          className="relative flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-muted p-6 text-center"
+        >
+          <div className="relative h-40 w-40">
+            <Suspense fallback={null}>
+              <GameCanvas theme={theme} quality={quality}>
+                <BadgeBurstScene variant="neutral" material={getThemeMaterial(theme)} />
+              </GameCanvas>
+            </Suspense>
+          </div>
+          <p className="max-w-sm text-sm font-semibold text-foreground">{t('solo.wouldYouRather.yourChoice', { choice: dilemma[result.playerChoice] })}</p>
+          <p className="text-sm text-muted-foreground">
+            {result.playerChoice === result.machineChoice
+              ? t('solo.wouldYouRather.aiSame', { choice: dilemma[result.machineChoice] })
+              : t('solo.wouldYouRather.aiDifferent', { choice: dilemma[result.machineChoice] })}
+          </p>
+          <p className="text-xs text-muted-foreground">{t('solo.reveals.continueHint')}</p>
+        </div>
       ) : (
         <>
           <p className="text-sm text-muted-foreground">{t('solo.wouldYouRather.instructions')}</p>
