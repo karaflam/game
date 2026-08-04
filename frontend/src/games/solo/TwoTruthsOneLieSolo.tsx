@@ -67,7 +67,7 @@ export function TwoTruthsOneLieSolo() {
   };
 
   return (
-    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="relative space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       <ScorePill player={score.player} machine={score.machine} targetScore={TWO_TRUTHS_TARGET_SCORE} onReset={reset} />
 
       {roundResult && quality === 'fallback2d' ? (

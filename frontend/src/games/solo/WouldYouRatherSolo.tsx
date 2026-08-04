@@ -54,7 +54,7 @@ export function WouldYouRatherSolo() {
   };
 
   return (
-    <div className="space-y-6 rounded-3xl border border-border bg-background p-8">
+    <div className="space-y-6 rounded-3xl border border-border bg-background p-4 sm:p-8">
       {revealing && result && quality === 'fallback2d' ? (
         <BurstReveal
           icon="neutral"
